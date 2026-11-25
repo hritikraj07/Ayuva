@@ -55,6 +55,15 @@ const OutbreakGlobe3D = React.lazy(() =>
   import("@/components/three/OutbreakGlobe3D").then((m) => ({ default: m.OutbreakGlobe3D }))
 );
 
+const CHAPTERS = [
+  { id: "hero-section", short: "01", label: "Anatomy" },
+  { id: "vault-experience", short: "02", label: "Vault" },
+  { id: "ai-assistant", short: "03", label: "Pharmacology" },
+  { id: "outbreak-globe", short: "04", label: "Outbreak Globe" },
+  { id: "simulation", short: "05", label: "SEIR Model" },
+  { id: "security", short: "06", label: "Security Shield" },
+] as const;
+
 function ModelPlaceholder({ label, heightClass }: { label: string; heightClass: string }) {
   return (
     <div className={`neo-glass flex items-center justify-center rounded-2xl text-xs text-muted-foreground ${heightClass}`}>
@@ -129,6 +138,22 @@ export function LandingPage() {
   const { user } = useAuth();
   const caps = useSceneCapabilities();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+  const [activeChapter, setActiveChapter] = useState<string>("hero-section");
+
+  // Section-scoped scroll refs directly driving each 3D medical model
+  const heroSectionRef = useRef<HTMLElement | null>(null);
+  const vaultSectionRef = useRef<HTMLElement | null>(null);
+  const aiSectionRef = useRef<HTMLElement | null>(null);
+  const globeSectionRef = useRef<HTMLElement | null>(null);
+  const simSectionRef = useRef<HTMLElement | null>(null);
+  const securitySectionRef = useRef<HTMLElement | null>(null);
+
+  const heroScrollRef = useRef(0);
+  const vaultScrollRef = useRef(0.5);
+  const aiScrollRef = useRef(0.5);
+  const globeScrollRef = useRef(0.5);
+  const securityScrollRef = useRef(0.5);
 
   // Interactive mathematical SEIR live calculator controls
   const [simCases, setSimCases] = useState(45);
@@ -151,6 +176,16 @@ export function LandingPage() {
       : "/patient/overview"
     : "/login";
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(el, { offset: -64 });
+    } else {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     if (caps.reducedMotion) return;
 
@@ -159,6 +194,7 @@ export function LandingPage() {
       smoothWheel: true,
       touchMultiplier: 1.2,
     });
+    lenisRef.current = lenis;
 
     lenis.on("scroll", () => {
       ScrollTrigger.update();
@@ -172,6 +208,63 @@ export function LandingPage() {
     rafId = requestAnimationFrame(raf);
 
     const ctx = gsap.context(() => {
+      // Connect each section's sliding scroll progress directly to its 3D model ref
+      const bindings: Array<{
+        el: HTMLElement | null;
+        id: string;
+        targetRef?: React.MutableRefObject<number>;
+        start?: string;
+        end?: string;
+      }> = [
+        { el: heroSectionRef.current, id: "hero-section", targetRef: heroScrollRef, start: "top top", end: "bottom top" },
+        { el: vaultSectionRef.current, id: "vault-experience", targetRef: vaultScrollRef },
+        { el: aiSectionRef.current, id: "ai-assistant", targetRef: aiScrollRef },
+        { el: globeSectionRef.current, id: "outbreak-globe", targetRef: globeScrollRef },
+        { el: simSectionRef.current, id: "simulation" },
+        { el: securitySectionRef.current, id: "security", targetRef: securityScrollRef },
+      ];
+
+      bindings.forEach((b) => {
+        if (!b.el) return;
+        ScrollTrigger.create({
+          trigger: b.el,
+          start: b.start || "top bottom",
+          end: b.end || "bottom top",
+          scrub: true,
+          onUpdate: (self) => {
+            if (b.targetRef) {
+              b.targetRef.current = self.progress;
+            }
+          },
+        });
+        ScrollTrigger.create({
+          trigger: b.el,
+          start: "top 48%",
+          end: "bottom 48%",
+          onEnter: () => setActiveChapter(b.id),
+          onEnterBack: () => setActiveChapter(b.id),
+        });
+      });
+
+      // Coordinated horizontal & vertical slide choreography synced to scroll
+      gsap.utils.toArray<HTMLElement>(".slide-3d-frame").forEach((el) => {
+        gsap.fromTo(
+          el,
+          { y: 26, scale: 0.97 },
+          {
+            y: -18,
+            scale: 1.0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: el,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      });
+
       gsap.utils.toArray<HTMLElement>(".reveal-panel").forEach((el) => {
         gsap.fromTo(
           el,
@@ -208,6 +301,7 @@ export function LandingPage() {
       cancelAnimationFrame(rafId);
       ctx.revert();
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, [caps.reducedMotion]);
 
@@ -268,9 +362,35 @@ export function LandingPage() {
         </div>
       </header>
 
+      {/* Interactive Scroll Chapter Slider Pill Rail (Desktop) */}
+      <aside
+        aria-label="3D section navigation"
+        className="fixed top-1/2 right-4 z-30 hidden -translate-y-1/2 flex-col gap-1.5 rounded-2xl border border-slate-300/80 bg-white/80 p-2 shadow-md backdrop-blur-md xl:flex"
+      >
+        {CHAPTERS.map((ch) => {
+          const active = activeChapter === ch.id;
+          return (
+            <button
+              key={ch.id}
+              type="button"
+              onClick={() => scrollToSection(ch.id)}
+              title={ch.label}
+              className={`flex min-h-[36px] items-center gap-2 rounded-lg px-2.5 text-left text-[11px] font-medium transition-all ${
+                active
+                  ? "bg-primary font-semibold text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:bg-card hover:text-primary"
+              }`}
+            >
+              <span className="font-mono">{ch.short}</span>
+              <span className="hidden 2xl:inline">{ch.label}</span>
+            </button>
+          );
+        })}
+      </aside>
+
       <main className="relative z-10">
-        {/* SECTION 1: HERO WITH DEDICATED 3D ANATOMICAL HEART & DNA MODEL */}
-        <section className="border-b border-slate-300/70">
+        {/* SECTION 1: HERO WITH SCROLL-INTERACTIVE 3D ANATOMICAL HEART & DNA */}
+        <section id="hero-section" ref={heroSectionRef} className="border-b border-slate-300/70">
           <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8 lg:py-20">
             <div className="flex flex-col gap-5 lg:col-span-6">
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#66A9EC] bg-card px-3.5 py-1.5 text-xs font-semibold text-primary">
@@ -323,9 +443,9 @@ export function LandingPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 lg:col-span-6">
+            <div className="slide-3d-frame flex flex-col gap-3 lg:col-span-6">
               <Suspense fallback={<ModelPlaceholder label="Loading 3D Cardiac & Genomic Anatomy..." heightClass="h-[420px]" />}>
-                <HeroMedicalHeartAndDna3D heightClass="h-[420px]" />
+                <HeroMedicalHeartAndDna3D heightClass="h-[420px]" scrollProgressRef={heroScrollRef} />
               </Suspense>
               <div className="neo-glass flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-3 text-xs">
                 <span className="flex items-center gap-2 font-medium text-primary">
@@ -339,12 +459,12 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 2: THE PERSONAL HEALTH INTELLIGENCE EXPERIENCE */}
-        <section id="vault-experience" className="border-b border-slate-300/70 py-20">
+        <section id="vault-experience" ref={vaultSectionRef} className="border-b border-slate-300/70 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
-              <div className="reveal-panel lg:col-span-5">
+              <div className="reveal-panel slide-3d-frame lg:col-span-5">
                 <Suspense fallback={<ModelPlaceholder label="Loading 3D Medical Vault Model..." heightClass="h-[360px]" />}>
-                  <MedicalVaultRecords3D heightClass="h-[360px]" />
+                  <MedicalVaultRecords3D heightClass="h-[360px]" scrollProgressRef={vaultScrollRef} />
                 </Suspense>
               </div>
               <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
@@ -450,7 +570,7 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 3: PERSONALIZED AI HEALTH ASSISTANT + PHARMACOLOGY 3D MODEL */}
-        <section id="ai-assistant" className="border-b border-slate-300/70 py-20">
+        <section id="ai-assistant" ref={aiSectionRef} className="border-b border-slate-300/70 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
               <div className="reveal-panel flex flex-col gap-5 lg:col-span-6">
@@ -474,9 +594,9 @@ export function LandingPage() {
                 </Link>
               </div>
 
-              <div className="reveal-panel lg:col-span-6">
+              <div className="reveal-panel slide-3d-frame lg:col-span-6">
                 <Suspense fallback={<ModelPlaceholder label="Loading 3D Pharmacology & Molecule Model..." heightClass="h-[340px]" />}>
-                  <MedicalPharmacology3D heightClass="h-[340px]" />
+                  <MedicalPharmacology3D heightClass="h-[340px]" scrollProgressRef={aiScrollRef} />
                 </Suspense>
               </div>
             </div>
@@ -519,12 +639,17 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SECTION 4: DISEASE OUTBREAK INTELLIGENCE + 3D GLOBE */}
-        <section id="outbreak-globe" className="border-b border-slate-300/70 py-20">
+        {/* SECTION 4: DISEASE OUTBREAK INTELLIGENCE + SCROLL-LINKED 3D GLOBE */}
+        <section id="outbreak-globe" ref={globeSectionRef} className="border-b border-slate-300/70 py-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
-            <div className="reveal-panel lg:col-span-7">
+            <div className="reveal-panel slide-3d-frame lg:col-span-7">
               <Suspense fallback={<ModelPlaceholder label="Initializing 3D Epidemiological Globe..." heightClass="h-[400px]" />}>
-                <OutbreakGlobe3D regions={[]} selectedRegionId={null} heightClass="h-[400px]" />
+                <OutbreakGlobe3D
+                  regions={[]}
+                  selectedRegionId={null}
+                  heightClass="h-[400px]"
+                  scrollProgressRef={globeScrollRef}
+                />
               </Suspense>
             </div>
 
@@ -561,7 +686,7 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 5: INTERVENTION SIMULATION */}
-        <section id="simulation" className="border-b border-slate-300/70 py-20">
+        <section id="simulation" ref={simSectionRef} className="border-b border-slate-300/70 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal-panel max-w-3xl">
               <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
@@ -675,8 +800,8 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SECTION 6: SECURITY AND TRUST + 3D MEDICAL SHIELD */}
-        <section id="security" className="py-20">
+        {/* SECTION 6: SECURITY AND TRUST + SCROLL-INTERACTIVE 3D MEDICAL SHIELD */}
+        <section id="security" ref={securitySectionRef} className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
               <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
@@ -691,9 +816,9 @@ export function LandingPage() {
                   tables inside MedLedger.
                 </p>
               </div>
-              <div className="reveal-panel lg:col-span-5">
+              <div className="reveal-panel slide-3d-frame lg:col-span-5">
                 <Suspense fallback={<ModelPlaceholder label="Loading 3D Privacy & Access Shield..." heightClass="h-[320px]" />}>
-                  <MedicalSecurityShield3D heightClass="h-[320px]" />
+                  <MedicalSecurityShield3D heightClass="h-[320px]" scrollProgressRef={securityScrollRef} />
                 </Suspense>
               </div>
             </div>

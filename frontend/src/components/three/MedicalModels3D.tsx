@@ -4,6 +4,8 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useSceneCapabilities, useVisibilityPause, WebGLErrorBoundary } from "./useSceneCapabilities";
 
+type ScrollRef = React.MutableRefObject<number>;
+
 function MedicalViewportShell({
   label,
   sublabel,
@@ -48,17 +50,18 @@ function MedicalViewportShell({
       </div>
 
       <div className="pointer-events-none absolute right-3 bottom-2.5 hidden text-[11px] font-medium text-primary/70 sm:block">
-        Drag to rotate 3D model
+        Scroll or drag to inspect 3D model
       </div>
     </div>
   );
 }
 
 /* 1. HERO MODEL: Sculpted Anatomical Heart + Aortic Arch/Coronary Vessels + Flanking DNA Helix */
-function AnatomicalHeartAndDnaMesh() {
+function AnatomicalHeartAndDnaMesh({ scrollProgressRef }: { scrollProgressRef?: ScrollRef }) {
   const rootRef = useRef<THREE.Group>(null);
   const heartRef = useRef<THREE.Group>(null);
   const dnaRef = useRef<THREE.Group>(null);
+  const smoothedScroll = useRef(0);
 
   const {
     aortaGeo,
@@ -132,7 +135,6 @@ function AnatomicalHeartAndDnaMesh() {
       false
     );
 
-    // Precision DNA strand beside the heart
     const ptsA: THREE.Vector3[] = [];
     const ptsB: THREE.Vector3[] = [];
     const rungs: Array<{ mid: THREE.Vector3; rotY: number }> = [];
@@ -176,29 +178,34 @@ function AnatomicalHeartAndDnaMesh() {
     };
   }, [aortaGeo, pulmonaryGeo, coronaryLeftGeo, coronaryRightGeo, superiorVenaGeo, dnaStrandA, dnaStrandB]);
 
-  useFrame(({ clock, pointer }) => {
+  useFrame(({ clock, pointer, camera }) => {
     const t = clock.getElapsedTime();
+    const targetSp = scrollProgressRef?.current ?? 0;
+    smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, targetSp, 0.08);
+    const sp = smoothedScroll.current;
+
     if (rootRef.current) {
-      rootRef.current.rotation.y = Math.sin(t * 0.35) * 0.24 + pointer.x * 0.25;
-      rootRef.current.rotation.x = pointer.y * 0.12;
+      // Smooth scroll-linked orbital turn + subtle tilt + pointer parallax
+      rootRef.current.rotation.y = Math.sin(t * 0.32) * 0.16 + sp * Math.PI * 0.85 + pointer.x * 0.25;
+      rootRef.current.rotation.x = sp * 0.18 + pointer.y * 0.12;
+      rootRef.current.position.y = -0.08 + Math.sin(sp * Math.PI) * 0.12;
     }
     if (heartRef.current) {
-      // Realistic lub-dub double cardiac beat (~72 BPM)
       const phase = (t * 1.2) % 1;
       const lub = Math.exp(-Math.pow((phase - 0.16) * 14, 2)) * 0.065;
       const dub = Math.exp(-Math.pow((phase - 0.34) * 16, 2)) * 0.04;
-      heartRef.current.scale.setScalar(1.0 + lub + dub);
+      heartRef.current.scale.setScalar(1.0 + lub + dub + sp * 0.08);
     }
     if (dnaRef.current) {
-      dnaRef.current.rotation.y = t * 0.55;
+      dnaRef.current.rotation.y = t * 0.55 + sp * Math.PI * 2.2;
+      dnaRef.current.position.x = 1.18 - sp * 0.22;
     }
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, 4.15 - sp * 0.45, 0.06);
   });
 
   return (
     <group ref={rootRef} position={[0, -0.08, 0]}>
-      {/* Sculpted Anatomical Heart */}
       <group ref={heartRef} position={[-0.35, 0.0, 0]}>
-        {/* Left & Right Ventricular Mass */}
         <mesh position={[0.04, -0.22, 0.02]} rotation={[0.15, 0, -0.24]} scale={[0.92, 1.28, 0.85]}>
           <sphereGeometry args={[0.56, 32, 32]} />
           <meshPhysicalMaterial
@@ -209,23 +216,19 @@ function AnatomicalHeartAndDnaMesh() {
             clearcoatRoughness={0.22}
           />
         </mesh>
-        {/* Right Ventricle bulge */}
         <mesh position={[-0.24, -0.14, 0.12]} rotation={[0.1, 0.2, 0.18]} scale={[0.76, 1.05, 0.72]}>
           <sphereGeometry args={[0.45, 28, 28]} />
           <meshPhysicalMaterial color="#be123c" roughness={0.36} clearcoat={0.45} />
         </mesh>
-        {/* Left Atrium */}
         <mesh position={[0.3, 0.28, -0.05]} scale={[0.9, 0.85, 0.8]}>
           <sphereGeometry args={[0.28, 24, 24]} />
           <meshPhysicalMaterial color="#f43f5e" roughness={0.35} clearcoat={0.4} />
         </mesh>
-        {/* Right Atrium */}
         <mesh position={[-0.38, 0.24, 0.05]} scale={[0.88, 0.9, 0.8]}>
           <sphereGeometry args={[0.27, 24, 24]} />
           <meshPhysicalMaterial color="#9f1239" roughness={0.38} clearcoat={0.35} />
         </mesh>
 
-        {/* Major Great Vessels */}
         <mesh geometry={aortaGeo}>
           <meshPhysicalMaterial color="#e11d48" roughness={0.3} clearcoat={0.5} />
         </mesh>
@@ -236,7 +239,6 @@ function AnatomicalHeartAndDnaMesh() {
           <meshPhysicalMaterial color="#1d4ed8" roughness={0.35} clearcoat={0.4} />
         </mesh>
 
-        {/* Surface Coronary Arteries */}
         <mesh geometry={coronaryLeftGeo}>
           <meshStandardMaterial color="#fda4af" emissive="#be123c" emissiveIntensity={0.25} roughness={0.3} />
         </mesh>
@@ -245,7 +247,6 @@ function AnatomicalHeartAndDnaMesh() {
         </mesh>
       </group>
 
-      {/* Flanking Medical DNA Helix */}
       <group ref={dnaRef} position={[1.18, 0.05, -0.15]} rotation={[0, 0, -0.12]}>
         <mesh geometry={dnaStrandA}>
           <meshStandardMaterial color="#0284c7" roughness={0.28} metalness={0.15} />
@@ -264,11 +265,17 @@ function AnatomicalHeartAndDnaMesh() {
   );
 }
 
-export function HeroMedicalHeartAndDna3D({ heightClass = "h-[380px]" }: { heightClass?: string }) {
+export function HeroMedicalHeartAndDna3D({
+  heightClass = "h-[380px]",
+  scrollProgressRef,
+}: {
+  heightClass?: string;
+  scrollProgressRef?: ScrollRef;
+}) {
   return (
     <MedicalViewportShell
       label="3D Biomedical Anatomy"
-      sublabel="Cardiac Vascular System & Genomic Helix"
+      sublabel="Scroll-Interactive Cardiac & Genomic Model"
       heightClass={heightClass}
       fallbackText="Interactive 3D Cardiac & Genomic Anatomy visualization requires WebGL."
     >
@@ -282,7 +289,7 @@ export function HeroMedicalHeartAndDna3D({ heightClass = "h-[380px]" }: { height
           <ambientLight intensity={0.85} />
           <directionalLight position={[4, 6, 5]} intensity={1.35} color="#ffffff" />
           <pointLight position={[-4, -2, 3]} intensity={0.8} color="#66a9ec" />
-          <AnatomicalHeartAndDnaMesh />
+          <AnatomicalHeartAndDnaMesh scrollProgressRef={scrollProgressRef} />
           <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.65} enableDamping />
         </Canvas>
       )}
@@ -290,10 +297,13 @@ export function HeroMedicalHeartAndDna3D({ heightClass = "h-[380px]" }: { height
   );
 }
 
-/* 2. SECTION 2 MODEL: Medical Record Archive Tablet + Stethoscope Cross + Live ECG Waveform */
-function MedicalVaultRecordMesh() {
+/* 2. SECTION 2 MODEL: Scroll-Fanning Medical Record Layers + ECG Waveform */
+function MedicalVaultRecordMesh({ scrollProgressRef }: { scrollProgressRef?: ScrollRef }) {
   const grpRef = useRef<THREE.Group>(null);
+  const backSheetRef = useRef<THREE.Mesh>(null);
+  const midSheetRef = useRef<THREE.Mesh>(null);
   const pulseDotRef = useRef<THREE.Mesh>(null);
+  const smoothedScroll = useRef(0);
 
   const ecgCurve = useMemo(
     () =>
@@ -318,32 +328,47 @@ function MedicalVaultRecordMesh() {
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
+    const targetSp = scrollProgressRef?.current ?? 0.5;
+    smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, targetSp, 0.08);
+    const sp = smoothedScroll.current;
+    // Fan out layers maximally as section sits centered in viewport (sp ~ 0.5)
+    const fan = Math.sin(sp * Math.PI);
+
     if (grpRef.current) {
-      grpRef.current.rotation.y = Math.sin(t * 0.4) * 0.25;
-      grpRef.current.position.y = Math.sin(t * 0.9) * 0.05;
+      grpRef.current.rotation.y = (sp - 0.5) * 0.9 + Math.sin(t * 0.4) * 0.12;
+      grpRef.current.position.y = Math.sin(t * 0.9) * 0.04;
+    }
+    if (backSheetRef.current) {
+      backSheetRef.current.position.set(-0.14 - fan * 0.42, 0.06 + fan * 0.12, -0.18 - fan * 0.25);
+      backSheetRef.current.rotation.z = 0.05 + fan * 0.14;
+    }
+    if (midSheetRef.current) {
+      midSheetRef.current.position.set(0.08 + fan * 0.36, -0.04 - fan * 0.08, -0.12);
+      midSheetRef.current.rotation.z = -0.03 - fan * 0.12;
     }
     if (pulseDotRef.current) {
-      pulseDotRef.current.position.copy(ecgCurve.getPointAt((t * 0.45) % 1));
+      pulseDotRef.current.position.copy(ecgCurve.getPointAt((t * (0.4 + fan * 0.2)) % 1));
     }
   });
 
   return (
     <group ref={grpRef}>
-      {/* Layered Clinical Record Sheets */}
-      <mesh position={[-0.14, 0.06, -0.18]} rotation={[0, 0.08, 0.05]}>
+      <mesh ref={backSheetRef} position={[-0.14, 0.06, -0.18]} rotation={[0, 0.08, 0.05]}>
         <boxGeometry args={[1.55, 1.95, 0.05]} />
         <meshStandardMaterial color="#b7d4f2" roughness={0.4} />
+      </mesh>
+      <mesh ref={midSheetRef} position={[0.08, -0.04, -0.12]} rotation={[0, -0.05, -0.03]}>
+        <boxGeometry args={[1.55, 1.95, 0.05]} />
+        <meshStandardMaterial color="#93c5fd" roughness={0.35} />
       </mesh>
       <mesh position={[0.02, 0, 0]}>
         <boxGeometry args={[1.65, 2.05, 0.07]} />
         <meshPhysicalMaterial color="#f9fafb" roughness={0.22} clearcoat={0.45} />
       </mesh>
-      {/* Top Medical Clipboard / Vault Header Bar */}
       <mesh position={[0.02, 0.88, 0.05]}>
         <boxGeometry args={[0.92, 0.22, 0.09]} />
         <meshStandardMaterial color="#323a4d" metalness={0.35} roughness={0.35} />
       </mesh>
-      {/* Medical Cross Emblem */}
       <group position={[-0.5, 0.56, 0.07]}>
         <mesh>
           <boxGeometry args={[0.24, 0.08, 0.03]} />
@@ -354,7 +379,6 @@ function MedicalVaultRecordMesh() {
           <meshStandardMaterial color="#e11d48" />
         </mesh>
       </group>
-      {/* ECG Telemetry Waveform */}
       <mesh geometry={ecgGeo}>
         <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.35} />
       </mesh>
@@ -362,7 +386,6 @@ function MedicalVaultRecordMesh() {
         <sphereGeometry args={[0.045, 12, 12]} />
         <meshBasicMaterial color="#e11d48" />
       </mesh>
-      {/* Record Line Placeholders representing verified structured fields */}
       {[-0.45, -0.64, -0.83].map((yPos, i) => (
         <mesh key={i} position={[0.02, yPos, 0.05]}>
           <boxGeometry args={[1.15 - i * 0.18, 0.06, 0.02]} />
@@ -373,11 +396,17 @@ function MedicalVaultRecordMesh() {
   );
 }
 
-export function MedicalVaultRecords3D({ heightClass = "h-[340px]" }: { heightClass?: string }) {
+export function MedicalVaultRecords3D({
+  heightClass = "h-[340px]",
+  scrollProgressRef,
+}: {
+  heightClass?: string;
+  scrollProgressRef?: ScrollRef;
+}) {
   return (
     <MedicalViewportShell
       label="3D Medical Vault"
-      sublabel="Structured Records, ECG Vitals & Chronology"
+      sublabel="Chronological Record Layers Fan With Scroll"
       heightClass={heightClass}
       fallbackText="3D Medical Record Vault preview requires WebGL."
     >
@@ -385,12 +414,12 @@ export function MedicalVaultRecords3D({ heightClass = "h-[340px]" }: { heightCla
         <Canvas
           dpr={dpr}
           frameloop={visible && !reducedMotion ? "always" : "demand"}
-          camera={{ position: [0.3, 0.15, 3.6], fov: 42 }}
+          camera={{ position: [0.3, 0.15, 3.65], fov: 42 }}
           gl={{ antialias: !lowPower, alpha: true }}
         >
           <ambientLight intensity={0.95} />
           <directionalLight position={[4, 5, 4]} intensity={1.25} color="#ffffff" />
-          <MedicalVaultRecordMesh />
+          <MedicalVaultRecordMesh scrollProgressRef={scrollProgressRef} />
           <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.65} enableDamping />
         </Canvas>
       )}
@@ -398,11 +427,14 @@ export function MedicalVaultRecords3D({ heightClass = "h-[340px]" }: { heightCla
   );
 }
 
-/* 3. SECTION 3 MODEL: Pharmaceutical Capsule & Active Bio-Molecule */
-function MedicalCapsuleAndMoleculeMesh() {
+/* 3. SECTION 3 MODEL: Scroll-Separating Pharmaceutical Capsule & Molecular Lattice */
+function MedicalCapsuleAndMoleculeMesh({ scrollProgressRef }: { scrollProgressRef?: ScrollRef }) {
   const grpRef = useRef<THREE.Group>(null);
+  const capTopRef = useRef<THREE.Mesh>(null);
+  const capBotRef = useRef<THREE.Mesh>(null);
   const capRef = useRef<THREE.Group>(null);
   const molRef = useRef<THREE.Group>(null);
+  const smoothedScroll = useRef(0);
 
   const atoms = useMemo(
     () => [
@@ -428,36 +460,44 @@ function MedicalCapsuleAndMoleculeMesh() {
 
   useFrame(({ clock, pointer }) => {
     const t = clock.getElapsedTime();
+    const targetSp = scrollProgressRef?.current ?? 0.5;
+    smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, targetSp, 0.08);
+    const sp = smoothedScroll.current;
+    const expand = Math.sin(sp * Math.PI) * 0.18;
+
     if (grpRef.current) {
-      grpRef.current.rotation.y = pointer.x * 0.28;
-      grpRef.current.rotation.x = pointer.y * 0.18;
+      grpRef.current.rotation.y = (sp - 0.5) * 0.75 + pointer.x * 0.25;
+      grpRef.current.rotation.x = pointer.y * 0.16;
     }
     if (capRef.current) {
-      capRef.current.rotation.z = 0.55 + Math.sin(t * 0.7) * 0.12;
-      capRef.current.rotation.y = t * 0.45;
-      capRef.current.position.y = Math.sin(t * 1.1) * 0.08;
+      capRef.current.rotation.z = 0.55 + sp * 0.45;
+      capRef.current.rotation.y = t * 0.45 + sp * Math.PI;
+      capRef.current.position.y = Math.sin(t * 1.1) * 0.07;
+    }
+    if (capTopRef.current && capBotRef.current) {
+      capTopRef.current.position.y = 0.28 + expand;
+      capBotRef.current.position.y = -0.28 - expand;
     }
     if (molRef.current) {
-      molRef.current.rotation.y = -t * 0.35;
-      molRef.current.rotation.x = Math.cos(t * 0.5) * 0.2;
+      molRef.current.rotation.y = -t * 0.35 - sp * Math.PI * 1.4;
+      molRef.current.rotation.x = Math.cos(t * 0.5) * 0.18 + sp * 0.35;
+      molRef.current.scale.setScalar(1.0 + expand * 0.45);
     }
   });
 
   return (
     <group ref={grpRef}>
-      {/* Two-Tone Medical Capsule */}
       <group ref={capRef} position={[-0.72, 0.05, 0.15]}>
-        <mesh position={[0, 0.28, 0]}>
+        <mesh ref={capTopRef} position={[0, 0.28, 0]}>
           <capsuleGeometry args={[0.28, 0.45, 16, 24]} />
           <meshPhysicalMaterial color="#0284c7" roughness={0.18} clearcoat={0.85} />
         </mesh>
-        <mesh position={[0, -0.28, 0]}>
+        <mesh ref={capBotRef} position={[0, -0.28, 0]}>
           <capsuleGeometry args={[0.275, 0.45, 16, 24]} />
           <meshPhysicalMaterial color="#f9fafb" roughness={0.18} clearcoat={0.85} />
         </mesh>
       </group>
 
-      {/* Active Pharmaceutical Molecular Structure */}
       <group ref={molRef} position={[0.68, 0, -0.1]}>
         {atoms.map((a, idx) => (
           <mesh key={idx} position={a.pos}>
@@ -475,11 +515,17 @@ function MedicalCapsuleAndMoleculeMesh() {
   );
 }
 
-export function MedicalPharmacology3D({ heightClass = "h-[340px]" }: { heightClass?: string }) {
+export function MedicalPharmacology3D({
+  heightClass = "h-[340px]",
+  scrollProgressRef,
+}: {
+  heightClass?: string;
+  scrollProgressRef?: ScrollRef;
+}) {
   return (
     <MedicalViewportShell
       label="3D Clinical Pharmacology"
-      sublabel="Medication Capsule & Molecular Structure"
+      sublabel="Scroll-Interactive Capsule & Molecular Lattice"
       heightClass={heightClass}
       fallbackText="3D Pharmacology & Molecular structure preview requires WebGL."
     >
@@ -493,7 +539,7 @@ export function MedicalPharmacology3D({ heightClass = "h-[340px]" }: { heightCla
           <ambientLight intensity={0.95} />
           <directionalLight position={[4, 6, 5]} intensity={1.3} color="#ffffff" />
           <pointLight position={[-3, -2, 3]} intensity={0.7} color="#66a9ec" />
-          <MedicalCapsuleAndMoleculeMesh />
+          <MedicalCapsuleAndMoleculeMesh scrollProgressRef={scrollProgressRef} />
           <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.65} enableDamping />
         </Canvas>
       )}
@@ -501,10 +547,11 @@ export function MedicalPharmacology3D({ heightClass = "h-[340px]" }: { heightCla
   );
 }
 
-/* 4. SECTION 6 MODEL: Medical Security Cross & Protective Shield */
-function MedicalShieldMesh() {
+/* 4. SECTION 6 MODEL: Scroll-Engaging Medical Security Cross & Protective Shield */
+function MedicalShieldMesh({ scrollProgressRef }: { scrollProgressRef?: ScrollRef }) {
   const ref = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  const smoothedScroll = useRef(0);
 
   const shieldShape = useMemo(() => {
     const s = new THREE.Shape();
@@ -526,11 +573,17 @@ function MedicalShieldMesh() {
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
+    const targetSp = scrollProgressRef?.current ?? 0.5;
+    smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, targetSp, 0.08);
+    const sp = smoothedScroll.current;
+
     if (ref.current) {
-      ref.current.rotation.y = Math.sin(t * 0.45) * 0.35;
+      ref.current.rotation.y = (sp - 0.5) * 1.1 + Math.sin(t * 0.45) * 0.18;
+      ref.current.scale.setScalar(0.95 + Math.sin(sp * Math.PI) * 0.1);
     }
     if (ringRef.current) {
-      ringRef.current.rotation.z = t * 0.3;
+      ringRef.current.rotation.z = t * 0.3 + sp * Math.PI * 1.5;
+      ringRef.current.rotation.x = Math.PI / 2.2 - Math.sin(sp * Math.PI) * 0.35;
     }
   });
 
@@ -546,7 +599,6 @@ function MedicalShieldMesh() {
           opacity={0.78}
         />
       </mesh>
-      {/* 3D Medical Cross anchored on the Shield */}
       <mesh position={[0, 0.08, 0.16]}>
         <boxGeometry args={[0.62, 0.2, 0.08]} />
         <meshStandardMaterial color="#323a4d" roughness={0.25} />
@@ -563,11 +615,17 @@ function MedicalShieldMesh() {
   );
 }
 
-export function MedicalSecurityShield3D({ heightClass = "h-[320px]" }: { heightClass?: string }) {
+export function MedicalSecurityShield3D({
+  heightClass = "h-[320px]",
+  scrollProgressRef,
+}: {
+  heightClass?: string;
+  scrollProgressRef?: ScrollRef;
+}) {
   return (
     <MedicalViewportShell
       label="3D Privacy & Access Shield"
-      sublabel="Patient-Controlled Encrypted Record Vault"
+      sublabel="Scroll-Responsive Encrypted Vault Emblem"
       heightClass={heightClass}
       fallbackText="3D Medical Privacy Shield preview requires WebGL."
     >
@@ -580,7 +638,7 @@ export function MedicalSecurityShield3D({ heightClass = "h-[320px]" }: { heightC
         >
           <ambientLight intensity={0.95} />
           <directionalLight position={[4, 5, 5]} intensity={1.3} color="#ffffff" />
-          <MedicalShieldMesh />
+          <MedicalShieldMesh scrollProgressRef={scrollProgressRef} />
           <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.65} enableDamping />
         </Canvas>
       )}

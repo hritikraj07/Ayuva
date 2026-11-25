@@ -32,6 +32,7 @@ function GlobeMesh({
   hoveredId,
   setHoveredId,
   simulationActive,
+  scrollProgressRef,
 }: {
   nodes: GlobeRegionNode[];
   selectedRegionId: number | null;
@@ -39,8 +40,10 @@ function GlobeMesh({
   hoveredId: number | null;
   setHoveredId: (id: number | null) => void;
   simulationActive?: boolean;
+  scrollProgressRef?: React.MutableRefObject<number>;
 }) {
   const globeRef = useRef<THREE.Group>(null);
+  const lastScroll = useRef(0);
   const radius = 1.65;
 
   const points = useMemo(
@@ -76,7 +79,11 @@ function GlobeMesh({
 
   useFrame((_, delta) => {
     if (globeRef.current && hoveredId === null) {
-      globeRef.current.rotation.y += delta * (simulationActive ? 0.18 : 0.08);
+      const targetSp = scrollProgressRef?.current ?? 0;
+      const scrollDelta = targetSp - lastScroll.current;
+      lastScroll.current = THREE.MathUtils.lerp(lastScroll.current, targetSp, 0.1);
+      globeRef.current.rotation.y += delta * (simulationActive ? 0.18 : 0.08) + scrollDelta * 1.4;
+      globeRef.current.rotation.x = 0.35 + (lastScroll.current - 0.5) * 0.2;
     }
   });
 
@@ -145,12 +152,14 @@ export function OutbreakGlobe3D({
   onSelectRegion,
   heightClass = "h-[360px]",
   simulationActive = false,
+  scrollProgressRef,
 }: {
   regions: GlobeRegionNode[];
   selectedRegionId: number | null;
   onSelectRegion?: (id: number) => void;
   heightClass?: string;
   simulationActive?: boolean;
+  scrollProgressRef?: React.MutableRefObject<number>;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const caps = useSceneCapabilities();
@@ -195,6 +204,7 @@ export function OutbreakGlobe3D({
             hoveredId={hoveredId}
             setHoveredId={setHoveredId}
             simulationActive={simulationActive}
+            scrollProgressRef={scrollProgressRef}
           />
           <OrbitControls enableZoom={false} enablePan={false} rotateSpeed={0.6} enableDamping />
         </Canvas>
