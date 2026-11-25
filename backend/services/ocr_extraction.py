@@ -29,9 +29,14 @@ _RAPID_OCR_INSTANCE = None
 def _get_ocr_engine():
     global _RAPID_OCR_INSTANCE
     if _RAPID_OCR_INSTANCE is None:
-        from rapidocr_onnxruntime import RapidOCR
-
-        _RAPID_OCR_INSTANCE = RapidOCR()
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            _RAPID_OCR_INSTANCE = RapidOCR()
+        except ImportError:
+            raise RuntimeError(
+                "RapidOCR is not installed in this environment. "
+                "OCR on scanned images/PDFs requires the full backend requirements."
+            )
     return _RAPID_OCR_INSTANCE
 
 

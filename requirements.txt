@@ -1,0 +1,22 @@
+# Vercel Python serverless requirements – only packages needed at runtime on Vercel.
+# Heavy local-only ML/OCR wheels (opencv, rapidocr, scikit-learn, scipy, numpy, pandas)
+# are excluded because:
+#   1. They are only used in outbreak_ml.py and ocr_extraction.py which lazy-import them.
+#   2. Including them would push the function bundle past Vercel's compressed limit.
+#   3. Those features gracefully fall back when the packages are unavailable.
+fastapi>=0.115.0
+uvicorn>=0.32.0
+SQLAlchemy>=2.0.35
+pydantic>=2.9.0
+email-validator>=2.2.0
+PyJWT>=2.9.0
+bcrypt>=4.2.0
+python-multipart>=0.0.12
+python-dotenv>=1.0.1
+pypdf>=5.0.0
+pillow>=10.4.0
+reportlab>=4.2.0
+qrcode>=8.0
+httpx>=0.27.0
+google-genai>=1.0.0
+psycopg2-binary>=2.9.9

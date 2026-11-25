@@ -2,10 +2,18 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score
+try:
+    import numpy as np
+    import pandas as pd
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import accuracy_score, roc_auc_score
+    _ML_AVAILABLE = True
+except ImportError:
+    np = None  # type: ignore[assignment]
+    pd = None  # type: ignore[assignment]
+    RandomForestClassifier = None  # type: ignore[assignment,misc]
+    accuracy_score = roc_auc_score = None  # type: ignore[assignment]
+    _ML_AVAILABLE = False
 from sqlalchemy.orm import Session
 
 from backend.models import (
@@ -91,6 +99,14 @@ def list_monitored_diseases(db: Session) -> List[str]:
 
 def train_and_forecast_disease(db: Session, disease: str) -> Dict[str, Any]:
     """Train a RandomForestClassifier strictly on verified NCDC/IDSP + Open-Meteo records with honest insufficient-data guards."""
+    if not _ML_AVAILABLE:
+        return {
+            "disease": disease.strip(),
+            "status": "unavailable",
+            "reason": "ML dependencies (numpy/pandas/scikit-learn) are not installed in this environment. Deploy the backend with the full requirements to enable outbreak ML forecasting.",
+            "predictions": [],
+            "metrics": {"status": "unavailable"},
+        }
     disease_clean = disease.strip()
     regions = {r.id: r for r in db.query(Region).all()}
     reports = (
