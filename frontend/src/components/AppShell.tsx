@@ -169,9 +169,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const renderNavGroups = (isCompact: boolean, scope: "desktop" | "mobile") => (
     <LayoutGroup id={`ayuva-sidebar-${scope}`}>
-      <nav aria-label="Workspace navigation" className="flex flex-1 flex-col gap-5 px-3 py-4 overflow-y-auto">
+      <nav aria-label="Workspace navigation" className="flex flex-col gap-3 px-3 py-3">
         {groups.map((grp) => (
-          <div key={grp.heading} className="flex flex-col gap-1">
+          <div key={grp.heading} className="flex flex-col gap-0.5">
             {!isCompact && (
               <div className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {grp.heading}
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   aria-label={item.label}
                   className={({ isActive }) =>
                     cn(
-                      "group relative flex min-h-[44px] items-center rounded-full px-3.5 py-2 text-sm transition-colors duration-200",
+                      "group relative flex min-h-[40px] items-center rounded-full px-3.5 py-1.5 text-sm transition-colors duration-200",
                       isActive ? "font-semibold text-white" : "text-[#475569] hover:text-[#111827]",
                       isCompact && "justify-center px-0"
                     )
@@ -231,14 +231,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh bg-[#EEF1F5] text-[#111827]">
-      {/* Desktop Sidebar */}
+      {/* Desktop Fixed Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-[#E5E9F0] bg-white transition-all duration-150 shrink-0",
+          "hidden lg:flex lg:sticky lg:top-0 lg:h-dvh flex-col border-r border-[#E5E9F0] bg-white transition-all duration-150 shrink-0",
           collapsed ? "w-[74px]" : "w-[268px]"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-[#E5E9F0] px-4">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#E5E9F0] px-4">
           {!collapsed ? (
             <Link to="/" aria-label="Ayuva Home">
               <BrandMark />
@@ -274,28 +274,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {renderNavGroups(collapsed, "desktop")}
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          {renderNavGroups(collapsed, "desktop")}
 
-        <div className="border-t border-border p-3">
-          {!collapsed && (
-            <div className="mb-3 flex flex-col gap-1 rounded-md bg-muted/60 px-3 py-2">
-              <div className="truncate text-xs font-semibold text-foreground">{user.full_name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{user.email}</div>
-              <Badge variant="teal" className="mt-1 w-fit">
-                {ROLE_LABELS[user.role]}
-              </Badge>
-            </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            aria-label="Sign out"
-            className={cn("w-full", collapsed && "px-0")}
-          >
-            <LogOut className="size-4 shrink-0" aria-hidden="true" />
-            {!collapsed && <span>Sign Out</span>}
-          </Button>
+          <div className="border-t border-border p-3">
+            {!collapsed && (
+              <div className="mb-2.5 flex flex-col gap-1 rounded-md bg-muted/60 px-3 py-2">
+                <div className="truncate text-xs font-semibold text-foreground">{user.full_name}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{user.email}</div>
+                <Badge variant="teal" className="mt-1 w-fit">
+                  {ROLE_LABELS[user.role]}
+                </Badge>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              aria-label="Sign out"
+              className={cn("w-full", collapsed && "px-0")}
+            >
+              <LogOut className="size-4 shrink-0" aria-hidden="true" />
+              {!collapsed && <span>Sign Out</span>}
+            </Button>
+          </div>
         </div>
       </aside>
 
