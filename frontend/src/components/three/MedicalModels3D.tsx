@@ -28,9 +28,9 @@ function applyGroupFade(group: THREE.Group, weight: number) {
 }
 
 /* ============================================================================
- * 1. HERO MODEL: MEDICAL-ATLAS HALF-BODY RESPIRATORY & THORACIC ANATOMY
+ * 1. HERO MODEL: STUDIO GLOSSY ANATOMICAL HEART & CORONARY VASCULATURE
  * ============================================================================ */
-function createLungTissueTextures(): { colorMap: THREE.CanvasTexture; bumpMap: THREE.CanvasTexture } {
+function createMyocardiumTextures(): { colorMap: THREE.CanvasTexture; bumpMap: THREE.CanvasTexture } {
   const size = 256;
   const colCanvas = document.createElement("canvas");
   colCanvas.width = size;
@@ -43,60 +43,59 @@ function createLungTissueTextures(): { colorMap: THREE.CanvasTexture; bumpMap: T
   const bCtx = bumpCanvas.getContext("2d");
 
   if (cCtx && bCtx) {
-    // Rich warm rosy-terracotta pleura base
-    cCtx.fillStyle = "#b55d4f";
+    // Rich studio coral-crimson myocardium base
+    const baseGrad = cCtx.createLinearGradient(0, 0, size, size);
+    baseGrad.addColorStop(0, "#f24854");
+    baseGrad.addColorStop(0.55, "#e02438");
+    baseGrad.addColorStop(1, "#c41628");
+    cCtx.fillStyle = baseGrad;
     cCtx.fillRect(0, 0, size, size);
+
     bCtx.fillStyle = "#888888";
     bCtx.fillRect(0, 0, size, size);
 
-    // Deterministic pulmonary secondary lobules + mottled organic depth
-    for (let i = 0; i < 240; i++) {
-      const s1 = Math.sin(i * 12.9898) * 43758.5453;
-      const s2 = Math.sin(i * 78.233) * 24634.6345;
-      const s3 = Math.sin(i * 41.123) * 19283.4123;
+    // Soft organic epicardial warmth & velvet mottling
+    for (let i = 0; i < 160; i++) {
+      const s1 = Math.sin(i * 17.31) * 43758.5453;
+      const s2 = Math.sin(i * 63.89) * 24634.6345;
+      const s3 = Math.sin(i * 39.47) * 19283.4123;
       const x = (s1 - Math.floor(s1)) * size;
       const y = (s2 - Math.floor(s2)) * size;
-      const r = 6 + (s3 - Math.floor(s3)) * 16;
+      const r = 10 + (s3 - Math.floor(s3)) * 22;
 
       const grad = cCtx.createRadialGradient(x, y, 1, x, y, r);
-      const isHighlight = i % 3 === 0;
-      grad.addColorStop(0, isHighlight ? "rgba(218, 134, 118, 0.55)" : "rgba(128, 52, 46, 0.5)");
-      grad.addColorStop(0.75, "rgba(165, 76, 66, 0.28)");
-      grad.addColorStop(1, "rgba(104, 40, 38, 0.0)");
+      const warm = i % 2 === 0;
+      grad.addColorStop(0, warm ? "rgba(255, 130, 140, 0.22)" : "rgba(155, 18, 32, 0.18)");
+      grad.addColorStop(1, "rgba(220, 38, 56, 0)");
       cCtx.fillStyle = grad;
       cCtx.beginPath();
       cCtx.arc(x, y, r, 0, Math.PI * 2);
       cCtx.fill();
 
       const bGrad = bCtx.createRadialGradient(x, y, 1, x, y, r);
-      bGrad.addColorStop(0, "rgba(225, 225, 225, 0.55)");
-      bGrad.addColorStop(0.8, "rgba(130, 130, 130, 0.3)");
-      bGrad.addColorStop(1, "rgba(55, 55, 55, 0.0)");
+      bGrad.addColorStop(0, warm ? "rgba(210, 210, 210, 0.25)" : "rgba(70, 70, 70, 0.25)");
+      bGrad.addColorStop(1, "rgba(136, 136, 136, 0)");
       bCtx.fillStyle = bGrad;
       bCtx.beginPath();
       bCtx.arc(x, y, r, 0, Math.PI * 2);
       bCtx.fill();
     }
 
-    // Subtle delicate capillary septa lines
-    cCtx.strokeStyle = "rgba(88, 34, 34, 0.28)";
-    cCtx.lineWidth = 1.1;
-    bCtx.strokeStyle = "rgba(45, 45, 45, 0.45)";
-    bCtx.lineWidth = 1.3;
-    for (let k = 0; k < 64; k++) {
-      const a = (k * 2.3999) % (Math.PI * 2);
-      const sx = ((Math.sin(k * 9.1) * 0.5 + 0.5) * size);
-      const sy = ((Math.cos(k * 7.3) * 0.5 + 0.5) * size);
-      const ex = sx + Math.cos(a) * 28;
-      const ey = sy + Math.sin(a) * 28;
+    // Subtle helical myocardial fiber striations + microvascular blush
+    cCtx.strokeStyle = "rgba(140, 16, 30, 0.14)";
+    cCtx.lineWidth = 1.0;
+    bCtx.strokeStyle = "rgba(65, 65, 65, 0.28)";
+    bCtx.lineWidth = 1.1;
+    for (let k = 0; k < 56; k++) {
+      const y0 = (k / 56) * size;
       cCtx.beginPath();
-      cCtx.moveTo(sx, sy);
-      cCtx.lineTo(ex, ey);
+      cCtx.moveTo(0, y0);
+      cCtx.bezierCurveTo(size * 0.35, y0 + 18, size * 0.65, y0 - 12, size, y0 + 24);
       cCtx.stroke();
 
       bCtx.beginPath();
-      bCtx.moveTo(sx, sy);
-      bCtx.lineTo(ex, ey);
+      bCtx.moveTo(0, y0);
+      bCtx.bezierCurveTo(size * 0.35, y0 + 18, size * 0.65, y0 - 12, size, y0 + 24);
       bCtx.stroke();
     }
   }
@@ -113,310 +112,62 @@ function createLungTissueTextures(): { colorMap: THREE.CanvasTexture; bumpMap: T
   return { colorMap, bumpMap };
 }
 
-function buildSculptedLungGeometry(side: -1 | 1): THREE.BufferGeometry {
-  const uSteps = 46;
-  const vSteps = 54;
+function buildSculptedVentriclesGeometry(): THREE.BufferGeometry {
+  // Anatomical biventricular heart cone: broader rounded base curving gracefully to an oblique right-inferior apex
+  const uSteps = 56;
+  const vSteps = 64;
   const positions: number[] = [];
   const uvs: number[] = [];
   const indices: number[] = [];
 
   for (let i = 0; i <= uSteps; i++) {
-    const u = (i / uSteps) * Math.PI;
-    const sinU = Math.sin(u);
-    const ny = Math.cos(u);
-    const radialScale = Math.pow(Math.max(sinU, 0.0001), 0.72) * (0.78 + (1 - ny) * 0.22);
-
-    for (let j = 0; j <= vSteps; j++) {
-      const v = (j / vSteps) * Math.PI * 2;
-      const cosV = Math.cos(v);
-      const sinV = Math.sin(v);
-
-      let rx = 0.45 * radialScale;
-      let rz = 0.42 * radialScale;
-
-      const medialness = Math.max(0, -side * cosV);
-      rx *= 1 - medialness * 0.48;
-
-      if (side === 1 && ny < 0.18 && cosV < 0.05 && sinV > -0.25) {
-        const notchFactor =
-          Math.max(0, (0.18 - ny) / 1.18) *
-          Math.max(0, (-cosV + 0.05) / 1.05) *
-          Math.max(0, (sinV + 0.25) / 1.25);
-        rx *= 1 - notchFactor * 0.56;
-        rz *= 1 - notchFactor * 0.24;
-      }
-
-      const obliqueDist = Math.abs(ny - 0.28 * sinV + 0.06);
-      const horizontalDist = side === -1 ? Math.abs(ny - 0.24) : 1.0;
-      const crease =
-        (obliqueDist < 0.08 ? (1 - obliqueDist / 0.08) * 0.058 : 0) +
-        (horizontalDist < 0.06 && sinV > -0.2 ? (1 - horizontalDist / 0.06) * 0.048 : 0);
-
-      // Subtle organic lobular surface undulation
-      const micro = Math.sin(ny * 18 + cosV * 9) * Math.cos(sinV * 11) * 0.009;
-
-      let x = cosV * rx * (1 - crease + micro);
-      let z = sinV * rz * (1 - crease + micro);
-      let y = ny * 0.68;
-
-      if (ny < -0.45) {
-        const baseArch = (Math.abs(ny) - 0.45) / 0.55;
-        y += baseArch * 0.22 * (1 - sinU * 0.35);
-        y -= sinV * 0.065 * baseArch;
-      }
-
-      x -= side * Math.max(0, ny) * 0.13;
-      positions.push(x, y, z);
-      uvs.push((j / vSteps) * 1.4, (i / uSteps) * 1.4);
-    }
-  }
-
-  for (let i = 0; i < uSteps; i++) {
-    for (let j = 0; j < vSteps; j++) {
-      const a = i * (vSteps + 1) + j;
-      const b = a + vSteps + 1;
-      indices.push(a, b, a + 1, b, b + 1, a + 1);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
-  return geo;
-}
-
-function buildSculptedHumanBustGeometry(): THREE.BufferGeometry {
-  // Smooth studio mannequin bust (closed rounded waist base -> chest/shoulders -> neck -> sculpted head/face -> closed crown)
-  const ySteps = 96;
-  const rSteps = 72;
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const indices: number[] = [];
-
-  for (let i = 0; i <= ySteps; i++) {
-    const tAll = i / ySteps;
-    const y = THREE.MathUtils.lerp(-0.88, 2.04, tAll);
-
-    // Base profile rx, rz, zShift across torso, shoulders, neck, and head
-    let rx = 0.62;
-    let rz = 0.36;
-    let zShift = 0.0;
-
-    if (y < -0.58) {
-      // Smooth rounded sculptural bust base closure (clean rounded waist cut)
-      const bt = THREE.MathUtils.clamp((y + 0.88) / 0.3, 0, 1);
-      const ease = Math.sin(bt * Math.PI * 0.5);
-      rx = Math.max(0.003, ease * 0.68);
-      rz = Math.max(0.003, ease * 0.38);
-      zShift = -0.02;
-    } else if (y < 0.42) {
-      // Ribcage -> chest -> broad shoulders
-      const tt = (y + 0.58) / 1.0;
-      const smooth = tt * tt * (3 - 2 * tt);
-      rx = THREE.MathUtils.lerp(0.68, 0.94, smooth) + Math.sin(tt * Math.PI) * 0.025;
-      rz = THREE.MathUtils.lerp(0.38, 0.43, Math.sin(tt * Math.PI * 0.78));
-      zShift = -0.02;
-    } else if (y < 0.82) {
-      // Natural trapezius slope from shoulders into neck
-      const tt = (y - 0.42) / 0.4;
-      const smooth = tt * tt * (3 - 2 * tt);
-      rx = THREE.MathUtils.lerp(0.94, 0.195, smooth);
-      rz = THREE.MathUtils.lerp(0.41, 0.195, smooth);
-      zShift = THREE.MathUtils.lerp(-0.02, -0.015, smooth);
-    } else if (y < 1.18) {
-      // Slender human neck
-      const tt = (y - 0.82) / 0.36;
-      rx = THREE.MathUtils.lerp(0.195, 0.175, tt);
-      rz = THREE.MathUtils.lerp(0.195, 0.185, tt);
-      zShift = -0.015;
-    } else {
-      // Human head: chin/jawline -> cheeks/temples -> smooth oval cranium dome -> closed crown
-      const ht = THREE.MathUtils.clamp((y - 1.18) / 0.86, 0, 1);
-      const crownCap = ht > 0.78 ? Math.cos(((ht - 0.78) / 0.22) * (Math.PI * 0.5)) : 1.0;
-      const headCurve = Math.sin(Math.min(1, ht / 0.86) * Math.PI * 0.74);
-      const jawFlare = Math.exp(-Math.pow((ht - 0.26) / 0.2, 2)) * 0.042;
-      rx = Math.max(0.002, (0.168 + headCurve * 0.088 + jawFlare) * crownCap);
-      rz = Math.max(0.002, (0.18 + headCurve * 0.125 + jawFlare * 0.7) * crownCap);
-      zShift = -0.015 + Math.sin(ht * Math.PI) * 0.025;
-    }
-
-    for (let j = 0; j <= rSteps; j++) {
-      const theta = (j / rSteps) * Math.PI * 2;
-      const cosT = Math.cos(theta); // +X/-X lateral
-      const sinT = Math.sin(theta); // +Z front, -Z back
-
-      let x = cosT * rx;
-      let z = sinT * rz + zShift;
-      let yOut = y;
-
-      // Subtle anterior chest pectoral contour & sternum valley
-      if (y > 0.05 && y < 0.52 && sinT > 0.1) {
-        const chestBand = Math.exp(-Math.pow((y - 0.3) / 0.18, 2));
-        const pecLobes = Math.exp(-Math.pow((Math.abs(x) - 0.32) / 0.22, 2));
-        const sternumDip = Math.exp(-Math.pow(x / 0.09, 2)) * 0.02;
-        z += chestBand * (pecLobes * 0.036 - sternumDip) * sinT;
-      }
-
-      // Sculpted human face relief on head anterior (y = 1.18..1.98, sinT > 0.1)
-      if (y > 1.18 && y < 1.98 && sinT > 0.08) {
-        const frontMask = THREE.MathUtils.smoothstep(sinT, 0.15, 0.92);
-
-        // Defined jawline + tapered chin under mouth (y ~ 1.24..1.38)
-        const chinMask =
-          Math.exp(-Math.pow((y - 1.28) / 0.055, 2)) *
-          Math.exp(-Math.pow(x / 0.095, 2)) *
-          THREE.MathUtils.smoothstep(sinT, 0.45, 0.96);
-        z += chinMask * 0.048;
-
-        // Brow ridge (y ~ 1.66)
-        const browMask =
-          Math.exp(-Math.pow((y - 1.665) / 0.032, 2)) *
-          Math.exp(-Math.pow(x / 0.14, 2)) *
-          THREE.MathUtils.smoothstep(sinT, 0.5, 0.95);
-        z += browMask * 0.028;
-
-        // Soft recessed human eye sockets (no hollow zombie cavities)
-        for (const side of [-1, 1]) {
-          const ex = (x - side * 0.072) / 0.042;
-          const ey = (y - 1.6) / 0.03;
-          const ed = Math.sqrt(ex * ex + ey * ey);
-          if (ed < 1.15 && sinT > 0.48) {
-            const depth = Math.pow(Math.max(0, 1 - ed / 1.15), 1.2) * 0.028;
-            z -= depth * frontMask;
-          }
-        }
-
-        // Sculpted human nose bridge + tip + alar wings (y = 1.47..1.65)
-        const noseVertical = THREE.MathUtils.smoothstep(y, 1.46, 1.52) * (1 - THREE.MathUtils.smoothstep(y, 1.62, 1.67));
-        const noseWidth = 0.022 + (1 - THREE.MathUtils.clamp((y - 1.48) / 0.16, 0, 1)) * 0.014;
-        const noseMask = Math.exp(-Math.pow(x / noseWidth, 2)) * noseVertical * THREE.MathUtils.smoothstep(sinT, 0.72, 0.98);
-        const noseTipBoost = Math.exp(-Math.pow((y - 1.505) / 0.028, 2));
-        z += noseMask * (0.042 + noseTipBoost * 0.032);
-
-        // Cheekbones
-        const cheekMask =
-          Math.exp(-Math.pow((Math.abs(x) - 0.125) / 0.045, 2)) *
-          Math.exp(-Math.pow((y - 1.52) / 0.055, 2)) *
-          frontMask;
-        z += cheekMask * 0.022;
-        x += Math.sign(x || 1) * cheekMask * 0.012;
-
-        // Upper & lower lips + subtle mouth line (y = 1.37..1.44)
-        const lipsMask =
-          Math.exp(-Math.pow((y - 1.4) / 0.028, 2)) *
-          Math.exp(-Math.pow(x / 0.058, 2)) *
-          THREE.MathUtils.smoothstep(sinT, 0.65, 0.97);
-        const mouthCrease = Math.exp(-Math.pow((y - 1.398) / 0.006, 2)) * 0.012;
-        z += lipsMask * 0.024 - mouthCrease * Math.exp(-Math.pow(x / 0.048, 2));
-
-        // Slight crown rounding
-        yOut = y;
-      }
-
-      positions.push(x, yOut, z);
-      uvs.push(j / rSteps, tAll);
-    }
-  }
-
-  for (let i = 0; i < ySteps; i++) {
-    for (let j = 0; j < rSteps; j++) {
-      const a = i * (rSteps + 1) + j;
-      const b = a + rSteps + 1;
-      indices.push(a, a + 1, b, b, a + 1, b + 1);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
-  return geo;
-}
-
-function buildSculptedArmGeometry(side: -1 | 1): THREE.BufferGeometry {
-  // Smooth tapering upper arm from rounded deltoid cap down to beveled mid-arm cuff (closed at both ends)
-  const ySteps = 32;
-  const rSteps = 28;
-  const positions: number[] = [];
-  const indices: number[] = [];
-
-  for (let i = 0; i <= ySteps; i++) {
-    const t = i / ySteps; // 0 = deltoid top, 1 = mid-arm bottom cuff
-    const y = THREE.MathUtils.lerp(0.56, -0.58, t);
-    const centerX = side * THREE.MathUtils.lerp(0.76, 1.12, Math.pow(t, 0.88));
-    const centerZ = THREE.MathUtils.lerp(-0.02, 0.01, t);
-
-    let rBase = THREE.MathUtils.lerp(0.205, 0.142, t);
-    if (t < 0.14) {
-      rBase *= Math.sin((t / 0.14) * (Math.PI * 0.5));
-    } else if (t > 0.92) {
-      rBase *= Math.cos(((t - 0.92) / 0.08) * (Math.PI * 0.5));
-    }
-    rBase = Math.max(0.002, rBase);
-
-    for (let j = 0; j <= rSteps; j++) {
-      const a = (j / rSteps) * Math.PI * 2;
-      positions.push(
-        centerX + Math.cos(a) * rBase * 0.94,
-        y,
-        centerZ + Math.sin(a) * rBase * 1.02
-      );
-    }
-  }
-
-  for (let i = 0; i < ySteps; i++) {
-    for (let j = 0; j < rSteps; j++) {
-      const a = i * (rSteps + 1) + j;
-      const b = a + rSteps + 1;
-      indices.push(a, a + 1, b, b, a + 1, b + 1);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
-  return geo;
-}
-
-function buildSculptedDiaphragmGeometry(): THREE.BufferGeometry {
-  // Smooth arched diaphragmatic dome beneath lungs + sculpted anterior scalloped muscular crura
-  const uSteps = 32;
-  const vSteps = 44;
-  const positions: number[] = [];
-  const indices: number[] = [];
-
-  for (let i = 0; i <= uSteps; i++) {
-    const u = (i / uSteps) * Math.PI * 0.54;
+    const u = (i / uSteps) * Math.PI; // 0 = base top, PI = apex bottom
     const sinU = Math.sin(u);
     const cosU = Math.cos(u);
+    const tDown = (1 - cosU) * 0.5; // 0 top .. 1 apex
+
+    // Broader asymmetric base tapering cleanly to cardiac apex
+    const taper = Math.pow(Math.max(sinU, 0.0005), 0.72) * (0.95 - tDown * 0.32);
 
     for (let j = 0; j <= vSteps; j++) {
       const v = (j / vSteps) * Math.PI * 2;
-      const cosV = Math.cos(v); // -1 left (viewer right), +1 right (viewer left)
-      const sinV = Math.sin(v); // +1 front, -1 back
+      const cosV = Math.cos(v); // +X viewer right (left ventricle), -X viewer left (right ventricle)
+      const sinV = Math.sin(v); // +Z anterior, -Z posterior/diaphragmatic
 
-      const rx = 0.72 * sinU;
-      const rz = 0.31 * sinU;
-      const x = cosV * rx;
-      const z = sinV * rz;
+      let rx = 0.64 * taper;
+      let rz = 0.5 * taper;
+      const ry = cosU * 0.74;
 
-      // Double dome shape: slightly higher anatomical right (viewer left -x), central cardiac dip
-      const doubleDome =
-        Math.exp(-Math.pow((x + 0.34) / 0.28, 2)) * 0.08 +
-        Math.exp(-Math.pow((x - 0.34) / 0.28, 2)) * 0.065;
-      const anteriorCrus =
-        sinV > 0.2 && sinU > 0.55
-          ? (Math.exp(-Math.pow((x + 0.18) / 0.14, 2)) + Math.exp(-Math.pow((x - 0.18) / 0.14, 2))) *
-            (sinU - 0.55) *
-            0.62
-          : 0;
+      // Left ventricle fullness (viewer's right, cosV > 0) vs gentler RV convexity
+      if (cosV > 0) {
+        rx *= 1 + cosV * 0.14 * (1 - tDown * 0.4);
+      }
 
-      const y = -0.58 + cosU * 0.26 + doubleDome - anteriorCrus;
+      // Subtle anterior & inferior interventricular sulcus groove (indentation where LAD courses)
+      const sulcusCenter = 0.05 + tDown * 0.14;
+      const sulcusDist = Math.abs(cosV - sulcusCenter);
+      if (sinV > 0.15 && sulcusDist < 0.24 && tDown > 0.08 && tDown < 0.92) {
+        const g = (1 - sulcusDist / 0.24) * 0.036 * THREE.MathUtils.smoothstep(sinV, 0.15, 0.65);
+        rz *= 1 - g;
+      }
+
+      // Flatten posterior/diaphragmatic surface slightly
+      if (sinV < 0) {
+        rz *= 1 + sinV * 0.12;
+      }
+
+      let x = cosV * rx;
+      let y = ry;
+      let z = sinV * rz;
+
+      // Sweeping anatomical axis tilt toward the apex (down & viewer's right)
+      x += tDown * tDown * 0.24;
+      z += tDown * (1 - tDown) * 0.12 + tDown * tDown * 0.12;
+      // Slight elevation on upper-left conus arteriosus outflow shoulder
+      y += Math.max(0, cosU) * Math.max(0, -cosV) * 0.08;
+
       positions.push(x, y, z);
+      uvs.push(j / vSteps, i / uSteps);
     }
   }
 
@@ -430,12 +181,13 @@ function buildSculptedDiaphragmGeometry(): THREE.BufferGeometry {
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
 }
 
-function HalfBodyRespiratorySystem({
+function StudioAnatomicalHeartModel({
   spRef,
   isDesktopRef,
   reducedMotion,
@@ -445,248 +197,274 @@ function HalfBodyRespiratorySystem({
   reducedMotion: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const lungsExpandRef = useRef<THREE.Group>(null);
-  const heartBeatRef = useRef<THREE.Group>(null);
-  const diaphragmRef = useRef<THREE.Group>(null);
-  const flowDotsRef = useRef<THREE.Group>(null);
+  const pulseHeartRef = useRef<THREE.Group>(null);
+  const greatVesselsRef = useRef<THREE.Group>(null);
+  const haloRingRef = useRef<THREE.Mesh>(null);
+  const pinGroupRef = useRef<THREE.Group>(null);
 
   const {
-    lungTextures,
-    bustGeo,
-    armGeos,
-    diaphragmGeo,
-    nasalCavityGeos,
-    pharynxGeo,
-    tracheaGeo,
-    bronchialGeos,
-    leftBronchialTreeGeos,
-    rightLungGeo,
-    leftLungGeo,
-    aortaGeo,
-    pulmonaryGeo,
-    venaCavaGeo,
-    flowCurves,
+    myocardiumTextures,
+    ventriclesGeo,
+    aortaArchGeo,
+    aortaBranchGeos,
+    pulmTrunkGeo,
+    pulmLeftGeo,
+    pulmRightGeo,
+    svcGeo,
+    ivcGeo,
+    pulmVeinGeos,
+    coronaryMainGeos,
+    coronaryFineGeos,
+    vesselCollars,
+    diagnosticPins,
   } = useMemo(() => {
-    const lTex = createLungTissueTextures();
-    const bust = buildSculptedHumanBustGeometry();
-    const arms = [buildSculptedArmGeometry(-1), buildSculptedArmGeometry(1)];
-    const diaph = buildSculptedDiaphragmGeometry();
-    const rLung = buildSculptedLungGeometry(-1);
-    const lLung = buildSculptedLungGeometry(1);
+    const mTex = createMyocardiumTextures();
+    const ventGeo = buildSculptedVentriclesGeometry();
 
-    // Internal nasal cavity turbinates & palate curving back to pharynx inside sculpted head
-    const nasalCavities = [
-      new THREE.TubeGeometry(
-        new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 1.50, 0.29),
-          new THREE.Vector3(0, 1.57, 0.21),
-          new THREE.Vector3(0, 1.56, 0.08),
-          new THREE.Vector3(0, 1.43, 0.02),
-        ]),
-        20,
-        0.044,
-        14,
-        false
-      ),
-      new THREE.TubeGeometry(
-        new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 1.42, 0.22),
-          new THREE.Vector3(0, 1.43, 0.11),
-          new THREE.Vector3(0, 1.38, 0.03),
-        ]),
-        14,
-        0.036,
-        12,
-        false
-      ),
+    // 1. Ascending Aorta & smooth sweeping Aortic Arch
+    const aortaCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.02, 0.24, 0.02),
+      new THREE.Vector3(-0.08, 0.56, 0.05),
+      new THREE.Vector3(-0.02, 0.92, 0.02),
+      new THREE.Vector3(0.14, 1.0, -0.05),
+      new THREE.Vector3(0.24, 0.72, -0.18),
+      new THREE.Vector3(0.14, 0.16, -0.26),
+    ]);
+    const aorta = new THREE.TubeGeometry(aortaCurve, 40, 0.125, 22, false);
+
+    // 3 Supra-aortic branches rising cleanly off top of arch (Brachiocephalic, L Common Carotid, L Subclavian)
+    const branchDefs: Array<{ pts: [number, number, number][]; r: number }> = [
+      { pts: [[-0.04, 0.88, 0.03], [-0.08, 1.18, 0.04], [-0.11, 1.38, 0.03]], r: 0.052 },
+      { pts: [[0.06, 0.94, 0.0], [0.06, 1.24, -0.01], [0.06, 1.42, -0.02]], r: 0.042 },
+      { pts: [[0.15, 0.95, -0.05], [0.18, 1.2, -0.07], [0.22, 1.35, -0.09]], r: 0.04 },
     ];
-
-    const pharynx = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.52, 0.04),
-        new THREE.Vector3(0, 1.32, 0.02),
-        new THREE.Vector3(0, 1.12, 0.02),
-      ]),
-      18,
-      0.046,
-      14,
-      false
+    const aBranches = branchDefs.map(
+      (b) =>
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(b.pts.map(([x, y, z]) => new THREE.Vector3(x, y, z))),
+          16,
+          b.r,
+          14,
+          false
+        )
     );
 
-    const trachea = new THREE.TubeGeometry(
+    // 2. Pulmonary Trunk arching up & left anteriorly, splitting into horizontal L/R Pulmonary Arteries
+    const pTrunk = new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.12, 0.02),
-        new THREE.Vector3(0, 0.72, 0.02),
-        new THREE.Vector3(0, 0.34, 0.015),
-        new THREE.Vector3(0, 0.16, 0.015),
+        new THREE.Vector3(-0.02, 0.28, 0.2),
+        new THREE.Vector3(0.08, 0.52, 0.17),
+        new THREE.Vector3(0.14, 0.68, 0.06),
       ]),
-      32,
-      0.048,
+      24,
+      0.118,
+      20,
+      false
+    );
+    const pLeft = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.12, 0.66, 0.06),
+        new THREE.Vector3(0.36, 0.68, -0.02),
+        new THREE.Vector3(0.6, 0.62, -0.08),
+      ]),
+      18,
+      0.082,
+      16,
+      false
+    );
+    const pRight = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.12, 0.66, 0.05),
+        new THREE.Vector3(-0.18, 0.64, -0.04),
+        new THREE.Vector3(-0.56, 0.58, -0.1),
+      ]),
+      20,
+      0.078,
       16,
       false
     );
 
-    // Mainstem right & left bronchi splitting from carina
-    const mainBronchi = [
-      new THREE.TubeGeometry(
-        new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 0.18, 0.015),
-          new THREE.Vector3(-0.14, 0.12, 0.02),
-          new THREE.Vector3(-0.32, 0.06, 0.02),
-        ]),
-        16,
-        0.034,
-        12,
-        false
-      ),
-      new THREE.TubeGeometry(
-        new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 0.18, 0.015),
-          new THREE.Vector3(0.16, 0.11, 0.02),
-          new THREE.Vector3(0.36, 0.05, 0.02),
-        ]),
-        16,
-        0.033,
-        12,
-        false
-      ),
+    // 3. Superior & Inferior Vena Cava on viewer's left (anatomical right)
+    const svc = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.38, 0.26, -0.02),
+        new THREE.Vector3(-0.36, 0.68, -0.02),
+        new THREE.Vector3(-0.34, 1.06, -0.01),
+        new THREE.Vector3(-0.38, 1.24, 0.0),
+      ]),
+      24,
+      0.115,
+      20,
+      false
+    );
+    const ivc = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.34, -0.18, -0.16),
+        new THREE.Vector3(-0.36, -0.44, -0.2),
+      ]),
+      12,
+      0.105,
+      16,
+      false
+    );
+
+    // 4. Pulmonary Veins (lateral stubs behind atria matching the horizontal vessel silhouettes in reference)
+    const pvDefs: Array<[number, number, number][]> = [
+      [[0.3, 0.36, -0.1], [0.58, 0.36, -0.12]],
+      [[0.32, 0.2, -0.12], [0.56, 0.16, -0.14]],
+      [[-0.36, 0.36, -0.12], [-0.66, 0.38, -0.12]],
+    ];
+    const pVeins = pvDefs.map(
+      (pts) =>
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(pts.map(([x, y, z]) => new THREE.Vector3(x, y, z))),
+          12,
+          0.054,
+          14,
+          false
+        )
+    );
+
+    // Dark crimson lumen cuffs at vessel openings for crisp anatomical realism
+    const collars: Array<{ pos: [number, number, number]; rot: [number, number, number]; r: number }> = [
+      { pos: [-0.38, 1.24, 0.0], rot: [Math.PI / 2, -0.15, 0], r: 0.112 },
+      { pos: [-0.11, 1.38, 0.03], rot: [Math.PI / 2, -0.14, 0], r: 0.05 },
+      { pos: [0.06, 1.42, -0.02], rot: [Math.PI / 2, 0, 0], r: 0.04 },
+      { pos: [0.22, 1.35, -0.09], rot: [Math.PI / 2, 0.2, 0], r: 0.038 },
+      { pos: [0.6, 0.62, -0.08], rot: [0, Math.PI / 2, 0.22], r: 0.078 },
+      { pos: [-0.56, 0.58, -0.1], rot: [0, Math.PI / 2, -0.15], r: 0.074 },
+      { pos: [0.58, 0.36, -0.12], rot: [0, Math.PI / 2, 0], r: 0.05 },
+      { pos: [0.56, 0.16, -0.14], rot: [0, Math.PI / 2, -0.1], r: 0.05 },
+      { pos: [-0.66, 0.38, -0.12], rot: [0, Math.PI / 2, 0], r: 0.05 },
     ];
 
-    // Detailed pale ivory-rose bronchial & bronchiolar arborization visible inside translucent Left Lung (viewer right)
-    const leftBranchSpecs: Array<{ pts: [number, number, number][]; r: number }> = [
-      // Superior lobar bronchus + apical/anterior sub-branches
-      { pts: [[0.34, 0.05, 0.02], [0.46, 0.22, 0.04], [0.5, 0.44, 0.02]], r: 0.021 },
-      { pts: [[0.46, 0.22, 0.04], [0.64, 0.34, 0.05], [0.74, 0.46, 0.01]], r: 0.013 },
-      { pts: [[0.46, 0.22, 0.04], [0.62, 0.2, 0.14], [0.72, 0.26, 0.16]], r: 0.012 },
-      { pts: [[0.5, 0.44, 0.02], [0.42, 0.56, 0.01]], r: 0.009 },
-      { pts: [[0.5, 0.44, 0.02], [0.59, 0.54, -0.02]], r: 0.009 },
-      // Lingular divisions
-      { pts: [[0.34, 0.05, 0.02], [0.52, -0.04, 0.08], [0.68, -0.1, 0.14]], r: 0.017 },
-      { pts: [[0.52, -0.04, 0.08], [0.66, 0.06, 0.12], [0.78, 0.04, 0.1]], r: 0.011 },
-      { pts: [[0.68, -0.1, 0.14], [0.77, -0.22, 0.14]], r: 0.009 },
-      // Inferior lobar trunk + basal segmental/subsegmental tree
-      { pts: [[0.34, 0.05, 0.02], [0.46, -0.14, 0.0], [0.54, -0.36, -0.02]], r: 0.02 },
-      { pts: [[0.46, -0.14, 0.0], [0.66, -0.24, -0.04], [0.78, -0.36, -0.06]], r: 0.012 },
-      { pts: [[0.54, -0.36, -0.02], [0.44, -0.5, 0.06], [0.38, -0.58, 0.08]], r: 0.011 },
-      { pts: [[0.54, -0.36, -0.02], [0.64, -0.5, 0.02], [0.72, -0.58, 0.02]], r: 0.011 },
-      { pts: [[0.66, -0.24, -0.04], [0.76, -0.16, -0.08]], r: 0.008 },
-      { pts: [[0.64, -0.5, 0.02], [0.74, -0.46, 0.1]], r: 0.008 },
+    // 5. Delicate organic Coronary Arterial Tree tracing smoothly over anterior ventricles
+    const mainCoronaryPaths: Array<{ pts: [number, number, number][]; r: number }> = [
+      // Left Anterior Descending (LAD) sweeping diagonally toward apex
+      {
+        pts: [
+          [0.02, 0.26, 0.44],
+          [0.06, 0.08, 0.52],
+          [0.12, -0.16, 0.51],
+          [0.19, -0.44, 0.41],
+          [0.25, -0.66, 0.25],
+        ],
+        r: 0.015,
+      },
+      // Left Circumflex / Obtuse Marginal hugging right-anterior convexity
+      {
+        pts: [
+          [0.04, 0.26, 0.42],
+          [0.32, 0.18, 0.43],
+          [0.54, -0.02, 0.36],
+          [0.56, -0.32, 0.25],
+          [0.44, -0.58, 0.17],
+        ],
+        r: 0.014,
+      },
+      // Right Coronary Artery descending down anterior-left border
+      {
+        pts: [
+          [-0.22, 0.22, 0.36],
+          [-0.4, 0.0, 0.38],
+          [-0.44, -0.26, 0.32],
+          [-0.28, -0.54, 0.24],
+        ],
+        r: 0.013,
+      },
     ];
-    const leftTreeGeos = leftBranchSpecs.map(
+
+    const fineCoronaryPaths: Array<{ pts: [number, number, number][]; r: number }> = [
+      // Diagonal branches off LAD
+      { pts: [[0.06, 0.08, 0.52], [0.24, -0.04, 0.51], [0.38, -0.22, 0.43]], r: 0.0085 },
+      { pts: [[0.24, -0.04, 0.51], [0.32, -0.18, 0.46]], r: 0.006 },
+      { pts: [[0.12, -0.16, 0.51], [0.28, -0.32, 0.45], [0.38, -0.48, 0.32]], r: 0.008 },
+      { pts: [[0.19, -0.44, 0.41], [0.31, -0.54, 0.31]], r: 0.006 },
+      { pts: [[0.12, -0.16, 0.51], [-0.04, -0.34, 0.44], [-0.14, -0.5, 0.34]], r: 0.008 },
+      { pts: [[0.06, 0.08, 0.52], [-0.12, -0.08, 0.49], [-0.24, -0.24, 0.43]], r: 0.0075 },
+      // Marginal twigs off LCx & RCA
+      { pts: [[0.32, 0.18, 0.43], [0.46, 0.02, 0.42], [0.48, -0.18, 0.38]], r: 0.0075 },
+      { pts: [[0.54, -0.02, 0.36], [0.64, -0.18, 0.24]], r: 0.0065 },
+      { pts: [[-0.4, 0.0, 0.38], [-0.26, -0.18, 0.41], [-0.18, -0.34, 0.38]], r: 0.0075 },
+      { pts: [[-0.44, -0.26, 0.32], [-0.36, -0.42, 0.26]], r: 0.006 },
+    ];
+
+    const cMainGeos = mainCoronaryPaths.map(
       (b) =>
         new THREE.TubeGeometry(
-          new THREE.CatmullRomCurve3(b.pts.map(([px, py, pz]) => new THREE.Vector3(px, py, pz))),
-          14,
+          new THREE.CatmullRomCurve3(b.pts.map(([x, y, z]) => new THREE.Vector3(x, y, z))),
+          22,
           b.r,
           8,
           false
         )
     );
-
-    const aorta = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0.02, 0.04, 0.03),
-        new THREE.Vector3(0.04, 0.2, 0.02),
-        new THREE.Vector3(-0.04, 0.28, -0.02),
-        new THREE.Vector3(-0.1, 0.16, -0.06),
-      ]),
-      24,
-      0.034,
-      10,
-      false
-    );
-    const pulm = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.05, 0.01, 0.08),
-        new THREE.Vector3(-0.02, 0.14, 0.05),
-        new THREE.Vector3(0.16, 0.15, -0.01),
-      ]),
-      18,
-      0.028,
-      10,
-      false
-    );
-    const vena = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.12, 0.03, -0.01),
-        new THREE.Vector3(-0.12, 0.24, -0.02),
-      ]),
-      12,
-      0.028,
-      10,
-      false
+    const cFineGeos = fineCoronaryPaths.map(
+      (b) =>
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(b.pts.map(([x, y, z]) => new THREE.Vector3(x, y, z))),
+          14,
+          b.r,
+          7,
+          false
+        )
     );
 
-    const fCurves = [
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.54, 0.24),
-        new THREE.Vector3(0, 1.38, 0.03),
-        new THREE.Vector3(0, 0.72, 0.02),
-        new THREE.Vector3(0, 0.18, 0.015),
-        new THREE.Vector3(-0.34, 0.06, 0.02),
-      ]),
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.54, 0.24),
-        new THREE.Vector3(0, 1.38, 0.03),
-        new THREE.Vector3(0, 0.72, 0.02),
-        new THREE.Vector3(0, 0.18, 0.015),
-        new THREE.Vector3(0.46, 0.22, 0.04),
-        new THREE.Vector3(0.74, 0.46, 0.01),
-      ]),
+    // Subtle glowing white telemetry hotspot pins matching reference aesthetic
+    const pins: [number, number, number][] = [
+      [0.24, 0.78, 0.18],
+      [0.05, 0.22, 0.54],
+      [-0.48, -0.24, 0.44],
+      [0.54, -0.32, 0.4],
     ];
 
     return {
-      lungTextures: lTex,
-      bustGeo: bust,
-      armGeos: arms,
-      diaphragmGeo: diaph,
-      nasalCavityGeos: nasalCavities,
-      pharynxGeo: pharynx,
-      tracheaGeo: trachea,
-      bronchialGeos: mainBronchi,
-      leftBronchialTreeGeos: leftTreeGeos,
-      rightLungGeo: rLung,
-      leftLungGeo: lLung,
-      aortaGeo: aorta,
-      pulmonaryGeo: pulm,
-      venaCavaGeo: vena,
-      flowCurves: fCurves,
+      myocardiumTextures: mTex,
+      ventriclesGeo: ventGeo,
+      aortaArchGeo: aorta,
+      aortaBranchGeos: aBranches,
+      pulmTrunkGeo: pTrunk,
+      pulmLeftGeo: pLeft,
+      pulmRightGeo: pRight,
+      svcGeo: svc,
+      ivcGeo: ivc,
+      pulmVeinGeos: pVeins,
+      coronaryMainGeos: cMainGeos,
+      coronaryFineGeos: cFineGeos,
+      vesselCollars: collars,
+      diagnosticPins: pins,
     };
   }, []);
 
   useEffect(() => {
     return () => {
-      lungTextures.colorMap.dispose();
-      lungTextures.bumpMap.dispose();
-      bustGeo.dispose();
-      armGeos.forEach((g) => g.dispose());
-      diaphragmGeo.dispose();
-      nasalCavityGeos.forEach((g) => g.dispose());
-      pharynxGeo.dispose();
-      tracheaGeo.dispose();
-      bronchialGeos.forEach((g) => g.dispose());
-      leftBronchialTreeGeos.forEach((g) => g.dispose());
-      rightLungGeo.dispose();
-      leftLungGeo.dispose();
-      aortaGeo.dispose();
-      pulmonaryGeo.dispose();
-      venaCavaGeo.dispose();
+      myocardiumTextures.colorMap.dispose();
+      myocardiumTextures.bumpMap.dispose();
+      ventriclesGeo.dispose();
+      aortaArchGeo.dispose();
+      aortaBranchGeos.forEach((g) => g.dispose());
+      pulmTrunkGeo.dispose();
+      pulmLeftGeo.dispose();
+      pulmRightGeo.dispose();
+      svcGeo.dispose();
+      ivcGeo.dispose();
+      pulmVeinGeos.forEach((g) => g.dispose());
+      coronaryMainGeos.forEach((g) => g.dispose());
+      coronaryFineGeos.forEach((g) => g.dispose());
     };
   }, [
-    lungTextures,
-    bustGeo,
-    armGeos,
-    diaphragmGeo,
-    nasalCavityGeos,
-    pharynxGeo,
-    tracheaGeo,
-    bronchialGeos,
-    leftBronchialTreeGeos,
-    rightLungGeo,
-    leftLungGeo,
-    aortaGeo,
-    pulmonaryGeo,
-    venaCavaGeo,
+    myocardiumTextures,
+    ventriclesGeo,
+    aortaArchGeo,
+    aortaBranchGeos,
+    pulmTrunkGeo,
+    pulmLeftGeo,
+    pulmRightGeo,
+    svcGeo,
+    ivcGeo,
+    pulmVeinGeos,
+    coronaryMainGeos,
+    coronaryFineGeos,
   ]);
 
   useFrame(({ clock }) => {
@@ -699,209 +477,169 @@ function HalfBodyRespiratorySystem({
 
     const t = clock.getElapsedTime();
     const isDesktop = isDesktopRef.current;
-    const breathe = reducedMotion ? 0 : Math.sin(t * 1.45);
-    const inhale = (breathe + 1) * 0.5;
 
-    if (lungsExpandRef.current) {
-      lungsExpandRef.current.scale.set(1 + inhale * 0.045, 1 + inhale * 0.032, 1 + inhale * 0.05);
-    }
-    if (diaphragmRef.current) {
-      diaphragmRef.current.position.y = -inhale * 0.055;
-    }
-    if (heartBeatRef.current && !reducedMotion) {
-      const phase = (t * 1.2) % 1;
-      const lub = Math.exp(-Math.pow((phase - 0.16) * 14, 2)) * 0.07;
-      const dub = Math.exp(-Math.pow((phase - 0.34) * 16, 2)) * 0.04;
-      heartBeatRef.current.scale.setScalar(1.0 + lub + dub);
-    }
-
-    if (flowDotsRef.current && !reducedMotion) {
-      flowDotsRef.current.children.forEach((child, idx) => {
-        const curve = flowCurves[idx % flowCurves.length];
-        const phase = (t * 0.44 + idx * 0.16) % 1;
-        child.position.copy(curve.getPointAt(phase));
-        child.scale.setScalar(Math.max(0.25, Math.sin(phase * Math.PI) * 0.95));
-      });
+    // Realistic physiological lub-dub cardiac contraction cycle
+    if (!reducedMotion) {
+      const phase = (t * 1.15) % 1;
+      const lub = Math.exp(-Math.pow((phase - 0.16) * 14, 2)) * 0.065;
+      const dub = Math.exp(-Math.pow((phase - 0.34) * 16, 2)) * 0.038;
+      if (pulseHeartRef.current) {
+        pulseHeartRef.current.scale.set(1 + lub + dub, 1 + (lub + dub) * 0.72, 1 + lub + dub);
+      }
+      if (greatVesselsRef.current) {
+        greatVesselsRef.current.scale.setScalar(1 + lub * 0.35 + dub * 0.25);
+      }
+      if (haloRingRef.current) {
+        haloRingRef.current.scale.setScalar(1 + lub * 0.28);
+      }
+      if (pinGroupRef.current) {
+        pinGroupRef.current.children.forEach((pin, idx) => {
+          const p = 0.9 + Math.sin(t * 2.4 + idx * 1.4) * 0.12;
+          pin.scale.setScalar(p);
+        });
+      }
     }
 
     const slideProgress = THREE.MathUtils.clamp(sp / 0.2, 0, 1.5);
-    const baseX = isDesktop ? 1.82 : 0.0;
-    const baseY = isDesktop ? -0.18 : 0.08;
+    const baseX = isDesktop ? 1.72 : 0.0;
+    const baseY = isDesktop ? 0.04 : 0.16;
     grp.position.set(
-      baseX - slideProgress * (isDesktop ? 0.95 : 0),
-      baseY + (sp - 0.02) * 5.2,
+      baseX - slideProgress * (isDesktop ? 0.9 : 0),
+      baseY + (sp - 0.02) * 5.0 + (reducedMotion ? 0 : Math.sin(t * 1.1) * 0.03),
       (1 - weight) * -4.2
     );
-    grp.rotation.y = -0.16 + (reducedMotion ? 0 : Math.sin(t * 0.35) * 0.12) + sp * Math.PI * 2.4;
-    grp.rotation.x = 0.03 + slideProgress * 0.22;
-    grp.scale.setScalar((isDesktop ? 1.06 : 0.78) * (0.68 + 0.32 * weight));
+    grp.rotation.y = -0.14 + (reducedMotion ? 0 : Math.sin(t * 0.45) * 0.16) + sp * Math.PI * 2.5;
+    grp.rotation.x = 0.05 + slideProgress * 0.22;
+    grp.scale.setScalar((isDesktop ? 1.38 : 1.02) * (0.68 + 0.32 * weight));
     applyGroupFade(grp, weight);
   });
 
-  const cartilageRingYs = Array.from({ length: 18 }, (_, idx) => 1.04 - idx * 0.05);
-
   return (
-    <group ref={groupRef} position={[1.82, -0.18, 0]}>
-      {/* Smooth semi-translucent human bust, ears, and tapered upper arms (matching clean studio aesthetic) */}
-      <mesh geometry={bustGeo}>
-        <meshPhysicalMaterial
-          color="#dea28a"
-          roughness={0.32}
-          clearcoat={0.42}
-          clearcoatRoughness={0.28}
-          transparent
-          opacity={0.35}
-          depthWrite={false}
-          side={THREE.FrontSide}
-        />
+    <group ref={groupRef} position={[1.72, 0.04, 0]}>
+      {/* Clean translucent white circular halo disc & concentric ring behind the heart */}
+      <mesh position={[0.02, 0.12, -0.68]}>
+        <circleGeometry args={[1.18, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.42} side={THREE.DoubleSide} />
       </mesh>
-      {armGeos.map((g, i) => (
-        <mesh key={i} geometry={g}>
+      <mesh ref={haloRingRef} position={[0.02, 0.12, -0.66]}>
+        <ringGeometry args={[1.18, 1.36, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
+
+      <group ref={pulseHeartRef}>
+        {/* Sculpted Left & Right Ventricular Mass */}
+        <mesh geometry={ventriclesGeo} position={[0.02, -0.12, 0.06]}>
           <meshPhysicalMaterial
-            color="#dea28a"
-            roughness={0.32}
-            clearcoat={0.42}
-            clearcoatRoughness={0.28}
+            map={myocardiumTextures.colorMap}
+            bumpMap={myocardiumTextures.bumpMap}
+            bumpScale={0.015}
+            color="#f43f50"
+            roughness={0.26}
+            clearcoat={0.76}
+            clearcoatRoughness={0.18}
             transparent
-            opacity={0.33}
-            depthWrite={false}
-            side={THREE.FrontSide}
+            opacity={0.99}
           />
         </mesh>
-      ))}
-      {[-1, 1].map((side) => (
-        <mesh key={`ear-${side}`} position={[side * 0.238, 1.55, -0.025]} rotation={[0.08, side * 0.18, side * -0.08]} scale={[0.45, 1.1, 0.75]}>
-          <sphereGeometry args={[0.052, 14, 14]} />
-          <meshPhysicalMaterial color="#dba088" roughness={0.34} transparent opacity={0.36} depthWrite={false} side={THREE.FrontSide} />
-        </mesh>
-      ))}
 
-      {/* Internal Upper Airway: Nasal cavity, palate, pharynx, larynx & ringed trachea */}
-      {nasalCavityGeos.map((g, i) => (
-        <mesh key={`nas-${i}`} geometry={g}>
-          <meshPhysicalMaterial color="#b93e44" roughness={0.36} clearcoat={0.5} transparent opacity={0.94} />
-        </mesh>
-      ))}
-      {/* Nasal septal wing & anterior nostril flare */}
-      <mesh position={[0, 1.51, 0.28]} scale={[0.68, 0.76, 0.9]}>
-        <sphereGeometry args={[0.044, 16, 14]} />
-        <meshPhysicalMaterial color="#be4348" roughness={0.38} clearcoat={0.45} transparent opacity={0.95} />
-      </mesh>
-      {/* Palate arch */}
-      <mesh position={[0, 1.445, 0.16]} rotation={[0.12, 0, 0]} scale={[1.1, 0.42, 1.4]}>
-        <sphereGeometry args={[0.045, 16, 12]} />
-        <meshStandardMaterial color="#e09e96" roughness={0.42} transparent opacity={0.94} />
-      </mesh>
-      <mesh geometry={pharynxGeo}>
-        <meshPhysicalMaterial color="#b43d44" roughness={0.36} clearcoat={0.45} transparent opacity={0.93} />
-      </mesh>
-      {/* Hyoid arch & Larynx thyroid cartilage shield */}
-      <mesh position={[0, 1.24, 0.06]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.062, 0.011, 10, 24, Math.PI * 1.45]} />
-        <meshStandardMaterial color="#e9ccc4" roughness={0.3} transparent opacity={0.96} />
-      </mesh>
-      <mesh position={[0, 1.15, 0.04]} scale={[1.08, 1.0, 0.96]}>
-        <cylinderGeometry args={[0.068, 0.056, 0.125, 22]} />
-        <meshPhysicalMaterial color="#cc6f69" roughness={0.34} clearcoat={0.45} transparent opacity={0.96} />
-      </mesh>
-      {/* Cricoid cartilage ring */}
-      <mesh position={[0, 1.075, 0.025]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.056, 0.011, 10, 24]} />
-        <meshStandardMaterial color="#eed3cb" roughness={0.28} transparent opacity={0.98} />
-      </mesh>
-
-      {/* Ringed trachea + primary bronchi */}
-      <mesh geometry={tracheaGeo}>
-        <meshPhysicalMaterial color="#b33b3f" roughness={0.34} clearcoat={0.5} transparent opacity={0.96} />
-      </mesh>
-      {cartilageRingYs.map((ry) => (
-        <mesh key={ry} position={[0, ry, 0.018]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.049, 0.0085, 9, 24]} />
-          <meshStandardMaterial color="#edd5ce" roughness={0.28} transparent opacity={0.97} />
-        </mesh>
-      ))}
-      {bronchialGeos.map((g, idx) => (
-        <mesh key={`br-${idx}`} geometry={g}>
-          <meshPhysicalMaterial color="#d89d94" roughness={0.32} clearcoat={0.4} transparent opacity={0.95} />
-        </mesh>
-      ))}
-
-      {/* Dual-Contrast Lungs: Opaque Glossy Right Lung (viewer left) vs Translucent Left Lung with Crisp Bronchial Tree (viewer right) */}
-      <group ref={lungsExpandRef}>
-        <mesh geometry={rightLungGeo} position={[-0.45, -0.02, 0.01]} scale={0.86}>
+        {/* Right Atrium & Right Auricle (viewer's left, soft rose-coral highlight) */}
+        <mesh position={[-0.4, 0.02, 0.04]} rotation={[0.1, 0.2, 0.22]} scale={[0.72, 1.12, 0.78]}>
+          <sphereGeometry args={[0.32, 28, 24]} />
           <meshPhysicalMaterial
-            map={lungTextures.colorMap}
-            bumpMap={lungTextures.bumpMap}
-            bumpScale={0.028}
-            color="#d85b4c"
+            color="#f26671"
             roughness={0.28}
-            clearcoat={0.72}
-            clearcoatRoughness={0.22}
+            clearcoat={0.68}
+            clearcoatRoughness={0.2}
             transparent
-            opacity={0.97}
+            opacity={0.99}
           />
         </mesh>
 
-        {/* Crisp ivory-pink multi-generation bronchial tree inside the translucent Left Lung */}
-        {leftBronchialTreeGeos.map((g, idx) => (
-          <mesh key={`ltree-${idx}`} geometry={g}>
-            <meshPhysicalMaterial color="#f6e9e4" roughness={0.25} clearcoat={0.35} transparent opacity={0.98} />
+        {/* Left Auricular Appendage (tucked neatly upper-right beside pulmonary trunk) */}
+        <mesh position={[0.42, 0.3, 0.08]} rotation={[0.15, -0.3, -0.45]} scale={[0.92, 0.65, 0.72]}>
+          <sphereGeometry args={[0.18, 22, 18]} />
+          <meshPhysicalMaterial
+            color="#ec4856"
+            roughness={0.28}
+            clearcoat={0.7}
+            clearcoatRoughness={0.2}
+            transparent
+            opacity={0.99}
+          />
+        </mesh>
+
+        {/* Fine Branching Surface Coronary Arteries */}
+        {coronaryMainGeos.map((g, idx) => (
+          <mesh key={`cm-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#fca5ad" roughness={0.25} clearcoat={0.6} transparent opacity={0.97} />
+          </mesh>
+        ))}
+        {coronaryFineGeos.map((g, idx) => (
+          <mesh key={`cf-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#fecdd3" roughness={0.28} clearcoat={0.5} transparent opacity={0.95} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Great Vessels: Aorta + 3 Supra-aortic branches, Pulmonary Trunk + L/R Arteries, SVC/IVC, Pulmonary Veins */}
+      <group ref={greatVesselsRef}>
+        <mesh geometry={aortaArchGeo}>
+          <meshPhysicalMaterial color="#ea3546" roughness={0.26} clearcoat={0.72} clearcoatRoughness={0.18} transparent opacity={0.99} />
+        </mesh>
+        {aortaBranchGeos.map((g, idx) => (
+          <mesh key={`ab-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#ef4454" roughness={0.26} clearcoat={0.68} clearcoatRoughness={0.18} transparent opacity={0.99} />
+          </mesh>
+        ))}
+        <mesh geometry={pulmTrunkGeo}>
+          <meshPhysicalMaterial color="#f25764" roughness={0.26} clearcoat={0.68} clearcoatRoughness={0.2} transparent opacity={0.99} />
+        </mesh>
+        <mesh geometry={pulmLeftGeo}>
+          <meshPhysicalMaterial color="#ed4554" roughness={0.28} clearcoat={0.65} transparent opacity={0.99} />
+        </mesh>
+        <mesh geometry={pulmRightGeo}>
+          <meshPhysicalMaterial color="#ed4554" roughness={0.28} clearcoat={0.65} transparent opacity={0.99} />
+        </mesh>
+        <mesh geometry={svcGeo}>
+          <meshPhysicalMaterial color="#f26b76" roughness={0.28} clearcoat={0.65} clearcoatRoughness={0.2} transparent opacity={0.99} />
+        </mesh>
+        <mesh geometry={ivcGeo}>
+          <meshPhysicalMaterial color="#df3a49" roughness={0.3} clearcoat={0.55} transparent opacity={0.98} />
+        </mesh>
+        {pulmVeinGeos.map((g, idx) => (
+          <mesh key={`pv-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#eb4857" roughness={0.28} clearcoat={0.62} transparent opacity={0.99} />
           </mesh>
         ))}
 
-        {/* Translucent left lung pleural lobe shell wrapping the bronchial tree */}
-        <mesh geometry={leftLungGeo} position={[0.45, -0.02, 0.01]} scale={0.86}>
-          <meshPhysicalMaterial
-            color="#ef9c84"
-            roughness={0.22}
-            clearcoat={0.62}
-            clearcoatRoughness={0.2}
-            transparent
-            opacity={0.38}
-            depthWrite={false}
-            side={THREE.FrontSide}
-          />
-        </mesh>
+        {/* Flared vessel lumen openings with deep interior core */}
+        {vesselCollars.map((c, idx) => (
+          <group key={`vc-${idx}`} position={c.pos} rotation={c.rot}>
+            <mesh>
+              <torusGeometry args={[c.r, c.r * 0.22, 12, 24]} />
+              <meshPhysicalMaterial color="#f46c77" roughness={0.28} clearcoat={0.55} transparent opacity={0.98} />
+            </mesh>
+            <mesh>
+              <circleGeometry args={[c.r * 0.88, 20]} />
+              <meshStandardMaterial color="#6b1019" roughness={0.75} side={THREE.DoubleSide} transparent opacity={0.98} />
+            </mesh>
+          </group>
+        ))}
       </group>
 
-      {/* Subtle beating heart tucked behind left cardiac notch */}
-      <group ref={heartBeatRef} position={[0.07, -0.18, 0.05]} scale={0.68}>
-        <mesh position={[0.02, -0.06, 0.01]} rotation={[0.14, 0, -0.26]} scale={[0.88, 1.24, 0.82]}>
-          <sphereGeometry args={[0.16, 24, 24]} />
-          <meshPhysicalMaterial color="#b42d37" roughness={0.32} clearcoat={0.6} transparent opacity={0.88} />
-        </mesh>
-        <mesh geometry={aortaGeo}>
-          <meshPhysicalMaterial color="#a62226" roughness={0.32} clearcoat={0.5} transparent opacity={0.86} />
-        </mesh>
-        <mesh geometry={pulmonaryGeo}>
-          <meshPhysicalMaterial color="#4e6a8d" roughness={0.34} clearcoat={0.45} transparent opacity={0.84} />
-        </mesh>
-        <mesh geometry={venaCavaGeo}>
-          <meshPhysicalMaterial color="#4e6a8d" roughness={0.34} clearcoat={0.45} transparent opacity={0.84} />
-        </mesh>
-      </group>
-
-      {/* Sculpted muscular diaphragm dome + scalloped anterior costal crura */}
-      <group ref={diaphragmRef}>
-        <mesh geometry={diaphragmGeo}>
-          <meshPhysicalMaterial
-            color="#d88562"
-            roughness={0.34}
-            clearcoat={0.42}
-            clearcoatRoughness={0.28}
-            transparent
-            opacity={0.95}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      </group>
-
-      <group ref={flowDotsRef}>
-        {Array.from({ length: 5 }).map((_, idx) => (
-          <mesh key={idx}>
-            <sphereGeometry args={[0.016, 10, 10]} />
-            <meshBasicMaterial color="#0066ff" transparent opacity={0.82} />
-          </mesh>
+      {/* Subtle Floating White Telemetry Ring Hotspots */}
+      <group ref={pinGroupRef}>
+        {diagnosticPins.map((pos, idx) => (
+          <group key={`pin-${idx}`} position={pos}>
+            <mesh>
+              <sphereGeometry args={[0.042, 16, 16]} />
+              <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
+            </mesh>
+            <mesh>
+              <ringGeometry args={[0.065, 0.115, 28]} />
+              <meshBasicMaterial color="#ffffff" transparent opacity={0.42} side={THREE.DoubleSide} />
+            </mesh>
+          </group>
         ))}
       </group>
     </group>
@@ -1557,7 +1295,7 @@ function ParallaxChoreography({
   return (
     <>
       <AmbientBioParticles spRef={smoothedSpRef} reducedMotion={reducedMotion} />
-      <HalfBodyRespiratorySystem spRef={smoothedSpRef} isDesktopRef={isDesktopRef} reducedMotion={reducedMotion} />
+      <StudioAnatomicalHeartModel spRef={smoothedSpRef} isDesktopRef={isDesktopRef} reducedMotion={reducedMotion} />
       <DetailedVaultModel spRef={smoothedSpRef} isDesktopRef={isDesktopRef} reducedMotion={reducedMotion} />
       <DetailedPharmacologyModel spRef={smoothedSpRef} isDesktopRef={isDesktopRef} reducedMotion={reducedMotion} />
       <DetailedParallaxGlobeModel spRef={smoothedSpRef} isDesktopRef={isDesktopRef} reducedMotion={reducedMotion} />
@@ -1594,10 +1332,11 @@ export function LandingParallaxStage3D({
           camera={{ position: [0, 0.12, 6.2], fov: 40 }}
           gl={{ antialias: !caps.isLowPower, alpha: true }}
         >
-          <ambientLight intensity={0.95} />
-          <directionalLight position={[5, 7, 6]} intensity={1.35} color="#ffffff" />
-          <pointLight position={[-5, -2, 4]} intensity={0.85} color="#66a9ec" />
-          <pointLight position={[3, -4, 3]} intensity={0.55} color="#38bdf8" />
+          <ambientLight intensity={0.98} />
+          <directionalLight position={[4, 7, 6]} intensity={1.45} color="#ffffff" />
+          <pointLight position={[2, 2.5, 5]} intensity={0.72} color="#fff1f2" />
+          <pointLight position={[-5, -2, 4]} intensity={0.78} color="#93c5fd" />
+          <pointLight position={[3, -4, 3]} intensity={0.5} color="#38bdf8" />
           <ParallaxChoreography
             scrollProgressRef={scrollProgressRef}
             pointerRef={pointerRef}
