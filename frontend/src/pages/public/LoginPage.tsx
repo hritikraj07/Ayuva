@@ -131,7 +131,7 @@ export function LoginPage() {
         loggedInUser.role === "admin"
           ? "/admin/overview"
           : loggedInUser.role === "doctor"
-          ? "/doctor/records"
+          ? "/doctor/overview"
           : "/patient/overview";
       navigate(target);
     } catch (err: any) {

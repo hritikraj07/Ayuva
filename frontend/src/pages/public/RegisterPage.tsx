@@ -38,7 +38,7 @@ export function RegisterPage() {
         specialty_or_department: specialty.trim() || undefined,
       });
       if (user.role === "admin") navigate("/admin/overview");
-      else if (user.role === "doctor") navigate("/doctor/records");
+      else if (user.role === "doctor") navigate("/doctor/overview");
       else navigate("/patient/overview");
     } catch (err: any) {
       setError(err?.message || "Registration failed.");

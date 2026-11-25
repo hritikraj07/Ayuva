@@ -3,10 +3,13 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
   Bell,
+  Building2,
+  Calendar,
   CalendarClock,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Clock,
   FileText,
   FolderLock,
   LayoutDashboard,
@@ -14,7 +17,9 @@ import {
   MapPin,
   Menu,
   MessageSquareHeart,
+  Search,
   Share2,
+  ShieldCheck,
   Sliders,
   Stethoscope,
   TrendingUp,
@@ -24,7 +29,8 @@ import {
 import { BrandMark } from "@/components/BrandMark";
 import { Badge, Button } from "@/components/ui/primitives";
 import { useAuth } from "@/context/AuthContext";
-import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
+import { cn, formatDateTime } from "@/lib/utils";
 
 interface NavItem {
   to: string;
@@ -48,6 +54,13 @@ const ROLE_NAVS: Record<"patient" | "doctor" | "admin", NavGroup[]> = {
       ],
     },
     {
+      heading: "Care & Consultations",
+      items: [
+        { to: "/patient/doctors", label: "Find a Doctor", icon: Search },
+        { to: "/patient/appointments", label: "My Appointments", icon: Calendar },
+      ],
+    },
+    {
       heading: "Clinical Preparation",
       items: [
         { to: "/patient/assistant", label: "AI Health Assistant", icon: MessageSquareHeart },
@@ -62,7 +75,17 @@ const ROLE_NAVS: Record<"patient" | "doctor" | "admin", NavGroup[]> = {
   ],
   doctor: [
     {
-      heading: "Clinician Access",
+      heading: "Practice & Schedule",
+      items: [
+        { to: "/doctor/overview", label: "Doctor Overview", icon: LayoutDashboard },
+        { to: "/doctor/appointments", label: "Appointments", icon: Calendar },
+        { to: "/doctor/availability", label: "Availability Calendar", icon: Clock },
+        { to: "/doctor/profile", label: "My Profile", icon: UserCog },
+        { to: "/doctor/clinic", label: "Clinic Settings", icon: Building2 },
+      ],
+    },
+    {
+      heading: "Shared Patient Records",
       items: [
         { to: "/doctor/records", label: "Shared Patient Records", icon: Stethoscope },
         { to: "/doctor/viewer", label: "Document & Summary Viewer", icon: FileText },
@@ -70,6 +93,10 @@ const ROLE_NAVS: Record<"patient" | "doctor" | "admin", NavGroup[]> = {
     },
   ],
   admin: [
+    {
+      heading: "Directory & Verification",
+      items: [{ to: "/admin/doctors", label: "Doctor Verification", icon: ShieldCheck }],
+    },
     {
       heading: "Surveillance & Prediction",
       items: [
@@ -101,9 +128,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = async () => {
+    try {
+      const res = await apiFetch("/notifications");
+      setNotifications(res.notifications || []);
+      setUnreadCount(res.unread_count || 0);
+    } catch {
+      // keep silent if offline
+    }
+  };
 
   useEffect(() => {
     setMobileOpen(false);
+    setNotifOpen(false);
+    loadNotifications();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -290,13 +332,77 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span>{user.specialty_or_department || "Private Personal Workspace"}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="In-app notifications"
+              onClick={() => {
+                setNotifOpen((o) => !o);
+                loadNotifications();
+              }}
+              className="relative inline-flex size-10 items-center justify-center rounded-full border border-[#E5E9F0] bg-[#F8FAFC] text-[#111827] hover:border-[#0066FF]/40 hover:text-[#0066FF]"
+            >
+              <Bell className="size-4" aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#EF233C] text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute top-12 right-0 z-50 w-80 rounded-3xl border border-[#E5E9F0] bg-white p-4 shadow-2xl">
+                <div className="mb-2 flex items-center justify-between border-b border-[#EEF1F5] pb-2">
+                  <span className="font-display text-xs font-semibold text-[#111827]">
+                    Notifications ({unreadCount} unread)
+                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await apiFetch("/notifications/read-all", { method: "POST" });
+                        loadNotifications();
+                      }}
+                      className="text-[11px] font-semibold text-[#0066FF] hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <p className="py-4 text-center text-xs text-[#64748B]">No notifications yet.</p>
+                ) : (
+                  <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+                    {notifications.slice(0, 12).map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={async () => {
+                          if (!n.read_status) {
+                            await apiFetch(`/notifications/${n.id}/read`, { method: "POST" });
+                            loadNotifications();
+                          }
+                        }}
+                        className={`rounded-2xl border p-2.5 text-left text-xs transition-colors ${
+                          n.read_status ? "border-[#EEF1F5] bg-[#FAFBFC] text-[#64748B]" : "border-[#BFDBFE] bg-[#EFF6FF] text-[#111827]"
+                        }`}
+                      >
+                        <div className="font-semibold">{n.title}</div>
+                        <div className="mt-0.5 text-[11px] leading-snug">{n.message}</div>
+                        <div className="mt-1 font-mono text-[10px] opacity-70">{formatDateTime(n.created_at)}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Badge variant="teal" className="hidden sm:inline-flex">
               {ROLE_LABELS[user.role]}
             </Badge>
             <Link
               to="/"
-              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 text-xs font-medium text-foreground hover:bg-muted"
+              className="inline-flex min-h-[40px] items-center rounded-full border border-[#E5E9F0] bg-white px-4 text-xs font-medium text-[#111827] hover:bg-[#F8FAFC]"
             >
               Platform Home
             </Link>

@@ -5,7 +5,7 @@ from backend.config import get_settings
 
 settings = get_settings()
 
-connect_args = {"check_same_thread": False} if settings.is_sqlite else {}
+connect_args = {"check_same_thread": False, "timeout": 30} if settings.is_sqlite else {}
 engine_kwargs = {"connect_args": connect_args}
 if not settings.is_sqlite:
     engine_kwargs["pool_pre_ping"] = True
@@ -20,6 +20,7 @@ if settings.is_sqlite:
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON;")
         cursor.execute("PRAGMA journal_mode=WAL;")
+        cursor.execute("PRAGMA busy_timeout=30000;")
         cursor.close()
 
 

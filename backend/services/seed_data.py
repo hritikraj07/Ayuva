@@ -1,15 +1,32 @@
 from sqlalchemy.orm import Session
 
 from backend.auth import hash_password
-from backend.models import PatientProfile, Role, User
+from backend.models import PatientProfile, Role, Speciality, User
+
+DEFAULT_SPECIALITIES = [
+    ("General Physician", "general-physician", "Primary care diagnosis, fevers, preventive checkups, and chronic care coordination.", "Primary Care"),
+    ("Dermatologist", "dermatologist", "Skin rashes, acne, eczema, hair/nail disorders, and dermatological evaluations.", "Medical"),
+    ("Cardiologist", "cardiologist", "Heart rhythm, blood pressure, chest discomfort assessment, and cardiovascular prevention.", "Medical"),
+    ("Neurologist", "neurologist", "Migraines, dizziness, seizures, neuropathy, and nervous system evaluation.", "Medical"),
+    ("Orthopedist", "orthopedist", "Joint pain, fractures, back or spine issues, sports injuries, and mobility care.", "Surgical"),
+    ("Pediatrician", "pediatrician", "Infant, child, and adolescent growth, immunizations, and acute pediatric care.", "Primary Care"),
+    ("Gynecologist", "gynecologist", "Women's reproductive health, menstrual care, prenatal guidance, and screenings.", "Medical"),
+    ("ENT Specialist", "ent-specialist", "Ear infections, sinus issues, throat pain, vertigo, and hearing concerns.", "Surgical"),
+    ("Ophthalmologist", "ophthalmologist", "Vision changes, eye infections, glaucoma screening, and retinal evaluations.", "Surgical"),
+    ("Psychiatrist", "psychiatrist", "Anxiety, depression, sleep disorders, stress management, and mental health care.", "Mental Health"),
+    ("Gastroenterologist", "gastroenterologist", "Digestive pain, acidity, liver health, IBS, and gastrointestinal evaluations.", "Medical"),
+    ("Endocrinologist", "endocrinologist", "Diabetes, thyroid disorders, hormonal balance, and metabolic conditions.", "Medical"),
+    ("Dentist", "dentist", "Oral hygiene, toothache, gum care, dental restorations, and preventive checkups.", "Dental"),
+    ("Pulmonologist", "pulmonologist", "Chronic cough, asthma, shortness of breath, sleep apnea, and respiratory care.", "Medical"),
+]
 
 
 def seed_database(db: Session) -> None:
-    """Ensure RBAC roles and optional clean-slate demo login accounts exist without preloaded mock records."""
+    """Ensure RBAC roles, controlled speciality catalog, and clean-slate login accounts exist without mock doctors/records."""
     roles_spec = [
         ("patient", "Individual user managing personal medical vault, timeline, and assistant"),
-        ("doctor", "Licensed clinician viewing strictly patient-shared records and summaries"),
-        ("admin", "Public health authority monitoring regional outbreak intelligence and simulations"),
+        ("doctor", "Licensed clinician managing verified practice profile, schedule, and patient-shared records"),
+        ("admin", "Public health authority and directory administrator managing verifications and surveillance"),
     ]
     role_map: dict[str, Role] = {}
     for name, desc in roles_spec:
@@ -19,6 +36,10 @@ def seed_database(db: Session) -> None:
             db.add(existing)
             db.flush()
         role_map[name] = existing
+
+    for name, slug, desc, category in DEFAULT_SPECIALITIES:
+        if not db.query(Speciality).filter(Speciality.slug == slug).first():
+            db.add(Speciality(name=name, slug=slug, description=desc, category=category, is_active=True))
 
     demo_users = [
         {

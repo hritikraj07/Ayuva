@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import get_settings
 from backend.database import Base, SessionLocal, engine
-from backend.routers import auth_router, chat_router, outbreak_router, sharing_router, vault_router
+from backend.routers import appointments_router, auth_router, chat_router, doctors_router, outbreak_router, sharing_router, vault_router
 from backend.services.assistant_service import get_active_gemini_key, get_active_gemini_model
 from backend.services.seed_data import seed_database
 
@@ -43,6 +43,8 @@ app.include_router(vault_router.router)
 app.include_router(sharing_router.router)
 app.include_router(chat_router.router)
 app.include_router(outbreak_router.router)
+app.include_router(doctors_router.router)
+app.include_router(appointments_router.router)
 
 
 @app.get("/api/health")
