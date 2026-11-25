@@ -187,50 +187,319 @@ function buildSculptedLungGeometry(side: -1 | 1): THREE.BufferGeometry {
   return geo;
 }
 
+function createBoneTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+
+  if (ctx) {
+    ctx.fillStyle = "#ebe0ca";
+    ctx.fillRect(0, 0, size, size);
+
+    // Subtle organic bone mineral / trabecular mottling
+    for (let i = 0; i < 320; i++) {
+      const s1 = Math.sin(i * 19.37) * 43758.5453;
+      const s2 = Math.sin(i * 73.19) * 24634.6345;
+      const s3 = Math.sin(i * 31.71) * 18371.1234;
+      const x = (s1 - Math.floor(s1)) * size;
+      const y = (s2 - Math.floor(s2)) * size;
+      const r = 4 + (s3 - Math.floor(s3)) * 18;
+      const g = ctx.createRadialGradient(x, y, 1, x, y, r);
+      const warm = i % 2 === 0;
+      g.addColorStop(0, warm ? "rgba(248, 242, 228, 0.34)" : "rgba(182, 165, 138, 0.22)");
+      g.addColorStop(1, "rgba(235, 224, 202, 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Fine mineral pores
+    ctx.fillStyle = "rgba(145, 128, 102, 0.14)";
+    for (let i = 0; i < 420; i++) {
+      const x = ((Math.sin(i * 12.7) * 0.5 + 0.5) * size);
+      const y = ((Math.cos(i * 45.9) * 0.5 + 0.5) * size);
+      ctx.fillRect(x, y, 1.2, 1.2);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function buildRealisticSkullCraniumGeometry(): THREE.BufferGeometry {
+  // Sculpted neurocranium + brow ridge + orbital sockets + nasal bridge/aperture + zygomas + maxilla
+  // Centered vertically at y=0 (placed at y=1.80 in head group), facing +z
+  const uSteps = 64;
+  const vSteps = 72;
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  for (let i = 0; i <= uSteps; i++) {
+    const u = (i / uSteps) * Math.PI; // 0 = crown (+y), PI = skull base/maxilla (-y)
+    const sinU = Math.sin(u);
+    const cosU = Math.cos(u);
+
+    for (let j = 0; j <= vSteps; j++) {
+      const v = (j / vSteps) * Math.PI * 2;
+      const sinV = Math.sin(v); // lateral X
+      const cosV = Math.cos(v); // anteroposterior Z (+1 = face front, -1 = occiput back)
+
+      // Base cranium vault proportions
+      let rx = 0.215 * sinU;
+      let ry = 0.255 * cosU;
+      let rz = 0.265 * sinU;
+
+      // Broaden parietal bosses slightly behind mid-plane, narrow temporal region anteriorly
+      const parietalBoost = Math.max(0, 1 - Math.abs(cosU - 0.18) / 0.55) * Math.max(0, -cosV * 0.4 + 0.6);
+      rx *= 1 + parietalBoost * 0.16;
+
+      // Posterior occipital bulge
+      if (cosV < 0) {
+        rz *= 1 + Math.max(0, -cosV) * Math.exp(-Math.pow((cosU + 0.1) / 0.55, 2)) * 0.14;
+      }
+
+      // Taper inferiorly beneath zygoma into maxilla + narrow skull base
+      if (cosU < -0.15) {
+        const lowerT = THREE.MathUtils.clamp((-0.15 - cosU) / 0.85, 0, 1);
+        const faceMask = THREE.MathUtils.smoothstep(cosV, -0.25, 0.55);
+        // Back/base of skull tucks upward smoothly
+        ry += (1 - faceMask) * lowerT * 0.12;
+        rx *= 1 - lowerT * (0.48 - faceMask * 0.08);
+        rz *= 1 - lowerT * (0.45 - faceMask * 0.24);
+      }
+
+      let x = sinV * rx;
+      let y = ry;
+      let z = cosV * rz;
+
+      // Shift cranial center slightly posteriorly so forehead & face align cleanly over neck
+      z -= 0.025;
+
+      // Facial anatomical sculpting on anterior half (cosV > 0)
+      if (cosV > 0.05) {
+        // 1. Temporal fossa indentation on lateral forehead/temples
+        const templeMask =
+          Math.exp(-Math.pow((Math.abs(x) - 0.175) / 0.045, 2)) *
+          Math.exp(-Math.pow((y - 0.035) / 0.095, 2)) *
+          THREE.MathUtils.smoothstep(cosV, 0.1, 0.65);
+        x -= Math.sign(x || 1) * templeMask * 0.024;
+
+        // 2. Supraorbital brow ridge
+        const browMask =
+          Math.exp(-Math.pow((y - 0.048) / 0.032, 2)) *
+          Math.exp(-Math.pow(x / 0.145, 2)) *
+          THREE.MathUtils.smoothstep(cosV, 0.45, 0.92);
+        const glabellaDip = 1 - 0.35 * Math.exp(-Math.pow(x / 0.022, 2));
+        z += browMask * 0.038 * glabellaDip;
+
+        // 3. Recessed left & right orbital eye sockets
+        for (const side of [-1, 1]) {
+          const dx = (x - side * 0.072) / 0.046;
+          const dy = (y + 0.015) / 0.038;
+          // Squarish-oval orbital contour
+          const orbitDist = Math.pow(Math.pow(Math.abs(dx), 2.4) + Math.pow(Math.abs(dy), 2.4), 1 / 2.4);
+          if (orbitDist < 1.22 && cosV > 0.4) {
+            const rim = Math.exp(-Math.pow((orbitDist - 0.96) / 0.2, 2)) * 0.018;
+            const depth = orbitDist < 0.92 ? Math.pow(1 - orbitDist / 0.92, 0.65) * 0.078 : 0;
+            z += (rim - depth) * THREE.MathUtils.smoothstep(cosV, 0.4, 0.85);
+          }
+        }
+
+        // 4. Zygomatic (cheekbone) prominences
+        const malarMask =
+          Math.exp(-Math.pow((Math.abs(x) - 0.118) / 0.042, 2)) *
+          Math.exp(-Math.pow((y + 0.068) / 0.042, 2)) *
+          THREE.MathUtils.smoothstep(cosV, 0.3, 0.82);
+        z += malarMask * 0.044;
+        x += Math.sign(x || 1) * malarMask * 0.022;
+
+        // 5. Prominent nasal bone bridge + recessed piriform nasal aperture
+        const nasalBridgeMask =
+          Math.exp(-Math.pow(x / 0.024, 2)) *
+          Math.exp(-Math.pow((y - 0.005) / 0.042, 2)) *
+          THREE.MathUtils.smoothstep(cosV, 0.65, 0.96);
+        z += nasalBridgeMask * 0.048;
+
+        // Piriform aperture cavity below nasal bridge
+        const nx = Math.abs(x) / (0.026 + Math.max(0, -0.055 - y) * 0.25);
+        const ny = (y + 0.085) / 0.044;
+        const nasalHole = Math.sqrt(nx * nx + ny * ny);
+        if (nasalHole < 1.0 && cosV > 0.6) {
+          const septum = Math.exp(-Math.pow(x / 0.0045, 2)) * 0.036;
+          const cavity = Math.pow(1 - nasalHole, 0.6) * 0.068;
+          z -= Math.max(0, cavity - septum);
+        }
+
+        // 6. Forward-curving maxilla / upper alveolar arch
+        const maxillaMask =
+          Math.exp(-Math.pow((y + 0.175) / 0.052, 2)) *
+          Math.exp(-Math.pow(x / 0.086, 2)) *
+          THREE.MathUtils.smoothstep(cosV, 0.5, 0.95);
+        z += maxillaMask * 0.066;
+      }
+
+      positions.push(x, y, z);
+      uvs.push((j / vSteps) * 2.0, (i / uSteps) * 2.0);
+    }
+  }
+
+  for (let i = 0; i < uSteps; i++) {
+    for (let j = 0; j < vSteps; j++) {
+      const a = i * (vSteps + 1) + j;
+      const b = a + vSteps + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function buildMandibleGeometry(): THREE.BufferGeometry {
+  // Sculpted horseshoe lower jaw (chin, mental eminence, body, gonial angles, vertical rami to condyles)
+  const uSteps = 44; // along horseshoe from left condyle -> chin -> right condyle
+  const vSteps = 18; // cross-section loop
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  const spinePts: Array<{ p: THREE.Vector3; w: number; h: number }> = [];
+  for (let i = 0; i <= uSteps; i++) {
+    const s = (i / uSteps) * 2 - 1; // -1 = left condyle, 0 = chin center, +1 = right condyle
+    const absS = Math.abs(s);
+    const side = Math.sign(s || 1);
+
+    let px: number;
+    let py: number;
+    let pz: number;
+    let w: number;
+    let h: number;
+
+    if (absS <= 0.62) {
+      // U-shaped mandibular body + chin
+      const a = (absS / 0.62) * (Math.PI * 0.56);
+      px = side * Math.sin(a) * 0.132;
+      pz = 0.05 + Math.cos(a) * 0.175;
+      py = 1.44 + (absS / 0.62) * 0.04;
+      // Broader flat-front chin (mental protuberance)
+      const chinFlat = Math.exp(-Math.pow(absS / 0.16, 2));
+      pz -= chinFlat * 0.008;
+      w = 0.017 + chinFlat * 0.006;
+      h = 0.044 - (absS / 0.62) * 0.006;
+    } else {
+      // Gonial jaw angle rising vertically along mandibular ramus to TMJ condyle
+      const rt = (absS - 0.62) / 0.38;
+      px = side * THREE.MathUtils.lerp(0.132 * Math.sin(Math.PI * 0.56), 0.156, rt);
+      pz = THREE.MathUtils.lerp(0.05 + Math.cos(Math.PI * 0.56) * 0.175, -0.025, rt);
+      py = THREE.MathUtils.lerp(1.48, 1.72, rt);
+      w = THREE.MathUtils.lerp(0.016, 0.013, rt);
+      h = THREE.MathUtils.lerp(0.042, 0.024, rt);
+    }
+
+    spinePts.push({ p: new THREE.Vector3(px, py, pz), w, h });
+  }
+
+  for (let i = 0; i <= uSteps; i++) {
+    const cur = spinePts[i];
+    const prev = spinePts[Math.max(0, i - 1)].p;
+    const next = spinePts[Math.min(uSteps, i + 1)].p;
+    const tangent = new THREE.Vector3().subVectors(next, prev).normalize();
+    const up = new THREE.Vector3(0, 1, 0);
+    const out = new THREE.Vector3().crossVectors(up, tangent).normalize();
+    if (out.lengthSq() < 0.01) out.set(1, 0, 0);
+    const binormal = new THREE.Vector3().crossVectors(tangent, out).normalize();
+
+    for (let j = 0; j <= vSteps; j++) {
+      const ang = (j / vSteps) * Math.PI * 2;
+      const cx = Math.cos(ang) * cur.w;
+      const cy = Math.sin(ang) * cur.h;
+      const vx = cur.p.x + out.x * cx + binormal.x * cy;
+      const vy = cur.p.y + out.y * cx + binormal.y * cy;
+      const vz = cur.p.z + out.z * cx + binormal.z * cy;
+      positions.push(vx, vy, vz);
+      uvs.push(i / uSteps, j / vSteps);
+    }
+  }
+
+  for (let i = 0; i < uSteps; i++) {
+    for (let j = 0; j < vSteps; j++) {
+      const a = i * (vSteps + 1) + j;
+      const b = a + vSteps + 1;
+      indices.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
 function buildSmoothHalfTorsoGeometry(): THREE.BufferGeometry {
-  const ySteps = 56;
-  const rSteps = 64;
+  const ySteps = 72;
+  const rSteps = 68;
   const positions: number[] = [];
   const indices: number[] = [];
 
-  const profileAt = (y: number): { rx: number; rz: number } => {
+  const profileAt = (y: number): { rx: number; rz: number; zShift: number } => {
     if (y < 0.56) {
       const t = THREE.MathUtils.clamp((y + 1.08) / 1.64, 0, 1);
       const smooth = t * t * (3 - 2 * t);
       return {
-        rx: THREE.MathUtils.lerp(0.84, 1.32, smooth) + Math.sin(t * Math.PI) * 0.05,
-        rz: THREE.MathUtils.lerp(0.45, 0.55, Math.sin(t * Math.PI * 0.85)),
+        rx: THREE.MathUtils.lerp(0.84, 1.3, smooth) + Math.sin(t * Math.PI) * 0.04,
+        rz: THREE.MathUtils.lerp(0.44, 0.54, Math.sin(t * Math.PI * 0.85)),
+        zShift: 0,
       };
     }
     if (y < 0.94) {
       const t = (y - 0.56) / 0.38;
       const smooth = t * t * (3 - 2 * t);
       return {
-        rx: THREE.MathUtils.lerp(1.32, 0.24, smooth),
-        rz: THREE.MathUtils.lerp(0.52, 0.22, smooth),
+        rx: THREE.MathUtils.lerp(1.3, 0.22, smooth),
+        rz: THREE.MathUtils.lerp(0.51, 0.21, smooth),
+        zShift: THREE.MathUtils.lerp(0, -0.01, smooth),
       };
     }
-    if (y < 1.3) {
-      const t = (y - 0.94) / 0.36;
+    if (y < 1.32) {
+      // Smooth anatomical neck
+      const t = (y - 0.94) / 0.38;
       return {
-        rx: THREE.MathUtils.lerp(0.24, 0.21, t),
-        rz: THREE.MathUtils.lerp(0.22, 0.2, t),
+        rx: THREE.MathUtils.lerp(0.22, 0.195, t),
+        rz: THREE.MathUtils.lerp(0.21, 0.195, t),
+        zShift: -0.01,
       };
     }
-    const t = THREE.MathUtils.clamp((y - 1.3) / 0.72, 0, 1);
-    const dome = Math.sin(t * Math.PI * 0.92);
+    // Closed human head contour wrapping cleanly around sculpted skull up to y = 2.16
+    const t = THREE.MathUtils.clamp((y - 1.32) / 0.84, 0, 1);
+    const crownCap = t > 0.82 ? Math.cos(((t - 0.82) / 0.18) * (Math.PI * 0.5)) : 1.0;
+    const midHead = Math.sin(Math.min(1, t / 0.85) * Math.PI * 0.65);
+    const chinJawFlare = Math.exp(-Math.pow((t - 0.32) / 0.24, 2)) * 0.055;
     return {
-      rx: 0.19 + dome * 0.2,
-      rz: 0.19 + dome * 0.24,
+      rx: Math.max(0.002, (0.19 + midHead * 0.095 + chinJawFlare) * crownCap),
+      rz: Math.max(0.002, (0.195 + midHead * 0.12 + chinJawFlare * 0.85) * crownCap),
+      zShift: -0.02 + Math.sin(t * Math.PI) * 0.025,
     };
   };
 
   for (let i = 0; i <= ySteps; i++) {
-    const y = THREE.MathUtils.lerp(-1.08, 2.02, i / ySteps);
-    const { rx, rz } = profileAt(y);
+    const y = THREE.MathUtils.lerp(-1.08, 2.16, i / ySteps);
+    const { rx, rz, zShift } = profileAt(y);
     for (let j = 0; j <= rSteps; j++) {
       const theta = (j / rSteps) * Math.PI * 2;
-      positions.push(Math.cos(theta) * rx, y, Math.sin(theta) * rz);
+      positions.push(Math.cos(theta) * rx, y, Math.sin(theta) * rz + zShift);
     }
   }
 
@@ -247,6 +516,23 @@ function buildSmoothHalfTorsoGeometry(): THREE.BufferGeometry {
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
+}
+
+function buildDermalPointCloudGeometry(torsoGeo: THREE.BufferGeometry, armGeos: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  // Fine anatomical micro-dot dermal stippling (replaces harsh diagonal wireframe grid)
+  const pts: number[] = [];
+  const sampleAttr = (geo: THREE.BufferGeometry, stride: number) => {
+    const pos = geo.getAttribute("position");
+    for (let i = 0; i < pos.count; i += stride) {
+      pts.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+    }
+  };
+  sampleAttr(torsoGeo, 2);
+  armGeos.forEach((g) => sampleAttr(g, 3));
+
+  const out = new THREE.BufferGeometry();
+  out.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+  return out;
 }
 
 function HalfBodyRespiratorySystem({
@@ -267,15 +553,21 @@ function HalfBodyRespiratorySystem({
 
   const {
     lungTextures,
+    boneTexture,
     torsoShellGeo,
     armShellGeos,
+    dermalPointsGeo,
+    skullCraniumGeo,
+    mandibleGeo,
+    zygomaticArchGeos,
+    toothPositions,
+    facialMuscleGeos,
     humerusGeos,
     neckMuscleGeos,
     carotidArteryGeos,
     jugularVeinGeos,
     armArteryGeos,
     armVeinGeos,
-    jawBoneGeo,
     rightLungGeo,
     leftLungGeo,
     tracheaGeo,
@@ -296,6 +588,7 @@ function HalfBodyRespiratorySystem({
     flowCurves,
   } = useMemo(() => {
     const lTex = createLungTissueTextures();
+    const bTex = createBoneTexture();
     const torsoGeo = buildSmoothHalfTorsoGeometry();
     const rLung = buildSculptedLungGeometry(-1);
     const lLung = buildSculptedLungGeometry(1);
@@ -303,53 +596,113 @@ function HalfBodyRespiratorySystem({
     const armShells = [-1, 1].map((side) =>
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 1.12, 0.56, -0.02),
-          new THREE.Vector3(side * 1.28, 0.1, -0.04),
-          new THREE.Vector3(side * 1.34, -0.48, -0.02),
-          new THREE.Vector3(side * 1.36, -1.06, 0.02),
+          new THREE.Vector3(side * 1.04, 0.44, -0.02),
+          new THREE.Vector3(side * 1.24, 0.04, -0.03),
+          new THREE.Vector3(side * 1.32, -0.5, -0.01),
+          new THREE.Vector3(side * 1.34, -1.04, 0.02),
         ]),
         24,
-        0.24,
+        0.22,
         24,
         false
       )
     );
+    const dermalPts = buildDermalPointCloudGeometry(torsoGeo, armShells);
+
+    const skullCranium = buildRealisticSkullCraniumGeometry();
+    const mandible = buildMandibleGeometry();
+
+    // Bilateral zygomatic arches sweeping from malar cheekbone back to temporal bone above TMJ
+    const zygomaticArches = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.132, 1.725, 0.14),
+          new THREE.Vector3(side * 0.184, 1.72, 0.06),
+          new THREE.Vector3(side * 0.172, 1.73, -0.035),
+        ]),
+        14,
+        0.013,
+        8,
+        false
+      )
+    );
+
+    // Sculpted upper & lower U-shaped dental arches
+    const teeth: Array<{ pos: [number, number, number]; rotY: number; scale: [number, number, number] }> = [];
+    for (let k = -4; k <= 4; k++) {
+      const ang = (k / 4.8) * 1.15;
+      const tx = Math.sin(ang) * 0.068;
+      const tz = 0.128 + Math.cos(ang) * 0.095;
+      const widthScale = Math.abs(k) <= 1 ? 0.013 : 0.011;
+      teeth.push({ pos: [tx, 1.592, tz], rotY: ang, scale: [widthScale, 0.022, 0.01] });
+      teeth.push({ pos: [tx * 0.94, 1.564, tz - 0.008], rotY: ang, scale: [widthScale * 0.9, 0.02, 0.009] });
+    }
+
+    // Anatomical ecorché masseter & temporalis muscles (flanking jaw/temples, leaving front skull crystal-clear)
+    const facialMuscles = [-1, 1].flatMap((side) => [
+      // Masseter (zygomatic arch -> gonial angle)
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.165, 1.71, 0.045),
+          new THREE.Vector3(side * 0.164, 1.58, 0.042),
+          new THREE.Vector3(side * 0.146, 1.47, 0.035),
+        ]),
+        12,
+        0.024,
+        10,
+        false
+      ),
+      // Temporalis belly inside temporal fossa
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.188, 1.88, -0.03),
+          new THREE.Vector3(side * 0.185, 1.79, 0.01),
+          new THREE.Vector3(side * 0.158, 1.69, 0.02),
+        ]),
+        12,
+        0.022,
+        10,
+        false
+      ),
+    ]);
 
     const humeri = [-1, 1].map((side) =>
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 1.1, 0.56, -0.01),
-          new THREE.Vector3(side * 1.24, 0.05, -0.02),
-          new THREE.Vector3(side * 1.32, -0.54, 0.0),
-          new THREE.Vector3(side * 1.34, -1.04, 0.03),
+          new THREE.Vector3(side * 1.08, 0.54, -0.01),
+          new THREE.Vector3(side * 1.22, 0.05, -0.02),
+          new THREE.Vector3(side * 1.3, -0.52, 0.0),
+          new THREE.Vector3(side * 1.32, -1.02, 0.02),
         ]),
         20,
-        0.052,
+        0.05,
         14,
         false
       )
     );
 
+    // Sternocleidomastoid anchoring anatomically from mastoid process behind ear -> manubrium/clavicle
     const neckMuscles = [-1, 1].flatMap((side) => [
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 0.24, 1.34, -0.04),
-          new THREE.Vector3(side * 0.17, 1.05, 0.08),
-          new THREE.Vector3(side * 0.07, 0.68, 0.36),
+          new THREE.Vector3(side * 0.155, 1.64, -0.075),
+          new THREE.Vector3(side * 0.145, 1.26, -0.01),
+          new THREE.Vector3(side * 0.115, 0.96, 0.12),
+          new THREE.Vector3(side * 0.06, 0.64, 0.34),
         ]),
-        18,
-        0.044,
+        20,
+        0.034,
         10,
         false
       ),
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 0.18, 1.22, -0.06),
-          new THREE.Vector3(side * 0.23, 0.92, -0.02),
-          new THREE.Vector3(side * 0.38, 0.68, 0.16),
+          new THREE.Vector3(side * 0.135, 1.56, -0.09),
+          new THREE.Vector3(side * 0.165, 1.12, -0.04),
+          new THREE.Vector3(side * 0.27, 0.72, 0.16),
         ]),
-        16,
-        0.036,
+        18,
+        0.03,
         10,
         false
       ),
@@ -358,13 +711,13 @@ function HalfBodyRespiratorySystem({
     const carotids = [-1, 1].map((side) =>
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 0.06, 0.34, 0.04),
-          new THREE.Vector3(side * 0.11, 0.72, 0.04),
-          new THREE.Vector3(side * 0.12, 1.18, 0.04),
-          new THREE.Vector3(side * 0.14, 1.44, 0.02),
+          new THREE.Vector3(side * 0.055, 0.34, 0.04),
+          new THREE.Vector3(side * 0.095, 0.74, 0.04),
+          new THREE.Vector3(side * 0.1, 1.22, 0.03),
+          new THREE.Vector3(side * 0.11, 1.54, -0.01),
         ]),
         20,
-        0.02,
+        0.019,
         10,
         false
       )
@@ -373,13 +726,13 @@ function HalfBodyRespiratorySystem({
     const jugulars = [-1, 1].map((side) =>
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 0.13, 0.44, 0.08),
-          new THREE.Vector3(side * 0.18, 0.78, 0.05),
-          new THREE.Vector3(side * 0.17, 1.22, 0.03),
-          new THREE.Vector3(side * 0.18, 1.45, 0.01),
+          new THREE.Vector3(side * 0.12, 0.44, 0.07),
+          new THREE.Vector3(side * 0.145, 0.82, 0.04),
+          new THREE.Vector3(side * 0.135, 1.26, 0.01),
+          new THREE.Vector3(side * 0.14, 1.56, -0.02),
         ]),
         20,
-        0.024,
+        0.022,
         10,
         false
       )
@@ -390,9 +743,9 @@ function HalfBodyRespiratorySystem({
         new THREE.CatmullRomCurve3([
           new THREE.Vector3(side * 0.12, 0.56, 0.04),
           new THREE.Vector3(side * 0.58, 0.62, 0.06),
-          new THREE.Vector3(side * 1.06, 0.48, 0.04),
-          new THREE.Vector3(side * 1.24, -0.1, 0.04),
-          new THREE.Vector3(side * 1.31, -0.95, 0.05),
+          new THREE.Vector3(side * 1.04, 0.46, 0.04),
+          new THREE.Vector3(side * 1.22, -0.1, 0.04),
+          new THREE.Vector3(side * 1.29, -0.94, 0.05),
         ]),
         24,
         0.014,
@@ -406,9 +759,9 @@ function HalfBodyRespiratorySystem({
         new THREE.CatmullRomCurve3([
           new THREE.Vector3(side * 0.16, 0.52, 0.08),
           new THREE.Vector3(side * 0.62, 0.58, 0.1),
-          new THREE.Vector3(side * 1.1, 0.42, 0.08),
-          new THREE.Vector3(side * 1.28, -0.15, 0.08),
-          new THREE.Vector3(side * 1.36, -0.98, 0.08),
+          new THREE.Vector3(side * 1.08, 0.4, 0.08),
+          new THREE.Vector3(side * 1.26, -0.15, 0.08),
+          new THREE.Vector3(side * 1.34, -0.96, 0.08),
         ]),
         24,
         0.016,
@@ -417,29 +770,15 @@ function HalfBodyRespiratorySystem({
       )
     );
 
-    const jawBone = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.22, 1.56, 0.02),
-        new THREE.Vector3(-0.17, 1.38, 0.14),
-        new THREE.Vector3(0, 1.32, 0.24),
-        new THREE.Vector3(0.17, 1.38, 0.14),
-        new THREE.Vector3(0.22, 1.56, 0.02),
-      ]),
-      24,
-      0.032,
-      10,
-      false
-    );
-
     const trachea = new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.48, 0.06),
+        new THREE.Vector3(0, 1.46, 0.05),
         new THREE.Vector3(0, 1.06, 0.04),
         new THREE.Vector3(0, 0.48, 0.02),
         new THREE.Vector3(0, 0.16, 0.02),
       ]),
       36,
-      0.062,
+      0.058,
       18,
       false
     );
@@ -451,7 +790,7 @@ function HalfBodyRespiratorySystem({
           new THREE.Vector3(-0.22, 0.06, 0.04),
           new THREE.Vector3(-0.42, -0.02, 0.12),
         ]),
-        radius: 0.045,
+        radius: 0.044,
       },
       {
         curve: new THREE.CatmullRomCurve3([
@@ -459,7 +798,7 @@ function HalfBodyRespiratorySystem({
           new THREE.Vector3(0.24, 0.05, 0.04),
           new THREE.Vector3(0.44, -0.02, 0.12),
         ]),
-        radius: 0.043,
+        radius: 0.042,
       },
     ];
 
@@ -549,14 +888,14 @@ function HalfBodyRespiratorySystem({
 
     const fCurves = [
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.06),
+        new THREE.Vector3(0, 1.46, 0.05),
         new THREE.Vector3(0, 0.85, 0.03),
         new THREE.Vector3(0, 0.18, 0.02),
         new THREE.Vector3(-0.32, 0.01, 0.08),
         new THREE.Vector3(-0.68, 0.42, 0.2),
       ]),
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.06),
+        new THREE.Vector3(0, 1.46, 0.05),
         new THREE.Vector3(0, 0.85, 0.03),
         new THREE.Vector3(0, 0.18, 0.02),
         new THREE.Vector3(0.36, 0.01, 0.08),
@@ -580,14 +919,14 @@ function HalfBodyRespiratorySystem({
           new THREE.Vector3(side * w, y - 0.05, -0.02),
           boneEnd,
         ]);
-        ribs.push(new THREE.TubeGeometry(ribCurve, 24, 0.017, 8, false));
+        ribs.push(new THREE.TubeGeometry(ribCurve, 24, 0.014, 8, false));
 
         if (i < 8) {
           const cartCurve = new THREE.CatmullRomCurve3([
             boneEnd,
             new THREE.Vector3(side * sternalGap, cartY, d * 0.88),
           ]);
-          cartilages.push(new THREE.TubeGeometry(cartCurve, 8, 0.014, 7, false));
+          cartilages.push(new THREE.TubeGeometry(cartCurve, 8, 0.011, 7, false));
         }
       }
     }
@@ -600,7 +939,7 @@ function HalfBodyRespiratorySystem({
         new THREE.Vector3(0, -0.36, 0.42),
       ]),
       18,
-      0.045,
+      0.04,
       10,
       false
     );
@@ -611,28 +950,34 @@ function HalfBodyRespiratorySystem({
           new THREE.Vector3(side * 0.07, 0.62, 0.4),
           new THREE.Vector3(side * 0.4, 0.72, 0.34),
           new THREE.Vector3(side * 0.76, 0.67, 0.2),
-          new THREE.Vector3(side * 1.1, 0.61, 0.01),
+          new THREE.Vector3(side * 1.08, 0.58, 0.0),
         ]),
         22,
-        0.03,
+        0.028,
         12,
         false
       )
     );
 
-    const spineVerts = Array.from({ length: 14 }, (_, idx) => new THREE.Vector3(0, 1.24 - idx * 0.16, -0.28 - (idx > 3 ? 0.12 : 0)));
+    const spineVerts = Array.from({ length: 16 }, (_, idx) => new THREE.Vector3(0, 1.56 - idx * 0.16, -0.14 - (idx > 4 ? 0.18 : idx * 0.04)));
 
     return {
       lungTextures: lTex,
+      boneTexture: bTex,
       torsoShellGeo: torsoGeo,
       armShellGeos: armShells,
+      dermalPointsGeo: dermalPts,
+      skullCraniumGeo: skullCranium,
+      mandibleGeo: mandible,
+      zygomaticArchGeos: zygomaticArches,
+      toothPositions: teeth,
+      facialMuscleGeos: facialMuscles,
       humerusGeos: humeri,
       neckMuscleGeos: neckMuscles,
       carotidArteryGeos: carotids,
       jugularVeinGeos: jugulars,
       armArteryGeos: armArteries,
       armVeinGeos: armVeins,
-      jawBoneGeo: jawBone,
       rightLungGeo: rLung,
       leftLungGeo: lLung,
       tracheaGeo: trachea,
@@ -658,15 +1003,20 @@ function HalfBodyRespiratorySystem({
     return () => {
       lungTextures.colorMap.dispose();
       lungTextures.bumpMap.dispose();
+      boneTexture.dispose();
       torsoShellGeo.dispose();
       armShellGeos.forEach((g) => g.dispose());
+      dermalPointsGeo.dispose();
+      skullCraniumGeo.dispose();
+      mandibleGeo.dispose();
+      zygomaticArchGeos.forEach((g) => g.dispose());
+      facialMuscleGeos.forEach((g) => g.dispose());
       humerusGeos.forEach((g) => g.dispose());
       neckMuscleGeos.forEach((g) => g.dispose());
       carotidArteryGeos.forEach((g) => g.dispose());
       jugularVeinGeos.forEach((g) => g.dispose());
       armArteryGeos.forEach((g) => g.dispose());
       armVeinGeos.forEach((g) => g.dispose());
-      jawBoneGeo.dispose();
       rightLungGeo.dispose();
       leftLungGeo.dispose();
       tracheaGeo.dispose();
@@ -685,15 +1035,20 @@ function HalfBodyRespiratorySystem({
     };
   }, [
     lungTextures,
+    boneTexture,
     torsoShellGeo,
     armShellGeos,
+    dermalPointsGeo,
+    skullCraniumGeo,
+    mandibleGeo,
+    zygomaticArchGeos,
+    facialMuscleGeos,
     humerusGeos,
     neckMuscleGeos,
     carotidArteryGeos,
     jugularVeinGeos,
     armArteryGeos,
     armVeinGeos,
-    jawBoneGeo,
     rightLungGeo,
     leftLungGeo,
     tracheaGeo,
@@ -767,35 +1122,74 @@ function HalfBodyRespiratorySystem({
 
   return (
     <group ref={groupRef} position={[1.82, -0.2, 0]}>
+      {/* Smooth translucent skin contour + fine micro-dotted dermal stippling (no harsh wireframe grid) */}
       <mesh geometry={torsoShellGeo}>
-        <meshPhysicalMaterial color="#e6d6ce" roughness={0.32} transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh geometry={torsoShellGeo}>
-        <meshBasicMaterial color="#9e877e" wireframe transparent opacity={0.05} />
+        <meshPhysicalMaterial color="#e6d6ce" roughness={0.28} transparent opacity={0.14} depthWrite={false} side={THREE.FrontSide} />
       </mesh>
       {armShellGeos.map((g, i) => (
-        <group key={i}>
-          <mesh geometry={g}>
-            <meshPhysicalMaterial color="#e6d6ce" roughness={0.32} transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} />
-          </mesh>
-          <mesh geometry={g}>
-            <meshBasicMaterial color="#9e877e" wireframe transparent opacity={0.05} />
-          </mesh>
-        </group>
+        <mesh key={i} geometry={g}>
+          <meshPhysicalMaterial color="#e6d6ce" roughness={0.28} transparent opacity={0.14} depthWrite={false} side={THREE.FrontSide} />
+        </mesh>
       ))}
-
-      <mesh geometry={jawBoneGeo}>
-        <meshStandardMaterial color="#efe5d1" roughness={0.35} transparent opacity={0.92} />
-      </mesh>
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 1.1, 0.57, -0.01]}>
-          <sphereGeometry args={[0.1, 18, 18]} />
-          <meshStandardMaterial color="#efe5d1" roughness={0.32} transparent opacity={0.96} />
+        <mesh key={`shcap-${side}`} position={[side * 1.04, 0.44, -0.02]}>
+          <sphereGeometry args={[0.215, 20, 16]} />
+          <meshPhysicalMaterial color="#e6d6ce" roughness={0.28} transparent opacity={0.13} depthWrite={false} side={THREE.FrontSide} />
+        </mesh>
+      ))}
+      <points geometry={dermalPointsGeo}>
+        <pointsMaterial color="#b09589" size={0.011} transparent opacity={0.34} sizeAttenuation depthWrite={false} />
+      </points>
+
+      {/* Realistic sculpted anatomical skull (cranium vault, deep orbital sockets, nasal bridge, zygomatic arches, teeth, mandible) */}
+      <group>
+        <mesh geometry={skullCraniumGeo} position={[0, 1.8, 0.04]}>
+          <meshStandardMaterial map={boneTexture} color="#f3ead7" roughness={0.44} metalness={0.02} transparent opacity={0.97} />
+        </mesh>
+        {/* Subtle dark shadow backing inside eye orbits & piriform nasal aperture for depth */}
+        {[-1, 1].map((side) => (
+          <mesh key={`orb-${side}`} position={[side * 0.072, 1.785, 0.145]} scale={[0.92, 0.78, 0.55]}>
+            <sphereGeometry args={[0.036, 16, 14]} />
+            <meshStandardMaterial color="#3c2f2c" roughness={0.85} transparent opacity={0.94} />
+          </mesh>
+        ))}
+        <mesh position={[0, 1.705, 0.17]} scale={[0.45, 0.72, 0.45]}>
+          <sphereGeometry args={[0.035, 14, 12]} />
+          <meshStandardMaterial color="#3c2f2c" roughness={0.85} transparent opacity={0.92} />
+        </mesh>
+        {/* Mandible & bilateral zygomatic arches */}
+        <mesh geometry={mandibleGeo}>
+          <meshStandardMaterial map={boneTexture} color="#efe4ce" roughness={0.42} transparent opacity={0.97} />
+        </mesh>
+        {zygomaticArchGeos.map((g, i) => (
+          <mesh key={`zyg-${i}`} geometry={g}>
+            <meshStandardMaterial map={boneTexture} color="#f2e8d4" roughness={0.4} transparent opacity={0.96} />
+          </mesh>
+        ))}
+        {/* Upper and lower dental arches */}
+        {toothPositions.map((tp, idx) => (
+          <mesh key={`tooth-${idx}`} position={tp.pos} rotation={[0, tp.rotY, 0]} scale={tp.scale}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#faf6ec" roughness={0.22} transparent opacity={0.98} />
+          </mesh>
+        ))}
+        {/* Lateral craniofacial ecorché masseter & temporalis muscles */}
+        {facialMuscleGeos.map((g, i) => (
+          <mesh key={`fmusc-${i}`} geometry={g}>
+            <meshPhysicalMaterial color="#ba424a" roughness={0.46} clearcoat={0.2} transparent opacity={0.88} />
+          </mesh>
+        ))}
+      </group>
+
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 1.08, 0.55, -0.01]}>
+          <sphereGeometry args={[0.096, 18, 18]} />
+          <meshStandardMaterial map={boneTexture} color="#efe5d1" roughness={0.34} transparent opacity={0.96} />
         </mesh>
       ))}
       {humerusGeos.map((g, i) => (
         <mesh key={i} geometry={g}>
-          <meshStandardMaterial color="#e8dcc6" roughness={0.35} transparent opacity={0.94} />
+          <meshStandardMaterial map={boneTexture} color="#e8dcc6" roughness={0.38} transparent opacity={0.94} />
         </mesh>
       ))}
 
@@ -825,27 +1219,16 @@ function HalfBodyRespiratorySystem({
         </mesh>
       ))}
 
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 0.11, 1.54, 0.19]} rotation={[0.1, side * 0.3, side * -0.25]} scale={[1.1, 0.65, 0.5]}>
-          <sphereGeometry args={[0.075, 16, 16]} />
-          <meshStandardMaterial color="#c44b52" roughness={0.45} transparent opacity={0.88} />
-        </mesh>
-      ))}
-      <mesh position={[0, 1.68, 0.24]} rotation={[-0.25, 0, 0]} scale={[0.55, 1.0, 0.8]}>
-        <coneGeometry args={[0.06, 0.14, 12]} />
-        <meshStandardMaterial color="#efe5d1" roughness={0.35} transparent opacity={0.92} />
-      </mesh>
-
       <mesh position={[0, 1.12, 0.05]} scale={[1.15, 1, 0.95]}>
-        <cylinderGeometry args={[0.092, 0.074, 0.15, 24]} />
-        <meshPhysicalMaterial color="#e6dac3" roughness={0.34} clearcoat={0.35} transparent opacity={0.96} />
+        <cylinderGeometry args={[0.088, 0.072, 0.15, 24]} />
+        <meshPhysicalMaterial map={boneTexture} color="#e6dac3" roughness={0.34} clearcoat={0.35} transparent opacity={0.96} />
       </mesh>
       <mesh geometry={tracheaGeo}>
         <meshPhysicalMaterial color="#dfd1b8" roughness={0.35} transparent opacity={0.94} />
       </mesh>
       {cartilageRingYs.map((ry) => (
         <mesh key={ry} position={[0, ry, 0.035]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.066, 0.012, 10, 28]} />
+          <torusGeometry args={[0.062, 0.011, 10, 28]} />
           <meshStandardMaterial color="#f5ebd8" roughness={0.28} transparent opacity={0.98} />
         </mesh>
       ))}
@@ -860,24 +1243,24 @@ function HalfBodyRespiratorySystem({
           <meshPhysicalMaterial
             map={lungTextures.colorMap}
             bumpMap={lungTextures.bumpMap}
-            bumpScale={0.024}
+            bumpScale={0.026}
             roughness={0.36}
             clearcoat={0.62}
             clearcoatRoughness={0.28}
             transparent
-            opacity={0.94}
+            opacity={0.96}
           />
         </mesh>
         <mesh geometry={leftLungGeo} position={[0.56, -0.06, 0.02]}>
           <meshPhysicalMaterial
             map={lungTextures.colorMap}
             bumpMap={lungTextures.bumpMap}
-            bumpScale={0.024}
+            bumpScale={0.026}
             roughness={0.36}
             clearcoat={0.62}
             clearcoatRoughness={0.28}
             transparent
-            opacity={0.94}
+            opacity={0.96}
           />
         </mesh>
 
@@ -932,26 +1315,26 @@ function HalfBodyRespiratorySystem({
       <group ref={ribcageRef}>
         {ribGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#f2ead8" roughness={0.32} transparent opacity={0.86} />
+            <meshStandardMaterial map={boneTexture} color="#f2ead8" roughness={0.34} transparent opacity={0.86} />
           </mesh>
         ))}
         {costalCartilageGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#e5dcc9" roughness={0.35} transparent opacity={0.78} />
+            <meshStandardMaterial color="#e5dcc9" roughness={0.35} transparent opacity={0.76} />
           </mesh>
         ))}
         <mesh geometry={sternumGeo}>
-          <meshStandardMaterial color="#e5dcc9" roughness={0.34} transparent opacity={0.85} />
+          <meshStandardMaterial map={boneTexture} color="#e5dcc9" roughness={0.36} transparent opacity={0.86} />
         </mesh>
         {clavicleGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#f3ecdb" roughness={0.28} transparent opacity={0.97} />
+            <meshStandardMaterial map={boneTexture} color="#f3ecdb" roughness={0.3} transparent opacity={0.97} />
           </mesh>
         ))}
         {spineGeos.map((pos, idx) => (
           <mesh key={idx} position={pos}>
-            <cylinderGeometry args={[0.064, 0.068, 0.11, 16]} />
-            <meshStandardMaterial color="#e5d9c3" roughness={0.38} transparent opacity={0.92} />
+            <cylinderGeometry args={[0.058, 0.064, 0.11, 16]} />
+            <meshStandardMaterial map={boneTexture} color="#e5d9c3" roughness={0.4} transparent opacity={0.93} />
           </mesh>
         ))}
       </group>
@@ -959,11 +1342,11 @@ function HalfBodyRespiratorySystem({
       <group ref={diaphragmRef} position={[0, -0.82, 0.02]}>
         <mesh position={[-0.36, 0.03, 0]} scale={[0.56, 0.24, 0.45]}>
           <sphereGeometry args={[0.88, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-          <meshPhysicalMaterial color="#a83b3b" roughness={0.38} clearcoat={0.45} transparent opacity={0.88} side={THREE.DoubleSide} />
+          <meshPhysicalMaterial color="#a83b3b" roughness={0.38} clearcoat={0.45} transparent opacity={0.9} side={THREE.FrontSide} />
         </mesh>
         <mesh position={[0.36, 0, 0]} scale={[0.54, 0.22, 0.45]}>
           <sphereGeometry args={[0.88, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-          <meshPhysicalMaterial color="#8f3032" roughness={0.38} clearcoat={0.45} transparent opacity={0.88} side={THREE.DoubleSide} />
+          <meshPhysicalMaterial color="#8f3032" roughness={0.38} clearcoat={0.45} transparent opacity={0.9} side={THREE.FrontSide} />
         </mesh>
       </group>
 
