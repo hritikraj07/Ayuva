@@ -10,16 +10,20 @@ import {
   ClipboardList,
   Database,
   FileSearch,
+  FileText,
   FolderLock,
   Globe2,
   KeyRound,
   Lock,
+  Mail,
+  Phone,
   Pill,
   QrCode,
   ShieldCheck,
   Sliders,
   Sparkles,
   Stethoscope,
+  X,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -128,6 +132,7 @@ export function LandingPage() {
   const [simPrevention, setSimPrevention] = useState(40);
   const [simVax, setSimVax] = useState(25);
   const [simStartDay, setSimStartDay] = useState(4);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
 
   const simSeries = useMemo(
     () => computeLiveSeirComparison(simCases, simBeds, simStaff, simPrevention, simVax, simStartDay),
@@ -770,31 +775,259 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-slate-300/80 bg-secondary/90 py-8 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <BrandMark />
-            <span>Educational healthcare &amp; public-health surveillance platform. Not a diagnostic medical device.</span>
+      <footer className="relative z-10 border-t border-[#E5E9F0] bg-white/95 pt-14 pb-8 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 pb-10 sm:grid-cols-2 lg:grid-cols-12">
+            {/* Brand & Platform Details */}
+            <div className="flex flex-col gap-4 lg:col-span-5">
+              <BrandMark />
+              <p className="max-w-md text-xs leading-relaxed text-[#475569]">
+                <strong className="font-semibold text-[#111827]">Ayuva Health AI</strong> is an integrated clinical
+                intelligence ecosystem uniting an encrypted Personal Medical Vault, OCR-assisted report extraction,
+                consent-scoped Gemini AI assistance, verified Doctor Discovery &amp; real-time appointment booking, and
+                district-level SEIR outbreak surveillance backed by live PostgreSQL data.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {["Zero Mock Records", "IST (Asia/Kolkata)", "Role-Isolated Access", "Live Outbreak Intelligence"].map(
+                  (tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center rounded-full border border-[#E5E9F0] bg-[#F8FAFC] px-3 py-1 font-mono text-[10px] font-medium text-[#475569]"
+                    >
+                      {tag}
+                    </span>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Platform Modules */}
+            <div className="flex flex-col gap-3 lg:col-span-2">
+              <h3 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#111827]">
+                Platform
+              </h3>
+              <ul className="flex flex-col gap-2 text-xs text-[#64748B]">
+                <li>
+                  <a href="#vault-experience" className="transition-colors hover:text-[#0066FF]">
+                    Personal Medical Vault
+                  </a>
+                </li>
+                <li>
+                  <a href="#ai-assistant" className="transition-colors hover:text-[#0066FF]">
+                    Gemini Clinical AI
+                  </a>
+                </li>
+                <li>
+                  <a href="#outbreak-globe" className="transition-colors hover:text-[#0066FF]">
+                    Outbreak Globe &amp; Map
+                  </a>
+                </li>
+                <li>
+                  <a href="#simulation" className="transition-colors hover:text-[#0066FF]">
+                    SEIR Outbreak Simulator
+                  </a>
+                </li>
+                <li>
+                  <a href="#security" className="transition-colors hover:text-[#0066FF]">
+                    Security &amp; Privacy Vault
+                  </a>
+                </li>
+                <li>
+                  <Link to="/login" className="font-medium text-[#111827] transition-colors hover:text-[#0066FF]">
+                    Sign In / Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/register" className="font-medium text-[#0066FF] transition-colors hover:underline">
+                    Create Account
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Direct Contact */}
+            <div className="flex flex-col gap-3 lg:col-span-3">
+              <h3 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#111827]">
+                Contact &amp; Support
+              </h3>
+              <div className="flex flex-col gap-2.5 text-xs text-[#475569]">
+                <a
+                  href="mailto:nhkhritxkk@gmail.com"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-[#E5E9F0] bg-[#F8FAFC] px-3.5 py-2.5 transition-colors hover:border-[#0066FF]/40 hover:bg-[#EFF6FF] hover:text-[#0066FF]"
+                >
+                  <Mail className="size-4 shrink-0 text-[#0066FF]" aria-hidden="true" />
+                  <span className="truncate font-medium">nhkhritxkk@gmail.com</span>
+                </a>
+                <a
+                  href="tel:+919142643751"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-[#E5E9F0] bg-[#F8FAFC] px-3.5 py-2.5 transition-colors hover:border-[#0066FF]/40 hover:bg-[#EFF6FF] hover:text-[#0066FF]"
+                >
+                  <Phone className="size-4 shrink-0 text-[#0066FF]" aria-hidden="true" />
+                  <span className="font-medium">+91 9142643751</span>
+                </a>
+                <p className="text-[11px] leading-relaxed text-[#64748B]">
+                  Support Hours: Mon–Sat, 09:00 AM – 07:00 PM IST for Patient, Doctor Onboarding &amp; Technical
+                  inquiries.
+                </p>
+              </div>
+            </div>
+
+            {/* Legal & Medical Compliance */}
+            <div className="flex flex-col gap-3 lg:col-span-2">
+              <h3 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#111827]">
+                Legal &amp; Safety
+              </h3>
+              <div className="flex flex-col items-start gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setLegalModal("terms")}
+                  className="inline-flex items-center gap-1.5 font-medium text-[#475569] transition-colors hover:text-[#0066FF]"
+                >
+                  <FileText className="size-3.5 text-[#0066FF]" aria-hidden="true" />
+                  <span>Terms &amp; Conditions</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLegalModal("privacy")}
+                  className="inline-flex items-center gap-1.5 font-medium text-[#475569] transition-colors hover:text-[#0066FF]"
+                >
+                  <ShieldCheck className="size-3.5 text-[#0066FF]" aria-hidden="true" />
+                  <span>Privacy Policy</span>
+                </button>
+              </div>
+              <p className="rounded-xl border border-[#E5E9F0] bg-[#F8FAFC] p-3 text-[11px] leading-relaxed text-[#64748B]">
+                <strong className="text-[#111827]">Clinical Disclaimer:</strong> AI insights assist navigation and
+                record organization only—not a medical diagnosis or emergency service.
+              </p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <a href="#vault-experience" className="hover:text-[#111827]">
-              Vault
-            </a>
-            <a href="#ai-assistant" className="hover:text-[#111827]">
-              Assistant
-            </a>
-            <a href="#outbreak-globe" className="hover:text-[#111827]">
-              Outbreak Globe
-            </a>
-            <Link to="/login" className="hover:text-[#111827]">
-              Sign In
-            </Link>
-            <Link to="/register" className="hover:text-[#111827]">
-              Register
-            </Link>
+
+          <div className="flex flex-col gap-3 border-t border-[#E5E9F0] pt-6 text-[11px] text-[#64748B] sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              &copy; {new Date().getFullYear()} Ayuva Health Intelligence Platform. All rights reserved.
+            </span>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setLegalModal("terms")}
+                className="transition-colors hover:text-[#111827]"
+              >
+                Terms &amp; Conditions
+              </button>
+              <button
+                type="button"
+                onClick={() => setLegalModal("privacy")}
+                className="transition-colors hover:text-[#111827]"
+              >
+                Privacy Policy
+              </button>
+              <a href="mailto:nhkhritxkk@gmail.com" className="transition-colors hover:text-[#111827]">
+                nhkhritxkk@gmail.com
+              </a>
+              <a href="tel:+919142643751" className="transition-colors hover:text-[#111827]">
+                +91 9142643751
+              </a>
+            </div>
           </div>
         </div>
       </footer>
+
+      {legalModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="legal-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-xs"
+          onClick={() => setLegalModal(null)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-[#E5E9F0] bg-white p-6 shadow-2xl sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#EEF1F5] pb-4">
+              <div>
+                <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#0066FF]">
+                  Ayuva Legal &amp; Governance
+                </div>
+                <h2 id="legal-modal-title" className="mt-1 font-display text-xl font-bold text-[#111827]">
+                  {legalModal === "terms" ? "Terms & Conditions" : "Privacy Policy"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Close legal dialog"
+                onClick={() => setLegalModal(null)}
+                className="rounded-full border border-[#E5E9F0] p-2 text-[#64748B] transition-colors hover:bg-[#F8FAFC] hover:text-[#111827]"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {legalModal === "terms" ? (
+              <div className="mt-5 space-y-4 text-xs leading-relaxed text-[#475569]">
+                <p>
+                  <strong className="text-[#111827]">1. Scope of Service:</strong> Ayuva provides personal medical
+                  document storage, OCR data extraction, AI-assisted health &amp; speciality guidance, verified clinician
+                  discovery, real-time appointment scheduling, and epidemiological visualization tools.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">2. Non-Diagnostic Disclaimer:</strong> All AI summaries,
+                  speciality suggestions, and outbreak forecasts are informational only and do not constitute medical
+                  diagnosis, prescriptions, or emergency intervention. For urgent symptoms such as severe chest pain or
+                  acute breathlessness, seek immediate in-person emergency care.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">3. Doctor Verification &amp; Bookings:</strong> Only doctors whose
+                  registration credentials are approved by an authorized Ayuva administrator appear in patient search.
+                  Appointment slots are locked server-side to prevent double booking and follow the Asia/Kolkata
+                  timezone.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">4. User Responsibilities:</strong> You retain ownership of uploaded
+                  records and are responsible for verifying extracted OCR values before relying on them in clinical
+                  consultations. Contact <span className="font-medium text-[#111827]">nhkhritxkk@gmail.com</span> or{" "}
+                  <span className="font-medium text-[#111827]">+91 9142643751</span> for account support.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-4 text-xs leading-relaxed text-[#475569]">
+                <p>
+                  <strong className="text-[#111827]">1. Data Ownership &amp; Isolation:</strong> Medical files,
+                  extracted conditions, medications, allergies, and lab values are strictly scoped to your authenticated
+                  patient account inside PostgreSQL. Public health administrators cannot view private patient vaults.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">2. Explicit Sharing &amp; AI Consent:</strong> Doctors only receive
+                  access to records explicitly shared via PIN-protected temporary share sessions or appointment document
+                  shares, and every view is logged in server-side AccessLogs. AI vault context usage can be disabled at
+                  any time from Profile &amp; Privacy.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">3. Security Controls:</strong> Passwords and sharing PINs are
+                  bcrypt-hashed, API routes enforce JWT role isolation, and patient accounts start completely clean with
+                  zero synthetic health data.
+                </p>
+                <p>
+                  <strong className="text-[#111827]">4. Erasure &amp; Grievance Contact:</strong> You may permanently
+                  delete uploaded documents and structured vault records inside your account, or contact our privacy
+                  desk at <span className="font-medium text-[#111827]">nhkhritxkk@gmail.com</span> /{" "}
+                  <span className="font-medium text-[#111827]">+91 9142643751</span>.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end border-t border-[#EEF1F5] pt-4">
+              <button
+                type="button"
+                onClick={() => setLegalModal(null)}
+                className="rounded-full bg-[#0066FF] px-5 py-2 text-xs font-semibold text-white hover:bg-[#0052CC]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -115,7 +115,7 @@ def log_access(
         action=action,
         resource_type=resource_type,
         resource_id=str(resource_id),
-        details=details,
+        details=details if details is not None else "",
     )
     db.add(entry)
     db.commit()
