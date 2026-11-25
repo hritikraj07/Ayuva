@@ -33,16 +33,35 @@ import {
   YAxis,
 } from "recharts";
 import { BrandMark } from "@/components/BrandMark";
-import { Badge, Button } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { useSceneCapabilities } from "@/components/three/useSceneCapabilities";
 import { useAuth } from "@/context/AuthContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const AnatomicalBioScene = React.lazy(() => import("@/components/three/AnatomicalBioScene"));
+const HeroMedicalHeartAndDna3D = React.lazy(() =>
+  import("@/components/three/MedicalModels3D").then((m) => ({ default: m.HeroMedicalHeartAndDna3D }))
+);
+const MedicalVaultRecords3D = React.lazy(() =>
+  import("@/components/three/MedicalModels3D").then((m) => ({ default: m.MedicalVaultRecords3D }))
+);
+const MedicalPharmacology3D = React.lazy(() =>
+  import("@/components/three/MedicalModels3D").then((m) => ({ default: m.MedicalPharmacology3D }))
+);
+const MedicalSecurityShield3D = React.lazy(() =>
+  import("@/components/three/MedicalModels3D").then((m) => ({ default: m.MedicalSecurityShield3D }))
+);
 const OutbreakGlobe3D = React.lazy(() =>
   import("@/components/three/OutbreakGlobe3D").then((m) => ({ default: m.OutbreakGlobe3D }))
 );
+
+function ModelPlaceholder({ label, heightClass }: { label: string; heightClass: string }) {
+  return (
+    <div className={`neo-glass flex items-center justify-center rounded-2xl text-xs text-muted-foreground ${heightClass}`}>
+      {label}
+    </div>
+  );
+}
 
 function computeLiveSeirComparison(
   initialCases: number,
@@ -110,9 +129,6 @@ export function LandingPage() {
   const { user } = useAuth();
   const caps = useSceneCapabilities();
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const scrollProgressRef = useRef(0);
-  const pointerRef = useRef({ x: 0, y: 0 });
-  const [sceneReady, setSceneReady] = useState(false);
 
   // Interactive mathematical SEIR live calculator controls
   const [simCases, setSimCases] = useState(45);
@@ -133,27 +149,13 @@ export function LandingPage() {
       : user.role === "doctor"
       ? "/doctor/records"
       : "/patient/overview"
-    : "/register";
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setSceneReady(true), 80);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const onPointer = (e: PointerEvent) => {
-      pointerRef.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      pointerRef.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    window.addEventListener("pointermove", onPointer, { passive: true });
-    return () => window.removeEventListener("pointermove", onPointer);
-  }, []);
+    : "/login";
 
   useEffect(() => {
     if (caps.reducedMotion) return;
 
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.05,
       smoothWheel: true,
       touchMultiplier: 1.2,
     });
@@ -170,28 +172,18 @@ export function LandingPage() {
     rafId = requestAnimationFrame(raf);
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: rootRef.current,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 0.4,
-        onUpdate: (self) => {
-          scrollProgressRef.current = self.progress;
-        },
-      });
-
       gsap.utils.toArray<HTMLElement>(".reveal-panel").forEach((el) => {
         gsap.fromTo(
           el,
-          { y: 36, opacity: 0 },
+          { y: 28, opacity: 0 },
           {
             y: 0,
             opacity: 1,
-            duration: 0.85,
+            duration: 0.75,
             ease: "power3.out",
             scrollTrigger: {
               trigger: el,
-              start: "top 84%",
+              start: "top 86%",
               once: true,
             },
           }
@@ -200,7 +192,7 @@ export function LandingPage() {
 
       gsap.utils.toArray<HTMLElement>(".parallax-float").forEach((el, idx) => {
         gsap.to(el, {
-          y: idx % 2 === 0 ? -24 : -14,
+          y: idx % 2 === 0 ? -16 : -10,
           ease: "none",
           scrollTrigger: {
             trigger: el,
@@ -221,25 +213,11 @@ export function LandingPage() {
 
   return (
     <div ref={rootRef} className="relative min-h-dvh bg-background text-foreground">
-      {/* Persistent Fullscreen 3D Neo-Biomedical Environment */}
-      {sceneReady && (
-        <Suspense fallback={<div className="pointer-events-none fixed inset-0 z-0 neo-grid-overlay opacity-70" />}>
-          <AnatomicalBioScene
-            scrollProgressRef={scrollProgressRef}
-            pointerRef={pointerRef}
-            capabilities={caps}
-          />
-        </Suspense>
-      )}
+      {/* Subtle Clean Spatial Grid */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 neo-grid-overlay opacity-55" />
 
-      {/* Subtle Spatial Grid Atmospheric Veil */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[1] neo-grid-overlay opacity-45"
-      />
-
-      {/* Holographic Glass Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-300/80 bg-background/75 backdrop-blur-xl">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-slate-300/80 bg-secondary/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" aria-label="MedLedger home">
             <BrandMark />
@@ -265,7 +243,7 @@ export function LandingPage() {
             {user ? (
               <Link
                 to={dashboardHref}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_-6px_rgba(34,211,238,0.65)] hover:bg-primary/90"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
               >
                 <span>Open Workspace</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -274,13 +252,13 @@ export function LandingPage() {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex min-h-[44px] items-center rounded-lg border border-border bg-card/85 px-4 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-secondary"
+                  className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-primary hover:bg-card"
                 >
-                  Sign In
+                  Sign In / Demo
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_-6px_rgba(34,211,238,0.65)] hover:bg-primary/90"
+                  className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                 >
                   Explore the Platform
                 </Link>
@@ -291,17 +269,17 @@ export function LandingPage() {
       </header>
 
       <main className="relative z-10">
-        {/* SECTION 1: CINEMATIC HERO */}
-        <section className="relative flex min-h-[90dvh] items-center border-b border-slate-300/60">
-          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
-            <div className="flex flex-col gap-6 lg:col-span-7">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#66A9EC] bg-card px-3.5 py-1.5 text-xs font-medium text-[#0369A1] backdrop-blur-md">
-                <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
-                <span>Neo-Biomedical Personal Health &amp; Epidemiological Intelligence</span>
+        {/* SECTION 1: HERO WITH DEDICATED 3D ANATOMICAL HEART & DNA MODEL */}
+        <section className="border-b border-slate-300/70">
+          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8 lg:py-20">
+            <div className="flex flex-col gap-5 lg:col-span-6">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#66A9EC] bg-card px-3.5 py-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="size-3.5 text-[#0284C7]" aria-hidden="true" />
+                <span>Personal Medical Intelligence &amp; Outbreak Surveillance</span>
               </div>
 
-              <h1 className="font-display text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl lg:leading-[1.06]">
-                <span className="block text-foreground">Smarter Health.</span>
+              <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl lg:leading-[1.08]">
+                <span className="block text-primary">Smarter Health.</span>
                 <span className="neo-text-gradient block">A Safer Tomorrow.</span>
               </h1>
 
@@ -310,83 +288,95 @@ export function LandingPage() {
                 health.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+              <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Link
                   to={dashboardHref}
-                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_0_30px_-6px_rgba(34,211,238,0.75)] transition-transform hover:scale-[1.01] hover:bg-primary/90"
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.01] hover:bg-primary/90"
                 >
                   <span>Explore the Platform</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
                 <a
                   href="#vault-experience"
-                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg border border-[#66A9EC] bg-card/80 px-6 text-sm font-semibold text-primary backdrop-blur-md hover:border-cyan-300/60 hover:bg-secondary/80"
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg border border-slate-300 bg-white/95 px-6 text-sm font-semibold text-primary hover:bg-card"
                 >
                   <span>Discover Our Technology</span>
                 </a>
               </div>
 
-              {/* Floating Holographic System Architecture Telemetry */}
-              <div className="grid gap-3 pt-4 sm:grid-cols-3">
+              <div className="grid gap-3 pt-3 sm:grid-cols-3">
                 <div className="neo-glass parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] text-primary">MODULE 01 // VAULT</div>
-                  <div className="mt-1 text-xs font-semibold text-foreground">pypdf + RapidOCR Pipeline</div>
+                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 01 // VAULT</div>
+                  <div className="mt-1 text-xs font-semibold text-primary">pypdf + RapidOCR Pipeline</div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">Human-verified extraction</div>
                 </div>
-                <div className="neo-glass-violet parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] text-[#0284C7]">MODULE 02 // CLINICAL AI</div>
-                  <div className="mt-1 text-xs font-semibold text-foreground">Gemini + OpenFDA Labels</div>
+                <div className="neo-glass parallax-float rounded-xl p-3.5">
+                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 02 // CLINICAL AI</div>
+                  <div className="mt-1 text-xs font-semibold text-primary">Gemini + OpenFDA Labels</div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">Scoped consent retrieval</div>
                 </div>
                 <div className="neo-glass parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] text-[#0369A1]">MODULE 03 // SURVEILLANCE</div>
-                  <div className="mt-1 text-xs font-semibold text-foreground">NCDC/IDSP + Open-Meteo</div>
+                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 03 // SURVEILLANCE</div>
+                  <div className="mt-1 text-xs font-semibold text-primary">NCDC/IDSP + Open-Meteo</div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">RandomForest &amp; SEIR engine</div>
                 </div>
               </div>
             </div>
 
-            {/* Right spatial frame intentionally leaves breathing room for the 3D anatomical cardiovascular figure */}
-            <div className="flex flex-col gap-3 lg:col-span-5 lg:items-end">
-              <div className="neo-glass w-full max-w-sm rounded-2xl p-4 text-xs">
-                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2.5">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#0284C7]">
-                    Biomedical Architecture
-                  </span>
-                  <Badge variant="teal">Zero Mock Records</Badge>
-                </div>
-                <ul className="mt-3 flex flex-col gap-2.5 text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <Activity className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                    <span>New patient vaults initialize empty until you upload real files.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Database className="mt-0.5 size-4 shrink-0 text-[#0284C7]" aria-hidden="true" />
-                    <span>Every outbreak marker, drug label, and summary traces to real APIs or verified records.</span>
-                  </li>
-                </ul>
+            <div className="flex flex-col gap-3 lg:col-span-6">
+              <Suspense fallback={<ModelPlaceholder label="Loading 3D Cardiac & Genomic Anatomy..." heightClass="h-[420px]" />}>
+                <HeroMedicalHeartAndDna3D heightClass="h-[420px]" />
+              </Suspense>
+              <div className="neo-glass flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-3 text-xs">
+                <span className="flex items-center gap-2 font-medium text-primary">
+                  <Activity className="size-4 text-[#0284C7]" aria-hidden="true" />
+                  New accounts start empty until you upload real records or sync IDSP data.
+                </span>
+                <Badge variant="teal">Zero Mock Records</Badge>
               </div>
             </div>
           </div>
         </section>
 
         {/* SECTION 2: THE PERSONAL HEALTH INTELLIGENCE EXPERIENCE */}
-        <section id="vault-experience" className="border-b border-slate-300/60 py-24">
+        <section id="vault-experience" className="border-b border-slate-300/70 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="reveal-panel max-w-2xl">
-              <div className="font-mono text-xs uppercase tracking-widest text-primary">
-                02 // Personal Health Intelligence
+            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+              <div className="reveal-panel lg:col-span-5">
+                <Suspense fallback={<ModelPlaceholder label="Loading 3D Medical Vault Model..." heightClass="h-[360px]" />}>
+                  <MedicalVaultRecords3D heightClass="h-[360px]" />
+                </Suspense>
               </div>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-                A holographic medical vault built for clarity before every consultation.
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-slate-700">
-                Upload PDFs, mobile photos of physical prescriptions, or lab reports. Local OCR extracts visible fields
-                for your review before structuring them into your chronological history.
-              </p>
+              <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                  02 // Personal Health Intelligence
+                </div>
+                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                  A structured digital medical vault built for clarity before every consultation.
+                </h2>
+                <p className="text-base leading-relaxed text-slate-700">
+                  Upload PDFs, mobile photos of physical prescriptions, or lab reports. Local OCR extracts visible
+                  fields for your review before structuring them into your chronological medical history.
+                </p>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <Link
+                    to="/patient/vault"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                  >
+                    <span>Open Medical Vault</span>
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-xs font-semibold text-primary hover:bg-card"
+                  >
+                    <span>Try Demo Patient</span>
+                  </Link>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {[
                 {
                   icon: FolderLock,
@@ -410,7 +400,7 @@ export function LandingPage() {
                   icon: ClipboardList,
                   tag: "ONE-MINUTE BRIEF",
                   title: "Doctor Summary PDF",
-                  desc: "Generates a clean consultation summary separating verified vault facts from automated highlights, exportable as PDF.",
+                  desc: "Generates a consultation summary separating verified vault facts from automated highlights, exportable as PDF.",
                 },
                 {
                   icon: QrCode,
@@ -423,17 +413,17 @@ export function LandingPage() {
                 return (
                   <div
                     key={item.title}
-                    className={`reveal-panel neo-glass rounded-2xl p-6 transition-all hover:border-cyan-400/50 ${
+                    className={`reveal-panel neo-glass rounded-2xl p-6 transition-all hover:border-[#66A9EC] ${
                       idx === 4 ? "md:col-span-2 lg:col-span-1" : ""
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[11px] text-[#0284C7]">{item.tag}</span>
-                      <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC] bg-card text-primary">
+                      <span className="font-mono text-[11px] font-semibold text-[#0284C7]">{item.tag}</span>
+                      <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
                         <Icon className="size-5" aria-hidden="true" />
                       </div>
                     </div>
-                    <h3 className="mt-4 font-display text-lg font-semibold text-foreground">{item.title}</h3>
+                    <h3 className="mt-4 font-display text-lg font-semibold text-primary">{item.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
                   </div>
                 );
@@ -441,12 +431,10 @@ export function LandingPage() {
 
               <div className="reveal-panel neo-glass-violet flex flex-col justify-between rounded-2xl p-6">
                 <div>
-                  <span className="font-mono text-[11px] text-[#0284C7]">START CLEAN</span>
-                  <h3 className="mt-3 font-display text-lg font-semibold text-foreground">
-                    Open Your Personal Vault
-                  </h3>
+                  <span className="font-mono text-[11px] font-semibold text-[#0284C7]">CLEAN ONBOARDING</span>
+                  <h3 className="mt-3 font-display text-lg font-semibold text-primary">Start Your Health Vault</h3>
                   <p className="mt-2 text-sm text-slate-700">
-                    Register a patient account to upload and organize real medical documents cleanly.
+                    Register a new account or sign in as Demo Patient to upload and verify your first document.
                   </p>
                 </div>
                 <Link
@@ -461,31 +449,39 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SECTION 3: PERSONALIZED AI HEALTH ASSISTANT */}
-        <section id="ai-assistant" className="border-b border-slate-300/60 py-24">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
-            <div className="reveal-panel flex flex-col gap-5 lg:col-span-5">
-              <div className="font-mono text-xs uppercase tracking-widest text-[#0284C7]">
-                03 // Personalized AI Intelligence
+        {/* SECTION 3: PERSONALIZED AI HEALTH ASSISTANT + PHARMACOLOGY 3D MODEL */}
+        <section id="ai-assistant" className="border-b border-slate-300/70 py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+              <div className="reveal-panel flex flex-col gap-5 lg:col-span-6">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                  03 // Personalized AI &amp; Pharmacology
+                </div>
+                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                  Gemini-powered clarity grounded strictly in your consented records.
+                </h2>
+                <p className="text-base leading-relaxed text-slate-700">
+                  Toggle personal vault context on or off per conversation. Relevant lab results, documented allergies,
+                  and prescription images stay isolated to your session, paired with live OpenFDA drug labeling and
+                  server-enforced emergency triage rules.
+                </p>
+                <Link
+                  to="/patient/assistant"
+                  className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <Bot className="size-4" aria-hidden="true" />
+                  <span>Open AI Health Assistant</span>
+                </Link>
               </div>
-              <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-                Gemini-powered clarity grounded strictly in your consented records.
-              </h2>
-              <p className="text-base leading-relaxed text-slate-700">
-                Toggle personal vault context on or off per conversation. Relevant lab results, documented allergies, and
-                prescription attachments stay strictly isolated to your authenticated session, paired with live OpenFDA
-                drug labeling and server-enforced emergency triage rules.
-              </p>
-              <Link
-                to="/patient/assistant"
-                className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg border border-[#66A9EC] bg-white/90 px-5 text-sm font-semibold text-primary backdrop-blur-md hover:bg-white"
-              >
-                <Bot className="size-4 text-primary" aria-hidden="true" />
-                <span>Open AI Health Assistant</span>
-              </Link>
+
+              <div className="reveal-panel lg:col-span-6">
+                <Suspense fallback={<ModelPlaceholder label="Loading 3D Pharmacology & Molecule Model..." heightClass="h-[340px]" />}>
+                  <MedicalPharmacology3D heightClass="h-[340px]" />
+                </Suspense>
+              </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 {
                   icon: Pill,
@@ -510,11 +506,11 @@ export function LandingPage() {
               ].map((card) => {
                 const Icon = card.icon;
                 return (
-                  <div key={card.title} className="reveal-panel neo-glass-violet rounded-2xl p-5">
-                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC] bg-card text-[#0369A1]">
+                  <div key={card.title} className="reveal-panel neo-glass rounded-2xl p-5">
+                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
                       <Icon className="size-5" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-3.5 font-display text-base font-semibold text-foreground">{card.title}</h3>
+                    <h3 className="mt-3.5 font-display text-base font-semibold text-primary">{card.title}</h3>
                     <p className="mt-1.5 text-xs leading-relaxed text-slate-700">{card.desc}</p>
                   </div>
                 );
@@ -523,26 +519,20 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SECTION 4: DISEASE OUTBREAK INTELLIGENCE */}
-        <section id="outbreak-globe" className="border-b border-slate-300/60 py-24">
+        {/* SECTION 4: DISEASE OUTBREAK INTELLIGENCE + 3D GLOBE */}
+        <section id="outbreak-globe" className="border-b border-slate-300/70 py-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
             <div className="reveal-panel lg:col-span-7">
-              <Suspense
-                fallback={
-                  <div className="neo-glass flex h-[400px] items-center justify-center rounded-2xl text-sm text-muted-foreground">
-                    Initializing 3D Epidemiological Globe...
-                  </div>
-                }
-              >
-                <OutbreakGlobe3D regions={[]} selectedRegionId={null} heightClass="h-[420px]" />
+              <Suspense fallback={<ModelPlaceholder label="Initializing 3D Epidemiological Globe..." heightClass="h-[400px]" />}>
+                <OutbreakGlobe3D regions={[]} selectedRegionId={null} heightClass="h-[400px]" />
               </Suspense>
             </div>
 
             <div className="reveal-panel flex flex-col gap-5 lg:col-span-5">
-              <div className="font-mono text-xs uppercase tracking-widest text-[#0369A1]">
+              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
                 04 // Disease Outbreak Intelligence
               </div>
-              <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+              <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
                 Interactive planetary surveillance backed by verified bulletins.
               </h2>
               <p className="text-base leading-relaxed text-slate-700">
@@ -554,15 +544,14 @@ export function LandingPage() {
               <div className="neo-glass rounded-xl p-4 text-xs text-slate-700">
                 <div className="font-semibold text-primary">Zero-Fabrication Surveillance Guarantee</div>
                 <p className="mt-1 leading-relaxed text-muted-foreground">
-                  No synthetic outbreak markers are shown on this public overview. Sign in as a Public Health Admin to
-                  trigger live NCDC/IDSP synchronization and populate verified district markers on the 3D globe and 2D
-                  geospatial risk layers.
+                  No synthetic outbreak markers are shown on this public overview. Sign in as Demo Admin or Public
+                  Health Officer to trigger live NCDC/IDSP synchronization and populate verified district markers.
                 </p>
               </div>
 
               <Link
                 to="/admin/overview"
-                className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_-6px_rgba(34,211,238,0.65)] hover:bg-primary/90"
+                className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
               >
                 <Globe2 className="size-4" aria-hidden="true" />
                 <span>Explore Analytics</span>
@@ -572,13 +561,13 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 5: INTERVENTION SIMULATION */}
-        <section id="simulation" className="border-b border-slate-300/60 py-24">
+        <section id="simulation" className="border-b border-slate-300/70 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal-panel max-w-3xl">
-              <div className="font-mono text-xs uppercase tracking-widest text-primary">
+              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
                 05 // SEIR Scientific Simulation
               </div>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
                 Model hospital capacity and surge interventions deterministically.
               </h2>
               <p className="mt-3 text-base leading-relaxed text-slate-700">
@@ -590,8 +579,8 @@ export function LandingPage() {
 
             <div className="mt-10 grid gap-6 lg:grid-cols-12">
               <div className="reveal-panel neo-glass flex flex-col gap-4 rounded-2xl p-6 text-xs lg:col-span-5">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="font-display text-sm font-semibold text-foreground">Live SEIR Parameters</span>
+                <div className="flex items-center justify-between border-b border-slate-300 pb-3">
+                  <span className="font-display text-sm font-semibold text-primary">Live SEIR Parameters</span>
                   <Badge variant="teal">Deterministic ODE</Badge>
                 </div>
 
@@ -608,7 +597,7 @@ export function LandingPage() {
                       <label htmlFor={ctrl.id} className="font-medium text-primary">
                         {ctrl.label}
                       </label>
-                      <span className="font-mono font-semibold text-primary">
+                      <span className="font-mono font-semibold text-[#0284C7]">
                         {ctrl.value}
                         {ctrl.unit}
                       </span>
@@ -620,7 +609,7 @@ export function LandingPage() {
                       max={ctrl.max}
                       value={ctrl.value}
                       onChange={(e) => ctrl.set(Number(e.target.value))}
-                      className="accent-[#0284C7]"
+                      className="accent-[#323A4D]"
                     />
                   </div>
                 ))}
@@ -637,7 +626,7 @@ export function LandingPage() {
               <div className="reveal-panel neo-glass rounded-2xl p-6 lg:col-span-7">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="font-display text-base font-semibold text-foreground">
+                    <h3 className="font-display text-base font-semibold text-primary">
                       30-Day Baseline vs. Intervention Incidence
                     </h3>
                     <p className="text-xs text-muted-foreground">
@@ -655,9 +644,10 @@ export function LandingPage() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#F9FAFB",
-                          borderColor: "#0284C7",
+                          borderColor: "#66A9EC",
                           borderRadius: "8px",
                           fontSize: "12px",
+                          color: "#141C2E",
                         }}
                       />
                       <Legend />
@@ -665,7 +655,7 @@ export function LandingPage() {
                         type="monotone"
                         dataKey="baselineCases"
                         name="Baseline (No Action)"
-                        stroke="#F43F5E"
+                        stroke="#E11D48"
                         strokeWidth={2.5}
                         dot={false}
                       />
@@ -685,20 +675,27 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* SECTION 6: SECURITY AND TRUST */}
-        <section id="security" className="py-24">
+        {/* SECTION 6: SECURITY AND TRUST + 3D MEDICAL SHIELD */}
+        <section id="security" className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="reveal-panel max-w-2xl">
-              <div className="font-mono text-xs uppercase tracking-widest text-[#0284C7]">
-                06 // Cryptographic Security &amp; Access Governance
+            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+              <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                  06 // Cryptographic Security &amp; Access Governance
+                </div>
+                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                  Strict role isolation and transparent access governance.
+                </h2>
+                <p className="text-base text-slate-700">
+                  Every control listed below maps directly to enforced FastAPI route dependencies and database audit
+                  tables inside MedLedger.
+                </p>
               </div>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-                Strict role isolation and transparent access governance.
-              </h2>
-              <p className="mt-3 text-base text-slate-700">
-                Every control listed below maps directly to enforced FastAPI route dependencies and database audit
-                tables inside MedLedger.
-              </p>
+              <div className="reveal-panel lg:col-span-5">
+                <Suspense fallback={<ModelPlaceholder label="Loading 3D Privacy & Access Shield..." heightClass="h-[320px]" />}>
+                  <MedicalSecurityShield3D heightClass="h-[320px]" />
+                </Suspense>
+              </div>
             </div>
 
             <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -737,10 +734,10 @@ export function LandingPage() {
                 const Icon = sec.icon;
                 return (
                   <div key={sec.title} className="reveal-panel neo-glass rounded-2xl p-6">
-                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC] bg-card text-primary">
+                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
                       <Icon className="size-5" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-4 font-display text-base font-semibold text-foreground">{sec.title}</h3>
+                    <h3 className="mt-4 font-display text-base font-semibold text-primary">{sec.title}</h3>
                     <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{sec.desc}</p>
                   </div>
                 );
@@ -750,7 +747,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-slate-300/80 bg-background/90 py-8 backdrop-blur-xl">
+      <footer className="relative z-10 border-t border-slate-300/80 bg-secondary/90 py-8 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <BrandMark />
