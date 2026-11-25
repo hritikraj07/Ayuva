@@ -510,8 +510,8 @@ function StudioAnatomicalHeartModel({
     );
     grp.rotation.y = -0.14 + (reducedMotion ? 0 : Math.sin(t * 0.45) * 0.16) + sp * Math.PI * 2.5;
     grp.rotation.x = 0.05 + slideProgress * 0.22;
-    grp.scale.setScalar((isDesktop ? 1.28 : 1.02) * (0.68 + 0.32 * weight));
-    applyGroupFade(grp, weight);
+    grp.scale.setScalar((isDesktop ? 1.28 : 0.94) * (0.68 + 0.32 * weight));
+    applyGroupFade(grp, weight * (isDesktop ? 1 : 0.32));
   });
 
   return (

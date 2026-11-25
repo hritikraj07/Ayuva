@@ -108,6 +108,7 @@ export function LandingPage() {
   const { user } = useAuth();
   const caps = useSceneCapabilities();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
 
   // Section refs & continuous full-page scroll progress driving the borderless 3D parallax stage
@@ -142,13 +143,41 @@ export function LandingPage() {
     : "/login";
 
   useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+      pageScrollRef.current = 0;
+    }
+
+    const headerEl = headerRef.current;
+    const syncNavbarHeight = () => {
+      if (headerEl) {
+        const h = Math.round(headerEl.getBoundingClientRect().height);
+        if (h > 0) {
+          document.documentElement.style.setProperty("--navbar-height", `${h}px`);
+        }
+      }
+    };
+    syncNavbarHeight();
+
+    let ro: ResizeObserver | null = null;
+    if (headerEl && typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(syncNavbarHeight);
+      ro.observe(headerEl);
+    }
+
     const syncNativeScroll = () => {
       const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
       pageScrollRef.current = Math.min(1, Math.max(0, window.scrollY / maxScroll));
     };
     syncNativeScroll();
     window.addEventListener("scroll", syncNativeScroll, { passive: true });
-    return () => window.removeEventListener("scroll", syncNativeScroll);
+    return () => {
+      window.removeEventListener("scroll", syncNativeScroll);
+      ro?.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -236,8 +265,8 @@ export function LandingPage() {
       </Suspense>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[#E5E9F0] bg-white/88 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header ref={headerRef} className="sticky top-0 z-40 h-[var(--navbar-height)] border-b border-[#E5E9F0] bg-white/88 backdrop-blur-xl">
+        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" aria-label="Ayuva home">
             <BrandMark />
           </Link>
@@ -258,11 +287,11 @@ export function LandingPage() {
               Security
             </a>
           </nav>
-          <div className="flex items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
             {user ? (
               <Link
                 to={dashboardHref}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#0066FF] px-5 text-xs font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC]"
+                className="inline-flex min-h-[38px] items-center gap-1.5 whitespace-nowrap rounded-full bg-[#0066FF] px-3.5 text-xs font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC] sm:min-h-[42px] sm:gap-2 sm:px-5"
               >
                 <span>Open Workspace</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -271,15 +300,17 @@ export function LandingPage() {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex min-h-[42px] items-center rounded-full border border-[#E5E9F0] bg-white px-4 text-xs font-semibold text-[#111827] hover:border-[#0066FF]/40 hover:text-[#0066FF]"
+                  className="inline-flex min-h-[36px] items-center whitespace-nowrap rounded-full border border-[#E5E9F0] bg-white px-3 text-[11px] font-semibold text-[#111827] hover:border-[#0066FF]/40 hover:text-[#0066FF] sm:min-h-[42px] sm:px-4 sm:text-xs"
                 >
-                  Sign In / Demo
+                  <span className="sm:hidden">Sign In</span>
+                  <span className="hidden sm:inline">Sign In / Demo</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex min-h-[42px] items-center rounded-full bg-[#0066FF] px-5 text-xs font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC]"
+                  className="inline-flex min-h-[36px] items-center whitespace-nowrap rounded-full bg-[#0066FF] px-3.5 text-[11px] font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC] sm:min-h-[42px] sm:px-5 sm:text-xs"
                 >
-                  Explore Platform
+                  <span className="sm:hidden">Get Started</span>
+                  <span className="hidden sm:inline">Explore Platform</span>
                 </Link>
               </>
             )}
@@ -288,9 +319,9 @@ export function LandingPage() {
       </header>
 
       <main className="relative z-10">
-        {/* SECTION 1: HERO WITH BORDERLESS 3D HALF-BODY RESPIRATORY PARALLAX */}
-        <section id="hero-section" ref={heroSectionRef} className="border-b border-[#E5E9F0]">
-          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8 lg:py-20">
+        {/* SECTION 1: HERO WITH BORDERLESS 3D STUDIO ANATOMICAL HEART PARALLAX */}
+        <section id="hero-section" ref={heroSectionRef} className="hero-viewport flex items-center border-b border-[#E5E9F0]">
+          <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-8 lg:py-10">
             <div className="flex flex-col gap-5 lg:col-span-6">
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#E5E9F0] bg-white px-4 py-1.5 text-xs font-semibold text-[#111827] shadow-xs">
                 <Sparkles className="size-3.5 text-[#0066FF]" aria-hidden="true" />
