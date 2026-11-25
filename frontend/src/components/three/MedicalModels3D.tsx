@@ -501,21 +501,21 @@ function StudioAnatomicalHeartModel({
     }
 
     const slideProgress = THREE.MathUtils.clamp(sp / 0.2, 0, 1.5);
-    const baseX = isDesktop ? 1.72 : 0.0;
-    const baseY = isDesktop ? 0.04 : 0.16;
+    const baseX = isDesktop ? 1.12 : 0.0;
+    const baseY = isDesktop ? 0.02 : 0.16;
     grp.position.set(
-      baseX - slideProgress * (isDesktop ? 0.9 : 0),
+      baseX - slideProgress * (isDesktop ? 0.85 : 0),
       baseY + (sp - 0.02) * 5.0 + (reducedMotion ? 0 : Math.sin(t * 1.1) * 0.03),
       (1 - weight) * -4.2
     );
     grp.rotation.y = -0.14 + (reducedMotion ? 0 : Math.sin(t * 0.45) * 0.16) + sp * Math.PI * 2.5;
     grp.rotation.x = 0.05 + slideProgress * 0.22;
-    grp.scale.setScalar((isDesktop ? 1.38 : 1.02) * (0.68 + 0.32 * weight));
+    grp.scale.setScalar((isDesktop ? 1.28 : 1.02) * (0.68 + 0.32 * weight));
     applyGroupFade(grp, weight);
   });
 
   return (
-    <group ref={groupRef} position={[1.72, 0.04, 0]}>
+    <group ref={groupRef} position={[1.12, 0.02, 0]}>
       {/* Clean translucent white circular halo disc & concentric ring behind the heart */}
       <mesh position={[0.02, 0.12, -0.68]}>
         <circleGeometry args={[1.18, 64]} />
