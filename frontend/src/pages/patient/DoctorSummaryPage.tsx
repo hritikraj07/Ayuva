@@ -131,11 +131,11 @@ export function DoctorSummaryPage() {
       </div>
 
       {/* Section B: Automated Consultation Brief clearly demarcated */}
-      <Card className="border-cyan-500/35">
-        <CardHeader className="bg-cyan-950/45">
+      <Card className="border-[#66A9EC]">
+        <CardHeader className="bg-card">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-base text-cyan-200">Automated Consultation Brief (AI Synthesis)</CardTitle>
+              <CardTitle className="text-base text-[#0369A1]">Automated Consultation Brief (AI Synthesis)</CardTitle>
               <CardDescription>{ai.provenance_label}</CardDescription>
             </div>
             <Badge variant="teal">Engine: {ai.model_mode}</Badge>
@@ -154,12 +154,12 @@ export function DoctorSummaryPage() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-md border border-amber-500/40 bg-amber-950/40 p-3.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-200">
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-900">
                 <AlertTriangle className="size-3.5 text-amber-400" aria-hidden="true" />
                 Missing or Uncertain Information
               </div>
-              <ul className="mt-2 flex list-disc flex-col gap-1 pl-4 text-xs text-amber-100/90">
+              <ul className="mt-2 flex list-disc flex-col gap-1 pl-4 text-xs text-amber-900">
                 {ai.missing_or_uncertain_information.length ? (
                   ai.missing_or_uncertain_information.map((m: string, i: number) => <li key={i}>{m}</li>)
                 ) : (
@@ -252,12 +252,12 @@ export function DoctorSummaryPage() {
             </div>
             {facts.past_or_older_medications?.length > 0 && (
               <div>
-                <div className="mb-1.5 font-semibold text-amber-200">
+                <div className="mb-1.5 font-semibold text-amber-900">
                   Past / Older Prescriptions Requiring Confirmation ({facts.past_or_older_medications.length})
                 </div>
                 <ul className="flex flex-col gap-1">
                   {facts.past_or_older_medications.map((m: any, i: number) => (
-                    <li key={i} className="flex items-center justify-between rounded border border-amber-500/40 bg-amber-950/40 px-2.5 py-1.5 text-amber-100">
+                    <li key={i} className="flex items-center justify-between rounded border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-amber-950">
                       <span className="font-medium">{m.medicine_name} {m.dosage || ""}</span>
                       <span>{m.status_note}</span>
                     </li>

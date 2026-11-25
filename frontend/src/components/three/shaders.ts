@@ -6,19 +6,19 @@ export function createHologramShaderMaterial(options?: {
   opacity?: number;
   scanSpeed?: number;
 }): THREE.ShaderMaterial {
-  const baseColor = new THREE.Color(options?.baseColor ?? "#0ea5e9");
-  const rimColor = new THREE.Color(options?.rimColor ?? "#22d3ee");
+  const baseColor = new THREE.Color(options?.baseColor ?? "#0284c7");
+  const rimColor = new THREE.Color(options?.rimColor ?? "#323a4d");
 
   return new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     uniforms: {
       uTime: { value: 0 },
       uBaseColor: { value: baseColor },
       uRimColor: { value: rimColor },
-      uOpacity: { value: options?.opacity ?? 0.55 },
+      uOpacity: { value: options?.opacity ?? 0.62 },
       uScanSpeed: { value: options?.scanSpeed ?? 1.2 },
     },
     vertexShader: /* glsl */ `
@@ -49,11 +49,11 @@ export function createHologramShaderMaterial(options?: {
       void main() {
         vec3 normal = normalize(vNormal);
         vec3 viewDir = normalize(vViewPosition);
-        float fresnel = pow(1.0 - abs(dot(normal, viewDir)), 2.4);
-        float scan = 0.72 + 0.28 * sin(vWorldPos.y * 12.0 - uTime * uScanSpeed);
-        float fineGrid = 0.9 + 0.1 * sin(vWorldPos.x * 32.0 + vWorldPos.z * 32.0);
-        vec3 color = mix(uBaseColor, uRimColor, clamp(fresnel * 1.15, 0.0, 1.0));
-        float alpha = clamp((0.14 + fresnel * 0.86) * scan * fineGrid * uOpacity, 0.05, 0.92);
+        float fresnel = pow(1.0 - abs(dot(normal, viewDir)), 2.1);
+        float scan = 0.78 + 0.22 * sin(vWorldPos.y * 12.0 - uTime * uScanSpeed);
+        float fineGrid = 0.92 + 0.08 * sin(vWorldPos.x * 32.0 + vWorldPos.z * 32.0);
+        vec3 color = mix(uBaseColor, uRimColor, clamp(fresnel * 1.1, 0.0, 1.0));
+        float alpha = clamp((0.22 + fresnel * 0.78) * scan * fineGrid * uOpacity, 0.08, 0.92);
         gl_FragColor = vec4(color, alpha);
       }
     `,

@@ -20,9 +20,9 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   render() {
     if (this.state.hasError) {
       return (
-        <div className="mx-auto my-12 max-w-lg rounded-xl border border-rose-500/40 bg-rose-950/50 p-6 text-rose-100 backdrop-blur-md">
+        <div className="mx-auto my-12 max-w-lg rounded-xl border border-rose-300 bg-rose-50 p-6 text-rose-950 backdrop-blur-md">
           <div className="flex items-center gap-2 font-display text-lg font-semibold">
-            <AlertTriangle className="size-5 shrink-0 text-rose-400" aria-hidden="true" />
+            <AlertTriangle className="size-5 shrink-0 text-rose-700" aria-hidden="true" />
             <span>Something went wrong in this view</span>
           </div>
           <p className="mt-2 text-sm">{this.state.message}</p>

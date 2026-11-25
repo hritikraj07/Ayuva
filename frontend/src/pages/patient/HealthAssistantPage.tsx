@@ -295,7 +295,7 @@ export function HealthAssistantPage() {
     <div className="mx-auto flex max-w-7xl flex-col gap-5">
       <div className="neo-glass-violet flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3.5">
-          <Suspense fallback={<div className="h-16 w-16 shrink-0 rounded-full border border-violet-400/40 bg-violet-950/40" />}>
+          <Suspense fallback={<div className="h-16 w-16 shrink-0 rounded-full border border-[#66A9EC] bg-card" />}>
             <IntelligenceOrb3D thinking={sending} className="h-16 w-16 shrink-0" />
           </Suspense>
           <div>

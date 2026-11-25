@@ -304,18 +304,18 @@ export function MedicalTimelinePage() {
                       <div className="h-52 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart data={selectedLabSeries} margin={{ top: 10, right: 12, left: -12, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1E335A" />
-                            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94A9C9" }} />
-                            <YAxis tick={{ fontSize: 11, fill: "#94A9C9" }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" />
+                            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#323A4D" }} />
+                            <YAxis tick={{ fontSize: 11, fill: "#323A4D" }} />
                             <Tooltip
                               contentStyle={{
-                                backgroundColor: "#061124",
-                                borderColor: "#22D3EE",
+                                backgroundColor: "#F9FAFB",
+                                borderColor: "#0284C7",
                                 borderRadius: "8px",
                                 fontSize: "12px",
                               }}
                             />
-                            <Line type="monotone" dataKey="value" stroke="#22D3EE" strokeWidth={2.5} dot={{ r: 4, fill: "#A78BFA" }} />
+                            <Line type="monotone" dataKey="value" stroke="#0284C7" strokeWidth={2.5} dot={{ r: 4, fill: "#A78BFA" }} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>

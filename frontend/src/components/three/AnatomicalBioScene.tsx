@@ -23,35 +23,33 @@ function AnatomicalFigureAndVascular({
   const torsoShader = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#0ea5e9",
-        rimColor: "#67e8f9",
-        opacity: 0.42,
-        scanSpeed: 1.6,
+        baseColor: "#66a9ec",
+        rimColor: "#1e3a8a",
+        opacity: 0.44,
+        scanSpeed: 1.5,
       }),
     []
   );
 
-  // Sculpted anatomical torso + neck + cranium silhouette via LatheGeometry
   const torsoGeo = useMemo(() => {
     const pts: THREE.Vector2[] = [
       new THREE.Vector2(0.01, -1.65),
-      new THREE.Vector2(0.46, -1.55), // pelvis lower
-      new THREE.Vector2(0.54, -1.25), // iliac crest
-      new THREE.Vector2(0.42, -0.78), // waist
-      new THREE.Vector2(0.58, -0.25), // lower ribcage
-      new THREE.Vector2(0.68, 0.35), // chest / pectoral
-      new THREE.Vector2(0.76, 0.72), // deltoid/shoulder breadth
-      new THREE.Vector2(0.24, 0.96), // neck base
-      new THREE.Vector2(0.18, 1.24), // upper neck
-      new THREE.Vector2(0.32, 1.44), // jaw / chin
-      new THREE.Vector2(0.35, 1.72), // cranium mid
-      new THREE.Vector2(0.24, 1.98), // crown
+      new THREE.Vector2(0.46, -1.55),
+      new THREE.Vector2(0.54, -1.25),
+      new THREE.Vector2(0.42, -0.78),
+      new THREE.Vector2(0.58, -0.25),
+      new THREE.Vector2(0.68, 0.35),
+      new THREE.Vector2(0.76, 0.72),
+      new THREE.Vector2(0.24, 0.96),
+      new THREE.Vector2(0.18, 1.24),
+      new THREE.Vector2(0.32, 1.44),
+      new THREE.Vector2(0.35, 1.72),
+      new THREE.Vector2(0.24, 1.98),
       new THREE.Vector2(0.01, 2.06),
     ];
     return new THREE.LatheGeometry(pts, 40);
   }, []);
 
-  // Cardiovascular tube paths: ascending aorta, carotids, subclavian branches
   const vascularCurves = useMemo(() => {
     const aorta = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0.08, 0.32, 0.14),
@@ -109,11 +107,10 @@ function AnatomicalFigureAndVascular({
 
     if (groupRef.current) {
       groupRef.current.rotation.y = Math.sin(t * 0.25) * 0.18 + sp * 1.4;
-      groupRef.current.position.y = Math.sin(t * 0.8) * 0.06;
+      groupRef.current.position.y = Math.sin(t * 0.8) * 0.05;
     }
 
     if (heartRef.current) {
-      // Rhythmic 72 BPM systolic pulse
       const beat = 1.0 + Math.pow(Math.max(0, Math.sin(t * 3.8)), 4) * 0.22;
       heartRef.current.scale.setScalar(beat);
     }
@@ -129,52 +126,47 @@ function AnatomicalFigureAndVascular({
   });
 
   return (
-    <group ref={groupRef} position={[0.4, -0.1, 0]}>
-      {/* Outer sculpted anatomical glass silhouette */}
+    <group ref={groupRef} position={[0.45, -0.05, 0]}>
       <mesh geometry={torsoGeo} material={torsoShader} scale={[1, 1, 0.62]} />
 
-      {/* Precision wireframe ribcage / MRI axial scan rings */}
       {[-0.45, -0.1, 0.25, 0.58, 1.58].map((yPos, idx) => (
         <mesh key={idx} position={[0, yPos, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.64, 1]}>
-          <torusGeometry args={[idx === 4 ? 0.34 : 0.66 - Math.abs(idx - 2) * 0.07, 0.006, 8, 48]} />
-          <meshBasicMaterial color={idx === 4 ? "#a78bfa" : "#38bdf8"} transparent opacity={0.42} />
+          <torusGeometry args={[idx === 4 ? 0.34 : 0.66 - Math.abs(idx - 2) * 0.07, 0.007, 8, 48]} />
+          <meshBasicMaterial color={idx === 4 ? "#4f46e5" : "#0284c7"} transparent opacity={0.45} />
         </mesh>
       ))}
 
-      {/* Glowing cardiovascular vessel network */}
       {vascularTubes.map((geo, i) => (
         <mesh key={i} geometry={geo}>
           <meshStandardMaterial
-            color="#22d3ee"
-            emissive="#06b6d4"
-            emissiveIntensity={1.6}
+            color="#0284c7"
+            emissive="#0369a1"
+            emissiveIntensity={0.85}
             transparent
-            opacity={0.85}
+            opacity={0.88}
           />
         </mesh>
       ))}
 
-      {/* Pulsing cardiac core */}
       <mesh ref={heartRef} position={[0.08, 0.32, 0.14]}>
         <icosahedronGeometry args={[0.14, 2]} />
         <meshStandardMaterial
-          color="#f43f5e"
-          emissive="#fb7185"
-          emissiveIntensity={2.4}
-          roughness={0.2}
+          color="#e11d48"
+          emissive="#be123c"
+          emissiveIntensity={0.95}
+          roughness={0.25}
           transparent
-          opacity={0.92}
+          opacity={0.94}
         />
       </mesh>
 
-      {/* Arterial pulse tracers */}
       <mesh ref={pulseDot1Ref}>
         <sphereGeometry args={[0.042, 12, 12]} />
-        <meshBasicMaterial color="#ffffff" />
+        <meshBasicMaterial color="#141c2e" />
       </mesh>
       <mesh ref={pulseDot2Ref}>
         <sphereGeometry args={[0.034, 12, 12]} />
-        <meshBasicMaterial color="#a78bfa" />
+        <meshBasicMaterial color="#e11d48" />
       </mesh>
     </group>
   );
@@ -234,15 +226,15 @@ function DNAHelix({
     <group position={position} rotation={[0, 0, rotationZ]}>
       <group ref={dnaRef}>
         <mesh geometry={strandA}>
-          <meshStandardMaterial color="#22d3ee" emissive="#0ea5e9" emissiveIntensity={1.5} />
+          <meshStandardMaterial color="#0284c7" emissive="#0369a1" emissiveIntensity={0.6} />
         </mesh>
         <mesh geometry={strandB}>
-          <meshStandardMaterial color="#a78bfa" emissive="#8b5cf6" emissiveIntensity={1.5} />
+          <meshStandardMaterial color="#323a4d" emissive="#1e293b" emissiveIntensity={0.4} />
         </mesh>
         {rungs.map((r, idx) => (
           <mesh key={idx} position={r.mid} rotation={[0, r.rotY, Math.PI / 2]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.62, 6]} />
-            <meshBasicMaterial color={idx % 2 === 0 ? "#67e8f9" : "#c4b5fd"} transparent opacity={0.75} />
+            <cylinderGeometry args={[0.011, 0.011, 0.62, 6]} />
+            <meshBasicMaterial color={idx % 2 === 0 ? "#0ea5e9" : "#4f46e5"} transparent opacity={0.7} />
           </mesh>
         ))}
       </group>
@@ -276,38 +268,25 @@ function VaultStage({ scrollProgressRef }: { scrollProgressRef: React.MutableRef
   });
 
   return (
-    <group position={[5.6, -1.6, -2.5]}>
+    <group position={[6.5, -5.8, -5.5]}>
       <group ref={vaultRef}>
         <mesh>
-          <octahedronGeometry args={[0.72, 0]} />
-          <meshStandardMaterial
-            color="#0ea5e9"
-            emissive="#22d3ee"
-            emissiveIntensity={1.1}
-            wireframe
-          />
+          <octahedronGeometry args={[0.78, 0]} />
+          <meshStandardMaterial color="#323a4d" wireframe />
         </mesh>
         <mesh>
-          <icosahedronGeometry args={[0.42, 1]} />
-          <meshStandardMaterial
-            color="#14b8a6"
-            emissive="#2dd4bf"
-            emissiveIntensity={1.4}
-            transparent
-            opacity={0.45}
-          />
+          <icosahedronGeometry args={[0.45, 1]} />
+          <meshStandardMaterial color="#0284c7" transparent opacity={0.55} />
         </mesh>
       </group>
       <group ref={cardsRef}>
         {[0, 1, 2, 3, 4, 5].map((idx) => (
           <mesh key={idx}>
-            <boxGeometry args={[0.46, 0.3, 0.025]} />
+            <boxGeometry args={[0.48, 0.32, 0.025]} />
             <meshStandardMaterial
-              color={idx % 2 === 0 ? "#22d3ee" : "#a78bfa"}
-              emissive={idx % 2 === 0 ? "#0ea5e9" : "#8b5cf6"}
-              emissiveIntensity={0.9}
+              color={idx % 2 === 0 ? "#66a9ec" : "#323a4d"}
               transparent
-              opacity={0.62}
+              opacity={0.75}
             />
           </mesh>
         ))}
@@ -325,10 +304,10 @@ function IntelligenceOrbStage({
   const orbShader = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#8b5cf6",
-        rimColor: "#22d3ee",
-        opacity: 0.78,
-        scanSpeed: 2.2,
+        baseColor: "#66a9ec",
+        rimColor: "#1e3a8a",
+        opacity: 0.72,
+        scanSpeed: 2.0,
       }),
     []
   );
@@ -345,21 +324,21 @@ function IntelligenceOrbStage({
   });
 
   return (
-    <group ref={orbRef} position={[-4.8, -3.3, -4.4]}>
+    <group ref={orbRef} position={[-6.0, -10.8, -9.0]}>
       <mesh material={orbShader}>
-        <sphereGeometry args={[0.88, 36, 36]} />
+        <sphereGeometry args={[0.92, 36, 36]} />
       </mesh>
       <mesh>
-        <icosahedronGeometry args={[1.05, 1]} />
-        <meshBasicMaterial color="#a78bfa" wireframe transparent opacity={0.35} />
+        <icosahedronGeometry args={[1.1, 1]} />
+        <meshBasicMaterial color="#323a4d" wireframe transparent opacity={0.35} />
       </mesh>
       <mesh rotation={[Math.PI / 3, 0.4, 0]}>
-        <torusGeometry args={[1.45, 0.014, 8, 64]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.6} />
+        <torusGeometry args={[1.5, 0.015, 8, 64]} />
+        <meshBasicMaterial color="#0284c7" transparent opacity={0.65} />
       </mesh>
       <mesh rotation={[-Math.PI / 4, -0.5, 0.2]}>
-        <torusGeometry args={[1.72, 0.01, 8, 64]} />
-        <meshBasicMaterial color="#d946ef" transparent opacity={0.45} />
+        <torusGeometry args={[1.76, 0.011, 8, 64]} />
+        <meshBasicMaterial color="#4f46e5" transparent opacity={0.5} />
       </mesh>
     </group>
   );
@@ -382,33 +361,33 @@ function SurveillanceGlobeAndShieldStage() {
 
   return (
     <>
-      <group ref={globeRef} position={[3.8, -5.0, -6.4]}>
+      <group ref={globeRef} position={[5.2, -16.0, -13.0]}>
         <mesh>
-          <sphereGeometry args={[1.28, 32, 32]} />
-          <meshStandardMaterial color="#071a33" emissive="#082f49" emissiveIntensity={0.65} roughness={0.6} />
+          <sphereGeometry args={[1.32, 32, 32]} />
+          <meshStandardMaterial color="#323a4d" roughness={0.55} />
         </mesh>
         <mesh>
-          <sphereGeometry args={[1.305, 24, 24]} />
-          <meshBasicMaterial color="#22d3ee" wireframe transparent opacity={0.28} />
+          <sphereGeometry args={[1.345, 24, 24]} />
+          <meshBasicMaterial color="#66a9ec" wireframe transparent opacity={0.45} />
         </mesh>
         <mesh rotation={[Math.PI / 2.2, 0.25, 0]}>
-          <torusGeometry args={[1.62, 0.012, 8, 72]} />
-          <meshBasicMaterial color="#14b8a6" transparent opacity={0.55} />
+          <torusGeometry args={[1.68, 0.014, 8, 72]} />
+          <meshBasicMaterial color="#0284c7" transparent opacity={0.65} />
         </mesh>
       </group>
 
-      <group ref={shieldRef} position={[0, -6.8, -8.5]}>
+      <group ref={shieldRef} position={[0, -21.5, -17.0]}>
         <mesh>
-          <dodecahedronGeometry args={[0.92, 0]} />
-          <meshStandardMaterial color="#22d3ee" emissive="#0ea5e9" emissiveIntensity={1.2} wireframe />
+          <dodecahedronGeometry args={[0.96, 0]} />
+          <meshStandardMaterial color="#323a4d" wireframe />
         </mesh>
         <mesh>
-          <octahedronGeometry args={[0.52, 0]} />
-          <meshStandardMaterial color="#a78bfa" emissive="#8b5cf6" emissiveIntensity={1.8} transparent opacity={0.75} />
+          <octahedronGeometry args={[0.56, 0]} />
+          <meshStandardMaterial color="#0284c7" transparent opacity={0.7} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[1.38, 0.015, 8, 64]} />
-          <meshBasicMaterial color="#22d3ee" transparent opacity={0.5} />
+          <torusGeometry args={[1.42, 0.016, 8, 64]} />
+          <meshBasicMaterial color="#323a4d" transparent opacity={0.55} />
         </mesh>
       </group>
     </>
@@ -422,10 +401,10 @@ function InstancedBioParticles({ count }: { count: number }) {
     () =>
       Array.from({ length: count }, (_, i) => ({
         x: ((i * 73) % 100) / 5.2 - 9.5,
-        y: ((i * 41) % 100) / 8.5 - 8.2,
-        z: -((i * 29) % 100) / 8.0 + 1.5,
+        y: ((i * 41) % 100) / 4.0 - 20.0,
+        z: -((i * 29) % 100) / 5.5 + 1.5,
         speed: 0.2 + ((i * 17) % 10) * 0.03,
-        scale: 0.015 + ((i * 13) % 8) * 0.004,
+        scale: 0.016 + ((i * 13) % 8) * 0.004,
       })),
     [count]
   );
@@ -451,7 +430,7 @@ function InstancedBioParticles({ count }: { count: number }) {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
       <sphereGeometry args={[1, 6, 6]} />
-      <meshBasicMaterial color="#67e8f9" transparent opacity={0.55} />
+      <meshBasicMaterial color="#0284c7" transparent opacity={0.45} />
     </instancedMesh>
   );
 }
@@ -463,32 +442,31 @@ function CameraChoreographer({
   scrollProgressRef: React.MutableRefObject<number>;
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
 }) {
-  const lookTarget = useMemo(() => new THREE.Vector3(0.4, 0.2, 0), []);
-  const desiredCam = useMemo(() => new THREE.Vector3(0, 0.35, 5.2), []);
-  const desiredLook = useMemo(() => new THREE.Vector3(0.4, 0.2, 0), []);
+  const lookTarget = useMemo(() => new THREE.Vector3(0.45, 0.2, 0), []);
+  const desiredCam = useMemo(() => new THREE.Vector3(0, 0.35, 5.4), []);
+  const desiredLook = useMemo(() => new THREE.Vector3(0.45, 0.2, 0), []);
 
   useFrame(({ camera }) => {
     const sp = THREE.MathUtils.clamp(scrollProgressRef.current, 0, 1);
     const px = pointerRef.current.x * 0.35;
     const py = pointerRef.current.y * 0.25;
 
-    // Multi-waypoint spline path matching Landing Page narrative sections
-    if (sp < 0.22) {
-      const k = sp / 0.22;
-      desiredCam.set(THREE.MathUtils.lerp(0.0, 2.8, k) + px, THREE.MathUtils.lerp(0.35, -0.6, k) + py, THREE.MathUtils.lerp(5.2, 3.8, k));
-      desiredLook.set(THREE.MathUtils.lerp(0.4, 2.2, k), THREE.MathUtils.lerp(0.2, -0.5, k), THREE.MathUtils.lerp(0, -1.2, k));
-    } else if (sp < 0.42) {
-      const k = (sp - 0.22) / 0.2;
-      desiredCam.set(THREE.MathUtils.lerp(2.8, -1.2, k) + px, THREE.MathUtils.lerp(-0.6, -2.2, k) + py, THREE.MathUtils.lerp(3.8, 0.5, k));
-      desiredLook.set(THREE.MathUtils.lerp(2.2, -3.5, k), THREE.MathUtils.lerp(-0.5, -2.8, k), THREE.MathUtils.lerp(-1.2, -3.8, k));
-    } else if (sp < 0.65) {
-      const k = (sp - 0.42) / 0.23;
-      desiredCam.set(THREE.MathUtils.lerp(-1.2, 1.4, k) + px, THREE.MathUtils.lerp(-2.2, -4.0, k) + py, THREE.MathUtils.lerp(0.5, -1.8, k));
-      desiredLook.set(THREE.MathUtils.lerp(-3.5, 2.8, k), THREE.MathUtils.lerp(-2.8, -4.8, k), THREE.MathUtils.lerp(-3.8, -6.2, k));
+    if (sp < 0.24) {
+      const k = sp / 0.24;
+      desiredCam.set(THREE.MathUtils.lerp(0.0, 3.6, k) + px, THREE.MathUtils.lerp(0.35, -4.8, k) + py, THREE.MathUtils.lerp(5.4, -0.5, k));
+      desiredLook.set(THREE.MathUtils.lerp(0.45, 5.5, k), THREE.MathUtils.lerp(0.2, -5.6, k), THREE.MathUtils.lerp(0, -5.5, k));
+    } else if (sp < 0.5) {
+      const k = (sp - 0.24) / 0.26;
+      desiredCam.set(THREE.MathUtils.lerp(3.6, -3.2, k) + px, THREE.MathUtils.lerp(-4.8, -10.0, k) + py, THREE.MathUtils.lerp(-0.5, -4.5, k));
+      desiredLook.set(THREE.MathUtils.lerp(5.5, -5.5, k), THREE.MathUtils.lerp(-5.6, -10.8, k), THREE.MathUtils.lerp(-5.5, -9.0, k));
+    } else if (sp < 0.76) {
+      const k = (sp - 0.5) / 0.26;
+      desiredCam.set(THREE.MathUtils.lerp(-3.2, 2.5, k) + px, THREE.MathUtils.lerp(-10.0, -15.2, k) + py, THREE.MathUtils.lerp(-4.5, -8.5, k));
+      desiredLook.set(THREE.MathUtils.lerp(-5.5, 4.8, k), THREE.MathUtils.lerp(-10.8, -16.0, k), THREE.MathUtils.lerp(-9.0, -13.0, k));
     } else {
-      const k = (sp - 0.65) / 0.35;
-      desiredCam.set(THREE.MathUtils.lerp(1.4, 0.0, k) + px, THREE.MathUtils.lerp(-4.0, -5.8, k) + py, THREE.MathUtils.lerp(-1.8, -4.2, k));
-      desiredLook.set(THREE.MathUtils.lerp(2.8, 0.0, k), THREE.MathUtils.lerp(-4.8, -6.6, k), THREE.MathUtils.lerp(-6.2, -8.4, k));
+      const k = (sp - 0.76) / 0.24;
+      desiredCam.set(THREE.MathUtils.lerp(2.5, 0.0, k) + px, THREE.MathUtils.lerp(-15.2, -20.5, k) + py, THREE.MathUtils.lerp(-8.5, -12.5, k));
+      desiredLook.set(THREE.MathUtils.lerp(4.8, 0.0, k), THREE.MathUtils.lerp(-16.0, -21.5, k), THREE.MathUtils.lerp(-13.0, -17.0, k));
     }
 
     camera.position.lerp(desiredCam, 0.06);
@@ -518,21 +496,21 @@ export default function AnatomicalBioScene({
       <WebGLErrorBoundary fallback={<div className="h-full w-full neo-grid-overlay opacity-70" />}>
         <Canvas
           dpr={capabilities.dpr}
-          camera={{ position: [0, 0.35, 5.2], fov: 46, near: 0.1, far: 45 }}
+          camera={{ position: [0, 0.35, 5.4], fov: 45, near: 0.1, far: 50 }}
           gl={{ antialias: !capabilities.isLowPower, alpha: true, powerPreference: "high-performance" }}
         >
-          <fog attach="fog" args={["#05070d", 6, 22]} />
-          <ambientLight intensity={0.45} />
-          <pointLight position={[3, 4, 5]} intensity={1.8} color="#22d3ee" />
-          <pointLight position={[-4, -2, 2]} intensity={1.4} color="#8b5cf6" />
+          <fog attach="fog" args={["#c3dcf0", 7, 24]} />
+          <ambientLight intensity={0.95} />
+          <directionalLight position={[4, 6, 5]} intensity={1.25} color="#ffffff" />
+          <pointLight position={[-4, 2, 3]} intensity={1.1} color="#66a9ec" />
 
           <AnatomicalFigureAndVascular scrollProgressRef={scrollProgressRef} />
-          <DNAHelix position={[-1.95, 0.1, -0.9]} rotationZ={0.22} scrollProgressRef={scrollProgressRef} />
-          <DNAHelix position={[2.35, -0.3, -1.4]} rotationZ={-0.18} scrollProgressRef={scrollProgressRef} />
+          <DNAHelix position={[-2.05, 0.1, -0.9]} rotationZ={0.22} scrollProgressRef={scrollProgressRef} />
+          <DNAHelix position={[2.4, -0.25, -1.4]} rotationZ={-0.18} scrollProgressRef={scrollProgressRef} />
           <VaultStage scrollProgressRef={scrollProgressRef} />
           <IntelligenceOrbStage pointerRef={pointerRef} />
           <SurveillanceGlobeAndShieldStage />
-          <InstancedBioParticles count={capabilities.isLowPower ? 75 : 160} />
+          <InstancedBioParticles count={capabilities.isLowPower ? 70 : 140} />
           <CameraChoreographer scrollProgressRef={scrollProgressRef} pointerRef={pointerRef} />
         </Canvas>
       </WebGLErrorBoundary>

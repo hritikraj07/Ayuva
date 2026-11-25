@@ -466,18 +466,18 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                     layout="vertical"
                     margin={{ left: 160, right: 20, top: 8, bottom: 8 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E335A" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: "#94A9C9" }} />
-                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#E6F1FF" }} width={155} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: "#323A4D" }} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#141C2E" }} width={155} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#061124",
-                        borderColor: "#22D3EE",
+                        backgroundColor: "#F9FAFB",
+                        borderColor: "#0284C7",
                         borderRadius: "8px",
                         fontSize: "12px",
                       }}
                     />
-                    <Bar dataKey="importance" name="Feature Importance" fill="#22D3EE" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="importance" name="Feature Importance" fill="#0284C7" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -659,18 +659,18 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
             <CardContent className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={recentReports.slice(0, 12)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E335A" />
-                  <XAxis dataKey="district" tick={{ fontSize: 10, fill: "#94A9C9" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "#94A9C9" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" />
+                  <XAxis dataKey="district" tick={{ fontSize: 10, fill: "#323A4D" }} />
+                  <YAxis tick={{ fontSize: 11, fill: "#323A4D" }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#061124",
-                      borderColor: "#22D3EE",
+                      backgroundColor: "#F9FAFB",
+                      borderColor: "#0284C7",
                       borderRadius: "8px",
                       fontSize: "12px",
                     }}
                   />
-                  <Bar dataKey="cases" name="Observed Cases" fill="#22D3EE" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cases" name="Observed Cases" fill="#0284C7" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -926,7 +926,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                   <Card>
                     <CardContent className="pt-4">
                       <div className="text-[11px] text-muted-foreground">Estimated Cases Averted</div>
-                      <div className="mt-1 font-mono text-xl font-bold text-emerald-400">
+                      <div className="mt-1 font-mono text-xl font-bold text-emerald-700">
                         {simResults.summary_metrics.estimated_cases_averted}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
@@ -966,13 +966,13 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                   <CardContent className="h-[270px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={simResults.daily_comparison}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1E335A" />
-                        <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#94A9C9" }} />
-                        <YAxis tick={{ fontSize: 11, fill: "#94A9C9" }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" />
+                        <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#323A4D" }} />
+                        <YAxis tick={{ fontSize: 11, fill: "#323A4D" }} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#061124",
-                            borderColor: "#22D3EE",
+                            backgroundColor: "#F9FAFB",
+                            borderColor: "#0284C7",
                             borderRadius: "8px",
                             fontSize: "12px",
                           }}
@@ -989,7 +989,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                           type="monotone"
                           dataKey="intervention_cases"
                           name="With Intervention"
-                          stroke="#22D3EE"
+                          stroke="#0284C7"
                           strokeWidth={2.5}
                         />
                       </LineChart>
@@ -1034,7 +1034,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                           <td className="py-2 pr-2 font-mono">
                             {sc.initial_active_cases} / {sc.available_beds} / {sc.medical_staff}
                           </td>
-                          <td className="py-2 font-mono font-semibold text-emerald-400">
+                          <td className="py-2 font-mono font-semibold text-emerald-700">
                             {sc.summary_metrics?.estimated_cases_averted ?? 0}
                           </td>
                         </tr>
@@ -1070,7 +1070,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                 <div key={a.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-xs sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <AlertTriangle className="size-4 text-rose-400" aria-hidden="true" />
+                      <AlertTriangle className="size-4 text-rose-700" aria-hidden="true" />
                       <span className="font-semibold text-primary">{a.title}</span>
                       <RiskBadge level={a.severity} />
                       {a.is_acknowledged && <Badge variant="verified">Acknowledged</Badge>}

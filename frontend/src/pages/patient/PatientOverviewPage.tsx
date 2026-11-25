@@ -60,7 +60,7 @@ export function PatientOverviewPage() {
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <div className="neo-glass flex flex-col gap-5 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Suspense fallback={<div className="h-24 w-24 shrink-0 rounded-full border border-cyan-400/30 bg-cyan-950/30" />}>
+          <Suspense fallback={<div className="h-24 w-24 shrink-0 rounded-full border border-[#66A9EC] bg-card" />}>
             <PatientBioCore3D className="h-24 w-24 shrink-0" />
           </Suspense>
           <div>
@@ -83,7 +83,7 @@ export function PatientOverviewPage() {
           </Link>
           <Link
             to="/patient/assistant"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-violet-400/35 bg-violet-500/15 px-4 text-sm font-medium text-violet-100 hover:bg-violet-500/25"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#66A9EC] bg-white/90 px-4 text-sm font-medium text-primary hover:bg-white"
           >
             <MessageSquareHeart className="size-4 text-primary" aria-hidden="true" />
             <span>Ask Gemini AI</span>
@@ -137,7 +137,7 @@ export function PatientOverviewPage() {
           <CardContent className="flex items-center justify-between pt-5">
             <div>
               <div className="text-xs font-medium text-muted-foreground">Flagged Lab Values</div>
-              <div className="mt-1 font-display text-2xl font-bold text-amber-300">{counts.flagged_labs}</div>
+              <div className="mt-1 font-display text-2xl font-bold text-amber-700">{counts.flagged_labs}</div>
             </div>
             <AlertTriangle className="size-6 text-amber-400" aria-hidden="true" />
           </CardContent>

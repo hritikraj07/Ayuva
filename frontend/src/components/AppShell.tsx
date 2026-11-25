@@ -145,8 +145,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   cn(
                     "flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150",
                     isActive
-                      ? "border border-secondary/50 bg-secondary/20 font-semibold text-primary shadow-[0_0_18px_-8px_rgba(85,190,199,0.65)]"
-                      : "border border-transparent text-foreground/80 hover:bg-accent/55 hover:text-primary",
+                      ? "bg-primary font-semibold text-primary-foreground shadow-sm"
+                      : "text-foreground/85 hover:bg-card hover:text-primary",
                     isCompact && "justify-center px-0"
                   )
                 }
@@ -166,18 +166,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-border bg-[#060D1E]/90 backdrop-blur-xl transition-all duration-150 shrink-0",
+          "hidden lg:flex flex-col border-r border-slate-300/80 bg-secondary/90 backdrop-blur-xl transition-all duration-150 shrink-0",
           collapsed ? "w-[74px]" : "w-[268px]"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-border px-4">
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
           {!collapsed ? (
             <Link to="/" aria-label="MedLedger Home">
               <BrandMark />
             </Link>
           ) : (
             <Link to="/" aria-label="MedLedger Home" className="mx-auto">
-              <span className="flex size-8 items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-950/60 font-display text-sm font-bold text-primary">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary font-display text-sm font-bold text-primary-foreground">
                 ML
               </span>
             </Link>
@@ -270,7 +270,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-[#060D1E]/80 px-4 backdrop-blur-xl lg:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-300/80 bg-secondary/85 px-4 backdrop-blur-xl lg:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"

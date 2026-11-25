@@ -9,9 +9,9 @@ function BioCoreMesh({ pulseBoost = false }: { pulseBoost?: boolean }) {
   const shader = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#14b8a6",
-        rimColor: "#22d3ee",
-        opacity: 0.72,
+        baseColor: "#66a9ec",
+        rimColor: "#323a4d",
+        opacity: 0.7,
         scanSpeed: 1.8,
       }),
     []
@@ -34,12 +34,12 @@ function BioCoreMesh({ pulseBoost = false }: { pulseBoost?: boolean }) {
         <icosahedronGeometry args={[0.92, 2]} />
       </mesh>
       <mesh rotation={[Math.PI / 3, 0.3, 0]}>
-        <torusGeometry args={[1.32, 0.018, 8, 64]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.65} />
+        <torusGeometry args={[1.32, 0.02, 8, 64]} />
+        <meshBasicMaterial color="#0284c7" transparent opacity={0.7} />
       </mesh>
       <mesh rotation={[-Math.PI / 3, -0.4, 0]}>
-        <torusGeometry args={[1.52, 0.014, 8, 64]} />
-        <meshBasicMaterial color="#a78bfa" transparent opacity={0.5} />
+        <torusGeometry args={[1.52, 0.015, 8, 64]} />
+        <meshBasicMaterial color="#323a4d" transparent opacity={0.55} />
       </mesh>
     </group>
   );
@@ -54,24 +54,24 @@ export function PatientBioCore3D({ className = "h-40 w-40" }: { className?: stri
     return (
       <div
         aria-hidden="true"
-        className={`flex items-center justify-center rounded-full border border-cyan-400/30 bg-radial from-cyan-500/20 via-violet-500/10 to-transparent ${className}`}
+        className={`flex items-center justify-center rounded-full border border-[#66A9EC]/50 bg-white/80 ${className}`}
       >
-        <div className="size-16 rounded-full border border-cyan-400/50 bg-cyan-400/15 shadow-[0_0_24px_rgba(34,211,238,0.45)]" />
+        <div className="size-12 rounded-full border border-[#0284C7] bg-[#D9EEF3]" />
       </div>
     );
   }
 
   return (
     <div ref={ref} aria-hidden="true" className={className}>
-      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-cyan-400/30 bg-cyan-500/10" />}>
+      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#66A9EC] bg-[#D9EEF3]" />}>
         <Canvas
           dpr={caps.dpr}
           frameloop={visible ? "always" : "demand"}
           camera={{ position: [0, 0, 3.8], fov: 40 }}
           gl={{ alpha: true, antialias: true }}
         >
-          <ambientLight intensity={0.6} />
-          <pointLight position={[3, 3, 3]} intensity={1.4} color="#22d3ee" />
+          <ambientLight intensity={0.9} />
+          <directionalLight position={[3, 3, 3]} intensity={1.2} color="#ffffff" />
           <BioCoreMesh />
         </Canvas>
       </WebGLErrorBoundary>
@@ -84,9 +84,9 @@ function OrbMesh({ thinking }: { thinking: boolean }) {
   const mat = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#8b5cf6",
-        rimColor: "#22d3ee",
-        opacity: thinking ? 0.92 : 0.72,
+        baseColor: "#66a9ec",
+        rimColor: "#141c2e",
+        opacity: thinking ? 0.88 : 0.68,
         scanSpeed: thinking ? 4.2 : 1.8,
       }),
     [thinking]
@@ -113,11 +113,11 @@ function OrbMesh({ thinking }: { thinking: boolean }) {
       </mesh>
       <mesh>
         <icosahedronGeometry args={[1.12, 1]} />
-        <meshBasicMaterial color="#a78bfa" wireframe transparent opacity={thinking ? 0.55 : 0.32} />
+        <meshBasicMaterial color="#323a4d" wireframe transparent opacity={thinking ? 0.55 : 0.35} />
       </mesh>
       <mesh rotation={[Math.PI / 2.6, 0.3, 0]}>
-        <torusGeometry args={[1.45, 0.016, 8, 64]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.65} />
+        <torusGeometry args={[1.45, 0.018, 8, 64]} />
+        <meshBasicMaterial color="#0284c7" transparent opacity={0.7} />
       </mesh>
     </group>
   );
@@ -138,25 +138,24 @@ export function IntelligenceOrb3D({
     return (
       <div
         aria-hidden="true"
-        className={`flex items-center justify-center rounded-full border border-violet-400/40 bg-radial from-violet-500/25 via-cyan-500/15 to-transparent ${className}`}
+        className={`flex items-center justify-center rounded-full border border-[#66A9EC] bg-white/80 ${className}`}
       >
-        <div className="size-12 rounded-full border border-cyan-300/60 bg-violet-500/25 shadow-[0_0_24px_rgba(139,92,246,0.5)]" />
+        <div className="size-10 rounded-full border border-[#323A4D] bg-[#D9EEF3]" />
       </div>
     );
   }
 
   return (
     <div ref={ref} aria-hidden="true" className={className}>
-      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-violet-400/40 bg-violet-500/15" />}>
+      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#66A9EC] bg-[#D9EEF3]" />}>
         <Canvas
           dpr={caps.dpr}
           frameloop={visible ? "always" : "demand"}
           camera={{ position: [0, 0, 3.8], fov: 42 }}
           gl={{ alpha: true, antialias: true }}
         >
-          <ambientLight intensity={0.6} />
-          <pointLight position={[3, 3, 4]} intensity={1.6} color="#22d3ee" />
-          <pointLight position={[-3, -2, 2]} intensity={1.3} color="#d946ef" />
+          <ambientLight intensity={0.9} />
+          <directionalLight position={[3, 3, 4]} intensity={1.25} color="#ffffff" />
           <OrbMesh thinking={thinking} />
         </Canvas>
       </WebGLErrorBoundary>

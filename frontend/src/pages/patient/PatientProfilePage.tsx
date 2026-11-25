@@ -213,7 +213,7 @@ export function PatientProfilePage() {
         </Card>
       </form>
 
-      <Card className="border-rose-500/40">
+      <Card className="border-rose-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base text-destructive">
             <ShieldAlert className="size-4" aria-hidden="true" />
