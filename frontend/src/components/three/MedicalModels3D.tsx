@@ -30,64 +30,144 @@ function applyGroupFade(group: THREE.Group, weight: number) {
 /* ============================================================================
  * 1. HERO MODEL: MEDICAL-ATLAS HALF-BODY RESPIRATORY & THORACIC ANATOMY
  * ============================================================================ */
+function createLungTissueTextures(): { colorMap: THREE.CanvasTexture; bumpMap: THREE.CanvasTexture } {
+  const size = 256;
+  const colCanvas = document.createElement("canvas");
+  colCanvas.width = size;
+  colCanvas.height = size;
+  const cCtx = colCanvas.getContext("2d");
+
+  const bumpCanvas = document.createElement("canvas");
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bCtx = bumpCanvas.getContext("2d");
+
+  if (cCtx && bCtx) {
+    // Rich warm rosy-terracotta pleura base
+    cCtx.fillStyle = "#b55d4f";
+    cCtx.fillRect(0, 0, size, size);
+    bCtx.fillStyle = "#888888";
+    bCtx.fillRect(0, 0, size, size);
+
+    // Deterministic pulmonary secondary lobules + mottled organic depth
+    for (let i = 0; i < 240; i++) {
+      const s1 = Math.sin(i * 12.9898) * 43758.5453;
+      const s2 = Math.sin(i * 78.233) * 24634.6345;
+      const s3 = Math.sin(i * 41.123) * 19283.4123;
+      const x = (s1 - Math.floor(s1)) * size;
+      const y = (s2 - Math.floor(s2)) * size;
+      const r = 6 + (s3 - Math.floor(s3)) * 16;
+
+      const grad = cCtx.createRadialGradient(x, y, 1, x, y, r);
+      const isHighlight = i % 3 === 0;
+      grad.addColorStop(0, isHighlight ? "rgba(218, 134, 118, 0.55)" : "rgba(128, 52, 46, 0.5)");
+      grad.addColorStop(0.75, "rgba(165, 76, 66, 0.28)");
+      grad.addColorStop(1, "rgba(104, 40, 38, 0.0)");
+      cCtx.fillStyle = grad;
+      cCtx.beginPath();
+      cCtx.arc(x, y, r, 0, Math.PI * 2);
+      cCtx.fill();
+
+      const bGrad = bCtx.createRadialGradient(x, y, 1, x, y, r);
+      bGrad.addColorStop(0, "rgba(225, 225, 225, 0.55)");
+      bGrad.addColorStop(0.8, "rgba(130, 130, 130, 0.3)");
+      bGrad.addColorStop(1, "rgba(55, 55, 55, 0.0)");
+      bCtx.fillStyle = bGrad;
+      bCtx.beginPath();
+      bCtx.arc(x, y, r, 0, Math.PI * 2);
+      bCtx.fill();
+    }
+
+    // Subtle delicate capillary septa lines
+    cCtx.strokeStyle = "rgba(88, 34, 34, 0.28)";
+    cCtx.lineWidth = 1.1;
+    bCtx.strokeStyle = "rgba(45, 45, 45, 0.45)";
+    bCtx.lineWidth = 1.3;
+    for (let k = 0; k < 64; k++) {
+      const a = (k * 2.3999) % (Math.PI * 2);
+      const sx = ((Math.sin(k * 9.1) * 0.5 + 0.5) * size);
+      const sy = ((Math.cos(k * 7.3) * 0.5 + 0.5) * size);
+      const ex = sx + Math.cos(a) * 28;
+      const ey = sy + Math.sin(a) * 28;
+      cCtx.beginPath();
+      cCtx.moveTo(sx, sy);
+      cCtx.lineTo(ex, ey);
+      cCtx.stroke();
+
+      bCtx.beginPath();
+      bCtx.moveTo(sx, sy);
+      bCtx.lineTo(ex, ey);
+      bCtx.stroke();
+    }
+  }
+
+  const colorMap = new THREE.CanvasTexture(colCanvas);
+  colorMap.wrapS = THREE.RepeatWrapping;
+  colorMap.wrapT = THREE.RepeatWrapping;
+  colorMap.colorSpace = THREE.SRGBColorSpace;
+
+  const bumpMap = new THREE.CanvasTexture(bumpCanvas);
+  bumpMap.wrapS = THREE.RepeatWrapping;
+  bumpMap.wrapT = THREE.RepeatWrapping;
+
+  return { colorMap, bumpMap };
+}
+
 function buildSculptedLungGeometry(side: -1 | 1): THREE.BufferGeometry {
-  // side === -1 (anatomical right lung, 3 lobes); side === 1 (anatomical left lung, cardiac notch)
-  const uSteps = 44;
-  const vSteps = 52;
+  const uSteps = 46;
+  const vSteps = 54;
   const positions: number[] = [];
+  const uvs: number[] = [];
   const indices: number[] = [];
 
   for (let i = 0; i <= uSteps; i++) {
     const u = (i / uSteps) * Math.PI;
     const sinU = Math.sin(u);
-    const ny = Math.cos(u); // +1 apex -> -1 base
-
-    // Organic vertical taper: rounded apex -> broad middle -> flared lower thoracic lobe
-    const radialScale = Math.pow(Math.max(sinU, 0.0001), 0.72) * (0.76 + (1 - ny) * 0.2);
+    const ny = Math.cos(u);
+    const radialScale = Math.pow(Math.max(sinU, 0.0001), 0.72) * (0.78 + (1 - ny) * 0.22);
 
     for (let j = 0; j <= vSteps; j++) {
       const v = (j / vSteps) * Math.PI * 2;
-      const cosV = Math.cos(v); // lateral (+side) vs medial (-side)
-      const sinV = Math.sin(v); // anterior (+z) vs posterior (-z)
+      const cosV = Math.cos(v);
+      const sinV = Math.sin(v);
 
-      let rx = 0.44 * radialScale;
+      let rx = 0.45 * radialScale;
       let rz = 0.42 * radialScale;
 
-      // Flatten medial mediastinal surface cleanly so both lungs flank trachea & heart
       const medialness = Math.max(0, -side * cosV);
       rx *= 1 - medialness * 0.48;
 
-      // Carve deep anatomical cardiac notch on lower anterior medial Left Lung (side === 1)
       if (side === 1 && ny < 0.18 && cosV < 0.05 && sinV > -0.25) {
         const notchFactor =
           Math.max(0, (0.18 - ny) / 1.18) *
           Math.max(0, (-cosV + 0.05) / 1.05) *
           Math.max(0, (sinV + 0.25) / 1.25);
-        rx *= 1 - notchFactor * 0.58;
-        rz *= 1 - notchFactor * 0.25;
+        rx *= 1 - notchFactor * 0.56;
+        rz *= 1 - notchFactor * 0.24;
       }
 
-      // Subtle anatomical oblique & horizontal fissure creases
       const obliqueDist = Math.abs(ny - 0.28 * sinV + 0.06);
       const horizontalDist = side === -1 ? Math.abs(ny - 0.24) : 1.0;
       const crease =
-        (obliqueDist < 0.08 ? (1 - obliqueDist / 0.08) * 0.055 : 0) +
-        (horizontalDist < 0.06 && sinV > -0.2 ? (1 - horizontalDist / 0.06) * 0.045 : 0);
+        (obliqueDist < 0.08 ? (1 - obliqueDist / 0.08) * 0.058 : 0) +
+        (horizontalDist < 0.06 && sinV > -0.2 ? (1 - horizontalDist / 0.06) * 0.048 : 0);
 
-      let x = cosV * rx * (1 - crease);
-      let z = sinV * rz * (1 - crease);
-      let y = ny * 0.66;
+      // Subtle organic lobular surface undulation
+      const micro = Math.sin(ny * 18 + cosV * 9) * Math.cos(sinV * 11) * 0.009;
 
-      // Posteriorly slope base lower & cup diaphragmatic underside smoothly
+      let x = cosV * rx * (1 - crease + micro);
+      let z = sinV * rz * (1 - crease + micro);
+      let y = ny * 0.68;
+
       if (ny < -0.45) {
         const baseArch = (Math.abs(ny) - 0.45) / 0.55;
         y += baseArch * 0.22 * (1 - sinU * 0.35);
-        y -= sinV * 0.06 * baseArch; // costophrenic posterior recess dips lower
+        y -= sinV * 0.065 * baseArch;
       }
 
-      // Gently tilt apex medially under 1st rib
-      x -= side * Math.max(0, ny) * 0.12;
+      x -= side * Math.max(0, ny) * 0.13;
       positions.push(x, y, z);
+      uvs.push((j / vSteps) * 1.4, (i / uSteps) * 1.4);
     }
   }
 
@@ -101,6 +181,7 @@ function buildSculptedLungGeometry(side: -1 | 1): THREE.BufferGeometry {
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
@@ -113,39 +194,34 @@ function buildSmoothHalfTorsoGeometry(): THREE.BufferGeometry {
   const indices: number[] = [];
 
   const profileAt = (y: number): { rx: number; rz: number } => {
-    // y runs smoothly from -1.08 (diaphragm waist) -> +2.02 (cranium top)
-    if (y < 0.55) {
-      // Smooth curved waist -> ribcage -> broad shoulders
-      const t = THREE.MathUtils.clamp((y + 1.08) / 1.63, 0, 1);
+    if (y < 0.56) {
+      const t = THREE.MathUtils.clamp((y + 1.08) / 1.64, 0, 1);
       const smooth = t * t * (3 - 2 * t);
       return {
-        rx: THREE.MathUtils.lerp(0.84, 1.24, smooth) + Math.sin(t * Math.PI) * 0.04,
-        rz: THREE.MathUtils.lerp(0.46, 0.58, Math.sin(t * Math.PI * 0.85)),
+        rx: THREE.MathUtils.lerp(0.84, 1.32, smooth) + Math.sin(t * Math.PI) * 0.05,
+        rz: THREE.MathUtils.lerp(0.45, 0.55, Math.sin(t * Math.PI * 0.85)),
       };
     }
     if (y < 0.94) {
-      // Curved shoulder cap -> trapezius slope -> base of neck
-      const t = (y - 0.55) / 0.39;
+      const t = (y - 0.56) / 0.38;
       const smooth = t * t * (3 - 2 * t);
       return {
-        rx: THREE.MathUtils.lerp(1.24, 0.25, smooth),
-        rz: THREE.MathUtils.lerp(0.54, 0.23, smooth),
+        rx: THREE.MathUtils.lerp(1.32, 0.24, smooth),
+        rz: THREE.MathUtils.lerp(0.52, 0.22, smooth),
       };
     }
     if (y < 1.3) {
-      // Slender sculpted neck
       const t = (y - 0.94) / 0.36;
       return {
-        rx: THREE.MathUtils.lerp(0.25, 0.22, t),
-        rz: THREE.MathUtils.lerp(0.23, 0.21, t),
+        rx: THREE.MathUtils.lerp(0.24, 0.21, t),
+        rz: THREE.MathUtils.lerp(0.22, 0.2, t),
       };
     }
-    // Smooth oval cranium & jaw contour (no harsh octagonal edges)
     const t = THREE.MathUtils.clamp((y - 1.3) / 0.72, 0, 1);
     const dome = Math.sin(t * Math.PI * 0.92);
     return {
-      rx: 0.2 + dome * 0.21,
-      rz: 0.2 + dome * 0.25,
+      rx: 0.19 + dome * 0.2,
+      rz: 0.19 + dome * 0.24,
     };
   };
 
@@ -190,11 +266,22 @@ function HalfBodyRespiratorySystem({
   const flowDotsRef = useRef<THREE.Group>(null);
 
   const {
+    lungTextures,
     torsoShellGeo,
+    armShellGeos,
+    humerusGeos,
+    neckMuscleGeos,
+    carotidArteryGeos,
+    jugularVeinGeos,
+    armArteryGeos,
+    armVeinGeos,
+    jawBoneGeo,
     rightLungGeo,
     leftLungGeo,
     tracheaGeo,
     bronchialGeos,
+    surfaceArterialGeos,
+    surfaceVenousGeos,
     aortaGeo,
     pulmonaryGeo,
     venaCavaGeo,
@@ -208,14 +295,146 @@ function HalfBodyRespiratorySystem({
     alveoliClusters,
     flowCurves,
   } = useMemo(() => {
+    const lTex = createLungTissueTextures();
     const torsoGeo = buildSmoothHalfTorsoGeometry();
     const rLung = buildSculptedLungGeometry(-1);
     const lLung = buildSculptedLungGeometry(1);
 
+    const armShells = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 1.12, 0.56, -0.02),
+          new THREE.Vector3(side * 1.28, 0.1, -0.04),
+          new THREE.Vector3(side * 1.34, -0.48, -0.02),
+          new THREE.Vector3(side * 1.36, -1.06, 0.02),
+        ]),
+        24,
+        0.24,
+        24,
+        false
+      )
+    );
+
+    const humeri = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 1.1, 0.56, -0.01),
+          new THREE.Vector3(side * 1.24, 0.05, -0.02),
+          new THREE.Vector3(side * 1.32, -0.54, 0.0),
+          new THREE.Vector3(side * 1.34, -1.04, 0.03),
+        ]),
+        20,
+        0.052,
+        14,
+        false
+      )
+    );
+
+    const neckMuscles = [-1, 1].flatMap((side) => [
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.24, 1.34, -0.04),
+          new THREE.Vector3(side * 0.17, 1.05, 0.08),
+          new THREE.Vector3(side * 0.07, 0.68, 0.36),
+        ]),
+        18,
+        0.044,
+        10,
+        false
+      ),
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.18, 1.22, -0.06),
+          new THREE.Vector3(side * 0.23, 0.92, -0.02),
+          new THREE.Vector3(side * 0.38, 0.68, 0.16),
+        ]),
+        16,
+        0.036,
+        10,
+        false
+      ),
+    ]);
+
+    const carotids = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.06, 0.34, 0.04),
+          new THREE.Vector3(side * 0.11, 0.72, 0.04),
+          new THREE.Vector3(side * 0.12, 1.18, 0.04),
+          new THREE.Vector3(side * 0.14, 1.44, 0.02),
+        ]),
+        20,
+        0.02,
+        10,
+        false
+      )
+    );
+
+    const jugulars = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.13, 0.44, 0.08),
+          new THREE.Vector3(side * 0.18, 0.78, 0.05),
+          new THREE.Vector3(side * 0.17, 1.22, 0.03),
+          new THREE.Vector3(side * 0.18, 1.45, 0.01),
+        ]),
+        20,
+        0.024,
+        10,
+        false
+      )
+    );
+
+    const armArteries = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.12, 0.56, 0.04),
+          new THREE.Vector3(side * 0.58, 0.62, 0.06),
+          new THREE.Vector3(side * 1.06, 0.48, 0.04),
+          new THREE.Vector3(side * 1.24, -0.1, 0.04),
+          new THREE.Vector3(side * 1.31, -0.95, 0.05),
+        ]),
+        24,
+        0.014,
+        8,
+        false
+      )
+    );
+
+    const armVeins = [-1, 1].map((side) =>
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3([
+          new THREE.Vector3(side * 0.16, 0.52, 0.08),
+          new THREE.Vector3(side * 0.62, 0.58, 0.1),
+          new THREE.Vector3(side * 1.1, 0.42, 0.08),
+          new THREE.Vector3(side * 1.28, -0.15, 0.08),
+          new THREE.Vector3(side * 1.36, -0.98, 0.08),
+        ]),
+        24,
+        0.016,
+        8,
+        false
+      )
+    );
+
+    const jawBone = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.22, 1.56, 0.02),
+        new THREE.Vector3(-0.17, 1.38, 0.14),
+        new THREE.Vector3(0, 1.32, 0.24),
+        new THREE.Vector3(0.17, 1.38, 0.14),
+        new THREE.Vector3(0.22, 1.56, 0.02),
+      ]),
+      24,
+      0.032,
+      10,
+      false
+    );
+
     const trachea = new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.05),
-        new THREE.Vector3(0, 1.06, 0.03),
+        new THREE.Vector3(0, 1.48, 0.06),
+        new THREE.Vector3(0, 1.06, 0.04),
         new THREE.Vector3(0, 0.48, 0.02),
         new THREE.Vector3(0, 0.16, 0.02),
       ]),
@@ -225,143 +444,52 @@ function HalfBodyRespiratorySystem({
       false
     );
 
-    // 4-generation anatomically branching bronchial tree reaching apex -> lateral -> basal lung segments
     const branches: Array<{ curve: THREE.CatmullRomCurve3; radius: number }> = [
-      // Right Mainstem + Superior/Middle/Inferior Lobar + Segmental Twigs
       {
         curve: new THREE.CatmullRomCurve3([
           new THREE.Vector3(0, 0.18, 0.02),
-          new THREE.Vector3(-0.22, 0.05, 0.02),
-          new THREE.Vector3(-0.46, -0.05, 0.02),
+          new THREE.Vector3(-0.22, 0.06, 0.04),
+          new THREE.Vector3(-0.42, -0.02, 0.12),
         ]),
-        radius: 0.044,
+        radius: 0.045,
       },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.32, 0.01, 0.02),
-          new THREE.Vector3(-0.5, 0.22, 0.04),
-          new THREE.Vector3(-0.62, 0.44, 0.0),
-        ]),
-        radius: 0.024,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.46, 0.18, 0.03),
-          new THREE.Vector3(-0.72, 0.28, -0.04),
-        ]),
-        radius: 0.015,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.5, 0.22, 0.04),
-          new THREE.Vector3(-0.46, 0.48, 0.06),
-        ]),
-        radius: 0.012,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.46, -0.05, 0.02),
-          new THREE.Vector3(-0.66, -0.1, 0.14),
-          new THREE.Vector3(-0.8, -0.22, 0.16),
-        ]),
-        radius: 0.022,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.66, -0.1, 0.14),
-          new THREE.Vector3(-0.84, 0.02, 0.04),
-        ]),
-        radius: 0.014,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.42, -0.04, 0.02),
-          new THREE.Vector3(-0.54, -0.34, -0.04),
-          new THREE.Vector3(-0.66, -0.58, 0.02),
-        ]),
-        radius: 0.024,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.54, -0.34, -0.04),
-          new THREE.Vector3(-0.82, -0.45, -0.08),
-        ]),
-        radius: 0.014,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(-0.58, -0.44, -0.02),
-          new THREE.Vector3(-0.44, -0.6, 0.08),
-        ]),
-        radius: 0.012,
-      },
-      // Left Mainstem + Superior/Lingular/Inferior Lobar + Segmental Twigs
       {
         curve: new THREE.CatmullRomCurve3([
           new THREE.Vector3(0, 0.18, 0.02),
-          new THREE.Vector3(0.24, 0.04, 0.02),
-          new THREE.Vector3(0.48, -0.05, 0.02),
+          new THREE.Vector3(0.24, 0.05, 0.04),
+          new THREE.Vector3(0.44, -0.02, 0.12),
         ]),
-        radius: 0.042,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.36, 0.0, 0.02),
-          new THREE.Vector3(0.54, 0.22, 0.04),
-          new THREE.Vector3(0.64, 0.44, 0.0),
-        ]),
-        radius: 0.023,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.54, 0.22, 0.04),
-          new THREE.Vector3(0.76, 0.28, -0.04),
-        ]),
-        radius: 0.014,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.5, 0.18, 0.04),
-          new THREE.Vector3(0.48, 0.48, 0.06),
-        ]),
-        radius: 0.012,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.48, -0.05, 0.02),
-          new THREE.Vector3(0.68, -0.14, 0.14),
-          new THREE.Vector3(0.8, -0.26, 0.15),
-        ]),
-        radius: 0.021,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.68, -0.14, 0.14),
-          new THREE.Vector3(0.84, -0.02, 0.04),
-        ]),
-        radius: 0.014,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.44, -0.04, 0.02),
-          new THREE.Vector3(0.58, -0.34, -0.04),
-          new THREE.Vector3(0.7, -0.58, 0.0),
-        ]),
-        radius: 0.022,
-      },
-      {
-        curve: new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0.58, -0.34, -0.04),
-          new THREE.Vector3(0.82, -0.46, -0.08),
-        ]),
-        radius: 0.014,
+        radius: 0.043,
       },
     ];
 
-    const bronGeos = branches.map((b) => new THREE.TubeGeometry(b.curve, 20, b.radius, 10, false));
-    const alvPos = branches.slice(1).map((b) => b.curve.getPointAt(1));
+    const surfaceArteries: Array<{ curve: THREE.CatmullRomCurve3; radius: number }> = [
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.34, 0.02, 0.14), new THREE.Vector3(-0.56, 0.22, 0.28), new THREE.Vector3(-0.68, 0.42, 0.2)]), radius: 0.018 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.5, 0.18, 0.25), new THREE.Vector3(-0.78, 0.24, 0.22)]), radius: 0.011 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.56, 0.22, 0.28), new THREE.Vector3(-0.48, 0.46, 0.2)]), radius: 0.009 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.42, -0.02, 0.18), new THREE.Vector3(-0.68, -0.1, 0.34), new THREE.Vector3(-0.84, -0.24, 0.28)]), radius: 0.016 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.66, -0.09, 0.33), new THREE.Vector3(-0.85, 0.02, 0.24)]), radius: 0.01 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.42, -0.04, 0.18), new THREE.Vector3(-0.56, -0.34, 0.32), new THREE.Vector3(-0.68, -0.56, 0.24)]), radius: 0.016 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.56, -0.34, 0.32), new THREE.Vector3(-0.82, -0.44, 0.22)]), radius: 0.01 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.36, 0.01, 0.14), new THREE.Vector3(0.58, 0.22, 0.28), new THREE.Vector3(0.68, 0.42, 0.2)]), radius: 0.017 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.54, 0.18, 0.25), new THREE.Vector3(0.8, 0.26, 0.2)]), radius: 0.01 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.58, 0.22, 0.28), new THREE.Vector3(0.48, 0.46, 0.2)]), radius: 0.009 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.44, -0.02, 0.18), new THREE.Vector3(0.68, -0.12, 0.34), new THREE.Vector3(0.84, -0.28, 0.26)]), radius: 0.015 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.44, -0.04, 0.18), new THREE.Vector3(0.58, -0.34, 0.32), new THREE.Vector3(0.72, -0.56, 0.24)]), radius: 0.015 },
+    ];
 
-    // Detailed Anatomical Heart tucked inside Left Mediastinal Cardiac Notch
+    const surfaceVeins: Array<{ curve: THREE.CatmullRomCurve3; radius: number }> = [
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.38, -0.04, 0.16), new THREE.Vector3(-0.52, -0.22, 0.34), new THREE.Vector3(-0.62, -0.48, 0.3)]), radius: 0.014 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(-0.52, -0.22, 0.34), new THREE.Vector3(-0.76, -0.32, 0.28)]), radius: 0.009 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.4, -0.05, 0.16), new THREE.Vector3(0.54, -0.24, 0.34), new THREE.Vector3(0.66, -0.5, 0.28)]), radius: 0.014 },
+      { curve: new THREE.CatmullRomCurve3([new THREE.Vector3(0.54, -0.24, 0.34), new THREE.Vector3(0.78, -0.34, 0.26)]), radius: 0.009 },
+    ];
+
+    const bronGeos = branches.map((b) => new THREE.TubeGeometry(b.curve, 20, b.radius, 12, false));
+    const artGeos = surfaceArteries.map((b) => new THREE.TubeGeometry(b.curve, 20, b.radius, 8, false));
+    const veinGeos = surfaceVeins.map((b) => new THREE.TubeGeometry(b.curve, 18, b.radius, 8, false));
+    const alvPos = [...surfaceArteries, ...surfaceVeins].map((b) => b.curve.getPointAt(1));
+
     const aorta = new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
         new THREE.Vector3(0.02, 0.04, 0.04),
@@ -421,50 +549,35 @@ function HalfBodyRespiratorySystem({
 
     const fCurves = [
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.05),
+        new THREE.Vector3(0, 1.5, 0.06),
         new THREE.Vector3(0, 0.85, 0.03),
         new THREE.Vector3(0, 0.18, 0.02),
-        new THREE.Vector3(-0.32, 0.01, 0.02),
-        new THREE.Vector3(-0.62, 0.44, 0.0),
+        new THREE.Vector3(-0.32, 0.01, 0.08),
+        new THREE.Vector3(-0.68, 0.42, 0.2),
       ]),
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.05),
+        new THREE.Vector3(0, 1.5, 0.06),
         new THREE.Vector3(0, 0.85, 0.03),
         new THREE.Vector3(0, 0.18, 0.02),
-        new THREE.Vector3(-0.42, -0.04, 0.02),
-        new THREE.Vector3(-0.66, -0.58, 0.02),
-      ]),
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.05),
-        new THREE.Vector3(0, 0.85, 0.03),
-        new THREE.Vector3(0, 0.18, 0.02),
-        new THREE.Vector3(0.36, 0.0, 0.02),
-        new THREE.Vector3(0.64, 0.44, 0.0),
-      ]),
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.5, 0.05),
-        new THREE.Vector3(0, 0.85, 0.03),
-        new THREE.Vector3(0, 0.18, 0.02),
-        new THREE.Vector3(0.44, -0.04, 0.02),
-        new THREE.Vector3(0.7, -0.58, 0.0),
+        new THREE.Vector3(0.36, 0.01, 0.08),
+        new THREE.Vector3(0.68, 0.42, 0.2),
       ]),
     ];
 
-    // 9 Pairs of Smooth Costal-Arch Ribs + Ivory Costal Cartilage Tips
     const ribs: THREE.BufferGeometry[] = [];
     const cartilages: THREE.BufferGeometry[] = [];
     for (let i = 0; i < 9; i++) {
-      const y = 0.52 - i * 0.145;
-      const w = 0.72 + Math.sin((i / 8) * Math.PI * 0.9) * 0.38;
-      const d = 0.43 + Math.sin((i / 8) * Math.PI * 0.85) * 0.17;
-      const sternalGap = i < 6 ? 0.08 : 0.2 + (i - 6) * 0.15;
+      const y = 0.5 - i * 0.145;
+      const w = 0.72 + Math.sin((i / 8) * Math.PI * 0.9) * 0.36;
+      const d = 0.42 + Math.sin((i / 8) * Math.PI * 0.85) * 0.16;
+      const sternalGap = i < 6 ? 0.08 : 0.22 + (i - 6) * 0.14;
       const cartY = i < 6 ? y - 0.1 : y - 0.04;
       for (const side of [-1, 1]) {
-        const boneEnd = new THREE.Vector3(side * (w * 0.56), y - 0.11, d * 0.8);
+        const boneEnd = new THREE.Vector3(side * (w * 0.58), y - 0.11, d * 0.78);
         const ribCurve = new THREE.CatmullRomCurve3([
           new THREE.Vector3(side * 0.09, y + 0.09, -d * 0.94),
-          new THREE.Vector3(side * (w * 0.82), y + 0.03, -d * 0.52),
-          new THREE.Vector3(side * w, y - 0.05, 0.02),
+          new THREE.Vector3(side * (w * 0.84), y + 0.03, -d * 0.5),
+          new THREE.Vector3(side * w, y - 0.05, -0.02),
           boneEnd,
         ]);
         ribs.push(new THREE.TubeGeometry(ribCurve, 24, 0.017, 8, false));
@@ -472,7 +585,7 @@ function HalfBodyRespiratorySystem({
         if (i < 8) {
           const cartCurve = new THREE.CatmullRomCurve3([
             boneEnd,
-            new THREE.Vector3(side * sternalGap, cartY, d * 0.9),
+            new THREE.Vector3(side * sternalGap, cartY, d * 0.88),
           ]);
           cartilages.push(new THREE.TubeGeometry(cartCurve, 8, 0.014, 7, false));
         }
@@ -481,13 +594,13 @@ function HalfBodyRespiratorySystem({
 
     const sternum = new THREE.TubeGeometry(
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 0.58, 0.43),
-        new THREE.Vector3(0, 0.34, 0.49),
-        new THREE.Vector3(0, -0.24, 0.48),
-        new THREE.Vector3(0, -0.36, 0.44),
+        new THREE.Vector3(0, 0.58, 0.42),
+        new THREE.Vector3(0, 0.34, 0.48),
+        new THREE.Vector3(0, -0.24, 0.46),
+        new THREE.Vector3(0, -0.36, 0.42),
       ]),
       18,
-      0.044,
+      0.045,
       10,
       false
     );
@@ -495,26 +608,37 @@ function HalfBodyRespiratorySystem({
     const clavicles = [-1, 1].map((side) =>
       new THREE.TubeGeometry(
         new THREE.CatmullRomCurve3([
-          new THREE.Vector3(side * 0.07, 0.62, 0.41),
-          new THREE.Vector3(side * 0.38, 0.72, 0.36),
-          new THREE.Vector3(side * 0.72, 0.68, 0.22),
-          new THREE.Vector3(side * 1.06, 0.63, 0.05),
+          new THREE.Vector3(side * 0.07, 0.62, 0.4),
+          new THREE.Vector3(side * 0.4, 0.72, 0.34),
+          new THREE.Vector3(side * 0.76, 0.67, 0.2),
+          new THREE.Vector3(side * 1.1, 0.61, 0.01),
         ]),
-        20,
-        0.025,
-        10,
+        22,
+        0.03,
+        12,
         false
       )
     );
 
-    const spineVerts = Array.from({ length: 12 }, (_, idx) => new THREE.Vector3(0, 0.82 - idx * 0.15, -0.44));
+    const spineVerts = Array.from({ length: 14 }, (_, idx) => new THREE.Vector3(0, 1.24 - idx * 0.16, -0.28 - (idx > 3 ? 0.12 : 0)));
 
     return {
+      lungTextures: lTex,
       torsoShellGeo: torsoGeo,
+      armShellGeos: armShells,
+      humerusGeos: humeri,
+      neckMuscleGeos: neckMuscles,
+      carotidArteryGeos: carotids,
+      jugularVeinGeos: jugulars,
+      armArteryGeos: armArteries,
+      armVeinGeos: armVeins,
+      jawBoneGeo: jawBone,
       rightLungGeo: rLung,
       leftLungGeo: lLung,
       tracheaGeo: trachea,
       bronchialGeos: bronGeos,
+      surfaceArterialGeos: artGeos,
+      surfaceVenousGeos: veinGeos,
       aortaGeo: aorta,
       pulmonaryGeo: pulm,
       venaCavaGeo: vena,
@@ -532,11 +656,23 @@ function HalfBodyRespiratorySystem({
 
   useEffect(() => {
     return () => {
+      lungTextures.colorMap.dispose();
+      lungTextures.bumpMap.dispose();
       torsoShellGeo.dispose();
+      armShellGeos.forEach((g) => g.dispose());
+      humerusGeos.forEach((g) => g.dispose());
+      neckMuscleGeos.forEach((g) => g.dispose());
+      carotidArteryGeos.forEach((g) => g.dispose());
+      jugularVeinGeos.forEach((g) => g.dispose());
+      armArteryGeos.forEach((g) => g.dispose());
+      armVeinGeos.forEach((g) => g.dispose());
+      jawBoneGeo.dispose();
       rightLungGeo.dispose();
       leftLungGeo.dispose();
       tracheaGeo.dispose();
       bronchialGeos.forEach((g) => g.dispose());
+      surfaceArterialGeos.forEach((g) => g.dispose());
+      surfaceVenousGeos.forEach((g) => g.dispose());
       aortaGeo.dispose();
       pulmonaryGeo.dispose();
       venaCavaGeo.dispose();
@@ -548,11 +684,22 @@ function HalfBodyRespiratorySystem({
       clavicleGeos.forEach((g) => g.dispose());
     };
   }, [
+    lungTextures,
     torsoShellGeo,
+    armShellGeos,
+    humerusGeos,
+    neckMuscleGeos,
+    carotidArteryGeos,
+    jugularVeinGeos,
+    armArteryGeos,
+    armVeinGeos,
+    jawBoneGeo,
     rightLungGeo,
     leftLungGeo,
     tracheaGeo,
     bronchialGeos,
+    surfaceArterialGeos,
+    surfaceVenousGeos,
     aortaGeo,
     pulmonaryGeo,
     venaCavaGeo,
@@ -578,13 +725,13 @@ function HalfBodyRespiratorySystem({
     const inhale = (breathe + 1) * 0.5;
 
     if (lungsExpandRef.current) {
-      lungsExpandRef.current.scale.set(1 + inhale * 0.05, 1 + inhale * 0.038, 1 + inhale * 0.06);
+      lungsExpandRef.current.scale.set(1 + inhale * 0.045, 1 + inhale * 0.032, 1 + inhale * 0.05);
     }
     if (ribcageRef.current) {
-      ribcageRef.current.scale.set(1 + inhale * 0.03, 1 + inhale * 0.015, 1 + inhale * 0.036);
+      ribcageRef.current.scale.set(1 + inhale * 0.028, 1 + inhale * 0.014, 1 + inhale * 0.032);
     }
     if (diaphragmRef.current) {
-      diaphragmRef.current.position.y = -0.82 - inhale * 0.07;
+      diaphragmRef.current.position.y = -0.82 - inhale * 0.065;
     }
     if (heartBeatRef.current && !reducedMotion) {
       const phase = (t * 1.2) % 1;
@@ -598,218 +745,233 @@ function HalfBodyRespiratorySystem({
         const curve = flowCurves[idx % flowCurves.length];
         const phase = (t * 0.44 + idx * 0.14) % 1;
         child.position.copy(curve.getPointAt(phase));
-        child.scale.setScalar(Math.max(0.25, Math.sin(phase * Math.PI) * 1.1));
+        child.scale.setScalar(Math.max(0.25, Math.sin(phase * Math.PI) * 1.0));
       });
     }
 
     const slideProgress = THREE.MathUtils.clamp(sp / 0.2, 0, 1.5);
-    const baseX = isDesktop ? 1.85 : 0.0;
-    const baseY = isDesktop ? -0.18 : 0.12;
+    const baseX = isDesktop ? 1.82 : 0.0;
+    const baseY = isDesktop ? -0.2 : 0.1;
     grp.position.set(
       baseX - slideProgress * (isDesktop ? 0.95 : 0),
       baseY + (sp - 0.02) * 5.2,
       (1 - weight) * -4.2
     );
-    grp.rotation.y = -0.26 + (reducedMotion ? 0 : Math.sin(t * 0.35) * 0.14) + sp * Math.PI * 2.4;
-    grp.rotation.x = 0.05 + slideProgress * 0.22;
-    grp.scale.setScalar((isDesktop ? 1.0 : 0.72) * (0.68 + 0.32 * weight));
+    grp.rotation.y = -0.18 + (reducedMotion ? 0 : Math.sin(t * 0.35) * 0.12) + sp * Math.PI * 2.4;
+    grp.rotation.x = 0.04 + slideProgress * 0.22;
+    grp.scale.setScalar((isDesktop ? 0.98 : 0.72) * (0.68 + 0.32 * weight));
     applyGroupFade(grp, weight);
   });
 
-  const cartilageRingYs = Array.from({ length: 14 }, (_, idx) => 0.98 - idx * 0.058);
+  const cartilageRingYs = Array.from({ length: 16 }, (_, idx) => 1.02 - idx * 0.054);
 
   return (
-    <group ref={groupRef} position={[1.85, -0.18, 0]}>
-      {/* Studio Porcelain Halo Rings behind the Half-Body Respiratory Model */}
-      <mesh position={[0, 0.1, -0.58]}>
-        <ringGeometry args={[0.98, 1.52, 72]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.58} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0, 0.1, -0.62]}>
-        <ringGeometry args={[1.58, 1.86, 72]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.32} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Smooth Contoured Half-Body Glass Silhouette (No Low-Poly Facets) */}
+    <group ref={groupRef} position={[1.82, -0.2, 0]}>
       <mesh geometry={torsoShellGeo}>
-        <meshPhysicalMaterial
-          color="#e2e8f0"
-          roughness={0.18}
-          clearcoat={0.65}
-          transparent
-          opacity={0.13}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
+        <meshPhysicalMaterial color="#e6d6ce" roughness={0.32} transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
+      <mesh geometry={torsoShellGeo}>
+        <meshBasicMaterial color="#9e877e" wireframe transparent opacity={0.05} />
+      </mesh>
+      {armShellGeos.map((g, i) => (
+        <group key={i}>
+          <mesh geometry={g}>
+            <meshPhysicalMaterial color="#e6d6ce" roughness={0.32} transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh geometry={g}>
+            <meshBasicMaterial color="#9e877e" wireframe transparent opacity={0.05} />
+          </mesh>
+        </group>
+      ))}
 
-      {/* Clean Diaphragm / Waist Half-Body Section Ring */}
-      <mesh position={[0, -1.07, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.55, 1]}>
-        <torusGeometry args={[0.84, 0.013, 12, 64]} />
-        <meshStandardMaterial color="#0066ff" transparent opacity={0.72} />
+      <mesh geometry={jawBoneGeo}>
+        <meshStandardMaterial color="#efe5d1" roughness={0.35} transparent opacity={0.92} />
       </mesh>
-
-      {/* Nasal / Pharyngeal Airway Entry Beacon */}
-      <mesh position={[0, 1.54, 0.24]}>
-        <sphereGeometry args={[0.042, 16, 16]} />
-        <meshStandardMaterial color="#0066ff" emissive="#0066ff" emissiveIntensity={0.4} transparent opacity={0.85} />
-      </mesh>
-
-      {/* Sculpted Thyroid Cartilage Shield + Cricoid Larynx + 14 Hyaline C-Rings */}
-      <mesh position={[0, 1.11, 0.04]} scale={[1.15, 1, 0.95]}>
-        <cylinderGeometry args={[0.095, 0.075, 0.16, 24]} />
-        <meshPhysicalMaterial color="#cbd5e1" roughness={0.26} clearcoat={0.55} transparent opacity={0.94} />
-      </mesh>
-      <mesh position={[0, 1.02, 0.035]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.076, 0.018, 10, 28]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.22} transparent opacity={0.96} />
-      </mesh>
-      <mesh geometry={tracheaGeo}>
-        <meshPhysicalMaterial color="#e2e8f0" roughness={0.22} clearcoat={0.55} transparent opacity={0.9} />
-      </mesh>
-      {cartilageRingYs.map((ry) => (
-        <mesh key={ry} position={[0, ry, 0.025]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.068, 0.012, 10, 28]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.2} transparent opacity={0.98} />
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 1.1, 0.57, -0.01]}>
+          <sphereGeometry args={[0.1, 18, 18]} />
+          <meshStandardMaterial color="#efe5d1" roughness={0.32} transparent opacity={0.96} />
+        </mesh>
+      ))}
+      {humerusGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshStandardMaterial color="#e8dcc6" roughness={0.35} transparent opacity={0.94} />
         </mesh>
       ))}
 
-      {/* 4-Generation Branching Bronchial Tree & Multi-Berry Alveolar Acini Clusters */}
-      <group>
-        {bronchialGeos.map((g, idx) => (
-          <mesh key={idx} geometry={g}>
-            <meshPhysicalMaterial
-              color={idx < 2 || idx === 9 ? "#0066ff" : "#3b82f6"}
-              emissive="#0066ff"
-              emissiveIntensity={0.18}
-              roughness={0.22}
-              clearcoat={0.45}
-              transparent
-              opacity={0.95}
-            />
-          </mesh>
-        ))}
-        {alveoliClusters.map((pos, idx) => (
-          <group key={idx} position={pos}>
-            <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.034, 12, 12]} />
-              <meshStandardMaterial color="#0066ff" emissive="#2563eb" emissiveIntensity={0.35} transparent opacity={0.92} />
-            </mesh>
-            <mesh position={[0.032, -0.022, 0.016]}>
-              <sphereGeometry args={[0.026, 10, 10]} />
-              <meshStandardMaterial color="#60a5fa" emissive="#0066ff" emissiveIntensity={0.3} transparent opacity={0.88} />
-            </mesh>
-            <mesh position={[-0.026, -0.02, -0.014]}>
-              <sphereGeometry args={[0.024, 10, 10]} />
-              <meshStandardMaterial color="#93c5fd" transparent opacity={0.86} />
-            </mesh>
-          </group>
-        ))}
-      </group>
+      {neckMuscleGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshPhysicalMaterial color="#be434b" roughness={0.45} clearcoat={0.25} transparent opacity={0.92} />
+        </mesh>
+      ))}
+      {carotidArteryGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshPhysicalMaterial color="#b91c1c" roughness={0.3} clearcoat={0.4} transparent opacity={0.96} />
+        </mesh>
+      ))}
+      {jugularVeinGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshPhysicalMaterial color="#7e6c9e" roughness={0.35} clearcoat={0.35} transparent opacity={0.9} />
+        </mesh>
+      ))}
+      {armArteryGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshStandardMaterial color="#b91c1c" roughness={0.35} transparent opacity={0.85} />
+        </mesh>
+      ))}
+      {armVeinGeos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshStandardMaterial color="#7e6c9e" roughness={0.38} transparent opacity={0.8} />
+        </mesh>
+      ))}
 
-      {/* Seamless Anatomically Sculpted Lungs (3-Lobe Right & 2-Lobe Left w/ Cardiac Notch) */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 0.11, 1.54, 0.19]} rotation={[0.1, side * 0.3, side * -0.25]} scale={[1.1, 0.65, 0.5]}>
+          <sphereGeometry args={[0.075, 16, 16]} />
+          <meshStandardMaterial color="#c44b52" roughness={0.45} transparent opacity={0.88} />
+        </mesh>
+      ))}
+      <mesh position={[0, 1.68, 0.24]} rotation={[-0.25, 0, 0]} scale={[0.55, 1.0, 0.8]}>
+        <coneGeometry args={[0.06, 0.14, 12]} />
+        <meshStandardMaterial color="#efe5d1" roughness={0.35} transparent opacity={0.92} />
+      </mesh>
+
+      <mesh position={[0, 1.12, 0.05]} scale={[1.15, 1, 0.95]}>
+        <cylinderGeometry args={[0.092, 0.074, 0.15, 24]} />
+        <meshPhysicalMaterial color="#e6dac3" roughness={0.34} clearcoat={0.35} transparent opacity={0.96} />
+      </mesh>
+      <mesh geometry={tracheaGeo}>
+        <meshPhysicalMaterial color="#dfd1b8" roughness={0.35} transparent opacity={0.94} />
+      </mesh>
+      {cartilageRingYs.map((ry) => (
+        <mesh key={ry} position={[0, ry, 0.035]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.066, 0.012, 10, 28]} />
+          <meshStandardMaterial color="#f5ebd8" roughness={0.28} transparent opacity={0.98} />
+        </mesh>
+      ))}
+      {bronchialGeos.map((g, idx) => (
+        <mesh key={idx} geometry={g}>
+          <meshPhysicalMaterial color="#efe5d1" roughness={0.32} clearcoat={0.35} transparent opacity={0.96} />
+        </mesh>
+      ))}
+
       <group ref={lungsExpandRef}>
         <mesh geometry={rightLungGeo} position={[-0.56, -0.06, 0.02]}>
           <meshPhysicalMaterial
-            color="#ff3b5c"
-            roughness={0.26}
-            clearcoat={0.82}
-            clearcoatRoughness={0.2}
+            map={lungTextures.colorMap}
+            bumpMap={lungTextures.bumpMap}
+            bumpScale={0.024}
+            roughness={0.36}
+            clearcoat={0.62}
+            clearcoatRoughness={0.28}
             transparent
-            opacity={0.5}
-            depthWrite={false}
+            opacity={0.94}
           />
         </mesh>
         <mesh geometry={leftLungGeo} position={[0.56, -0.06, 0.02]}>
           <meshPhysicalMaterial
-            color="#ff3b5c"
-            roughness={0.26}
-            clearcoat={0.82}
-            clearcoatRoughness={0.2}
+            map={lungTextures.colorMap}
+            bumpMap={lungTextures.bumpMap}
+            bumpScale={0.024}
+            roughness={0.36}
+            clearcoat={0.62}
+            clearcoatRoughness={0.28}
             transparent
-            opacity={0.5}
-            depthWrite={false}
+            opacity={0.94}
           />
         </mesh>
+
+        {surfaceArterialGeos.map((g, idx) => (
+          <mesh key={`art-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#c83e26" roughness={0.32} clearcoat={0.45} transparent opacity={0.96} />
+          </mesh>
+        ))}
+        {surfaceVenousGeos.map((g, idx) => (
+          <mesh key={`vn-${idx}`} geometry={g}>
+            <meshPhysicalMaterial color="#587091" roughness={0.35} clearcoat={0.4} transparent opacity={0.95} />
+          </mesh>
+        ))}
+        {alveoliClusters.map((pos, idx) => (
+          <mesh key={`nod-${idx}`} position={pos}>
+            <sphereGeometry args={[0.018, 10, 10]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.3} transparent opacity={0.92} />
+          </mesh>
+        ))}
       </group>
 
-      {/* Anatomically Sculpted Multi-Vessel Beating Heart tucked inside the Left Cardiac Notch */}
-      <group ref={heartBeatRef} position={[0.12, -0.22, 0.14]} scale={0.94}>
+      <group ref={heartBeatRef} position={[0.1, -0.24, 0.14]} scale={0.92}>
         <mesh position={[0.02, -0.07, 0.01]} rotation={[0.14, 0, -0.26]} scale={[0.88, 1.24, 0.82]}>
           <sphereGeometry args={[0.18, 28, 28]} />
-          <meshPhysicalMaterial color="#ef233c" roughness={0.26} clearcoat={0.72} transparent opacity={0.96} />
+          <meshPhysicalMaterial color="#c8373e" roughness={0.32} clearcoat={0.65} transparent opacity={0.97} />
         </mesh>
         <mesh position={[-0.08, -0.04, 0.04]} rotation={[0.1, 0.2, 0.16]} scale={[0.74, 1.02, 0.7]}>
           <sphereGeometry args={[0.14, 24, 24]} />
-          <meshPhysicalMaterial color="#d90429" roughness={0.3} clearcoat={0.62} transparent opacity={0.95} />
+          <meshPhysicalMaterial color="#a8262e" roughness={0.34} clearcoat={0.58} transparent opacity={0.96} />
         </mesh>
         <mesh position={[0.09, 0.09, -0.01]} scale={[0.88, 0.84, 0.8]}>
           <sphereGeometry args={[0.09, 20, 20]} />
-          <meshPhysicalMaterial color="#ff4d6d" roughness={0.3} clearcoat={0.55} transparent opacity={0.95} />
+          <meshPhysicalMaterial color="#d84a50" roughness={0.34} clearcoat={0.5} transparent opacity={0.96} />
         </mesh>
         <mesh geometry={aortaGeo}>
-          <meshPhysicalMaterial color="#ef233c" roughness={0.26} clearcoat={0.65} transparent opacity={0.96} />
+          <meshPhysicalMaterial color="#b91c1c" roughness={0.3} clearcoat={0.6} transparent opacity={0.96} />
         </mesh>
         <mesh geometry={pulmonaryGeo}>
-          <meshPhysicalMaterial color="#0066ff" roughness={0.28} clearcoat={0.55} transparent opacity={0.96} />
+          <meshPhysicalMaterial color="#4e6a8d" roughness={0.32} clearcoat={0.5} transparent opacity={0.96} />
         </mesh>
         <mesh geometry={venaCavaGeo}>
-          <meshPhysicalMaterial color="#2563eb" roughness={0.3} clearcoat={0.5} transparent opacity={0.94} />
+          <meshPhysicalMaterial color="#4e6a8d" roughness={0.34} clearcoat={0.45} transparent opacity={0.94} />
         </mesh>
         <mesh geometry={coronaryLGeo}>
-          <meshStandardMaterial color="#fda4af" roughness={0.28} transparent opacity={0.98} />
+          <meshStandardMaterial color="#fda4af" roughness={0.3} transparent opacity={0.98} />
         </mesh>
         <mesh geometry={coronaryRGeo}>
-          <meshStandardMaterial color="#fda4af" roughness={0.28} transparent opacity={0.98} />
+          <meshStandardMaterial color="#fda4af" roughness={0.3} transparent opacity={0.98} />
         </mesh>
       </group>
 
-      {/* Breathing Costal-Arch Ribcage, Hyaline Costal Cartilage, Sternum, Clavicles & Thoracic Spine */}
       <group ref={ribcageRef}>
         {ribGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#ffffff" roughness={0.26} metalness={0.05} transparent opacity={0.9} />
+            <meshStandardMaterial color="#f2ead8" roughness={0.32} transparent opacity={0.86} />
           </mesh>
         ))}
         {costalCartilageGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#dbeafe" roughness={0.3} transparent opacity={0.85} />
+            <meshStandardMaterial color="#e5dcc9" roughness={0.35} transparent opacity={0.78} />
           </mesh>
         ))}
         <mesh geometry={sternumGeo}>
-          <meshStandardMaterial color="#f1f5f9" roughness={0.26} metalness={0.08} transparent opacity={0.94} />
+          <meshStandardMaterial color="#e5dcc9" roughness={0.34} transparent opacity={0.85} />
         </mesh>
         {clavicleGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#ffffff" roughness={0.24} transparent opacity={0.95} />
+            <meshStandardMaterial color="#f3ecdb" roughness={0.28} transparent opacity={0.97} />
           </mesh>
         ))}
         {spineGeos.map((pos, idx) => (
           <mesh key={idx} position={pos}>
-            <cylinderGeometry args={[0.06, 0.064, 0.1, 16]} />
-            <meshStandardMaterial color="#cbd5e1" roughness={0.35} transparent opacity={0.8} />
+            <cylinderGeometry args={[0.064, 0.068, 0.11, 16]} />
+            <meshStandardMaterial color="#e5d9c3" roughness={0.38} transparent opacity={0.92} />
           </mesh>
         ))}
       </group>
 
-      {/* Dual-Dome Muscular Diaphragm */}
       <group ref={diaphragmRef} position={[0, -0.82, 0.02]}>
         <mesh position={[-0.36, 0.03, 0]} scale={[0.56, 0.24, 0.45]}>
           <sphereGeometry args={[0.88, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-          <meshPhysicalMaterial color="#ef233c" roughness={0.28} clearcoat={0.55} transparent opacity={0.78} side={THREE.DoubleSide} />
+          <meshPhysicalMaterial color="#a83b3b" roughness={0.38} clearcoat={0.45} transparent opacity={0.88} side={THREE.DoubleSide} />
         </mesh>
         <mesh position={[0.36, 0, 0]} scale={[0.54, 0.22, 0.45]}>
           <sphereGeometry args={[0.88, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-          <meshPhysicalMaterial color="#d90429" roughness={0.28} clearcoat={0.55} transparent opacity={0.78} side={THREE.DoubleSide} />
+          <meshPhysicalMaterial color="#8f3032" roughness={0.38} clearcoat={0.45} transparent opacity={0.88} side={THREE.DoubleSide} />
         </mesh>
       </group>
 
-      {/* Animated Oxygen Flow Particles along Upper Airway -> Terminal Bronchioles */}
       <group ref={flowDotsRef}>
-        {Array.from({ length: 10 }).map((_, idx) => (
+        {Array.from({ length: 6 }).map((_, idx) => (
           <mesh key={idx}>
-            <sphereGeometry args={[0.025, 10, 10]} />
-            <meshBasicMaterial color="#0066ff" transparent opacity={0.95} />
+            <sphereGeometry args={[0.02, 10, 10]} />
+            <meshBasicMaterial color="#0066ff" transparent opacity={0.82} />
           </mesh>
         ))}
       </group>
