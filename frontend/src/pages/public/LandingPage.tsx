@@ -4,7 +4,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import {
-  Activity,
   ArrowRight,
   Bot,
   CalendarClock,
@@ -42,15 +41,6 @@ gsap.registerPlugin(ScrollTrigger);
 const LandingParallaxStage3D = React.lazy(() =>
   import("@/components/three/MedicalModels3D").then((m) => ({ default: m.LandingParallaxStage3D }))
 );
-
-const CHAPTERS = [
-  { id: "hero-section", short: "01", label: "Respiratory 3D", modelTitle: "Half-Body Respiratory System" },
-  { id: "vault-experience", short: "02", label: "Clinical Vault", modelTitle: "Fanned Medical Vault & ECG" },
-  { id: "ai-assistant", short: "03", label: "Pharmacology", modelTitle: "Capsule, Molecule & DNA Helix" },
-  { id: "outbreak-globe", short: "04", label: "Outbreak Globe", modelTitle: "Epidemiological Risk Globe" },
-  { id: "simulation", short: "05", label: "SEIR Engine", modelTitle: "Cellular & SEIR Particle Field" },
-  { id: "security", short: "06", label: "Security Shield", modelTitle: "Gyroscopic Biomedical Shield" },
-] as const;
 
 function computeLiveSeirComparison(
   initialCases: number,
@@ -119,7 +109,6 @@ export function LandingPage() {
   const caps = useSceneCapabilities();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
-  const [activeChapter, setActiveChapter] = useState<string>("hero-section");
 
   // Section refs & continuous full-page scroll progress driving the borderless 3D parallax stage
   const heroSectionRef = useRef<HTMLElement | null>(null);
@@ -148,19 +137,9 @@ export function LandingPage() {
     ? user.role === "admin"
       ? "/admin/overview"
       : user.role === "doctor"
-      ? "/doctor/records"
+      ? "/doctor/overview"
       : "/patient/overview"
     : "/login";
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(el, { offset: -64 });
-    } else {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   useEffect(() => {
     const syncNativeScroll = () => {
@@ -206,29 +185,6 @@ export function LandingPage() {
         });
       }
 
-      const bindings: Array<{
-        el: HTMLElement | null;
-        id: string;
-      }> = [
-        { el: heroSectionRef.current, id: "hero-section" },
-        { el: vaultSectionRef.current, id: "vault-experience" },
-        { el: aiSectionRef.current, id: "ai-assistant" },
-        { el: globeSectionRef.current, id: "outbreak-globe" },
-        { el: simSectionRef.current, id: "simulation" },
-        { el: securitySectionRef.current, id: "security" },
-      ];
-
-      bindings.forEach((b) => {
-        if (!b.el) return;
-        ScrollTrigger.create({
-          trigger: b.el,
-          start: "top 48%",
-          end: "bottom 48%",
-          onEnter: () => setActiveChapter(b.id),
-          onEnterBack: () => setActiveChapter(b.id),
-        });
-      });
-
       gsap.utils.toArray<HTMLElement>(".reveal-panel").forEach((el) => {
         gsap.fromTo(
           el,
@@ -268,8 +224,6 @@ export function LandingPage() {
       lenisRef.current = null;
     };
   }, [caps.reducedMotion]);
-
-  const activeChapterInfo = CHAPTERS.find((c) => c.id === activeChapter) || CHAPTERS[0];
 
   return (
     <div ref={rootRef} className="relative min-h-dvh bg-background text-foreground">
@@ -333,39 +287,6 @@ export function LandingPage() {
         </div>
       </header>
 
-      {/* Interactive Scroll Chapter Slider Pill Rail (Desktop) */}
-      <aside
-        aria-label="3D section navigation"
-        className="fixed top-1/2 right-4 z-30 hidden -translate-y-1/2 flex-col gap-1.5 rounded-3xl border border-[#E5E9F0] bg-white/92 p-2 shadow-[0_14px_34px_-16px_rgba(15,23,42,0.12)] backdrop-blur-xl xl:flex"
-      >
-        {CHAPTERS.map((ch) => {
-          const active = activeChapter === ch.id;
-          return (
-            <button
-              key={ch.id}
-              type="button"
-              onClick={() => scrollToSection(ch.id)}
-              title={ch.label}
-              className={`flex min-h-[36px] items-center gap-2 rounded-full px-3 text-left text-[11px] font-medium transition-all ${
-                active
-                  ? "bg-[#0066FF] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(0,102,255,0.65)]"
-                  : "text-[#64748B] hover:bg-[#F3F5F8] hover:text-[#111827]"
-              }`}
-            >
-              <span className="font-mono">{ch.short}</span>
-              <span className="hidden 2xl:inline">{ch.label}</span>
-            </button>
-          );
-        })}
-      </aside>
-
-      {/* Floating Bottom-Left Active 3D Parallax Telemetry Pill (No Box Around Models) */}
-      <div className="pointer-events-none fixed bottom-4 left-4 z-30 hidden items-center gap-2 rounded-full border border-[#E5E9F0] bg-white/90 px-4 py-2 text-[11px] shadow-sm backdrop-blur-xl lg:inline-flex">
-        <span className="size-2 rounded-full bg-[#0066FF]" aria-hidden="true" />
-        <span className="font-mono font-semibold text-[#0066FF]">{activeChapterInfo.short} / 06</span>
-        <span className="font-medium text-[#111827]">{activeChapterInfo.modelTitle}</span>
-      </div>
-
       <main className="relative z-10">
         {/* SECTION 1: HERO WITH BORDERLESS 3D HALF-BODY RESPIRATORY PARALLAX */}
         <section id="hero-section" ref={heroSectionRef} className="border-b border-[#E5E9F0]">
@@ -421,15 +342,7 @@ export function LandingPage() {
               </div>
             </div>
 
-            <div className="flex flex-col justify-end lg:col-span-6 lg:min-h-[460px]">
-              <div className="neo-glass flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3 text-xs">
-                <span className="flex items-center gap-2 font-medium text-[#111827]">
-                  <Activity className="size-4 text-[#0066FF]" aria-hidden="true" />
-                  New accounts start empty until you upload real records or sync IDSP data.
-                </span>
-                <Badge variant="teal">Zero Mock Records</Badge>
-              </div>
-            </div>
+            <div className="hidden lg:block lg:col-span-6 lg:min-h-[480px]" aria-hidden="true" />
           </div>
         </section>
 
