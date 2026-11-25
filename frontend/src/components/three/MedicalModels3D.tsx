@@ -501,10 +501,10 @@ function StudioAnatomicalHeartModel({
     }
 
     const slideProgress = THREE.MathUtils.clamp(sp / 0.2, 0, 1.5);
-    const baseX = isDesktop ? Math.min(2.2, viewport.width * 0.265) : 0.0;
+    const baseX = isDesktop ? Math.min(viewport.width * 0.32, viewport.width * 0.5 - 1.48) : 0.0;
     const baseY = isDesktop ? -0.04 : 0.16;
     grp.position.set(
-      baseX - slideProgress * (isDesktop ? 0.95 : 0),
+      baseX - slideProgress * (isDesktop ? 1.15 : 0),
       baseY + (sp - 0.02) * 5.0 + (reducedMotion ? 0 : Math.sin(t * 1.1) * 0.03),
       (1 - weight) * -4.2
     );
@@ -515,7 +515,7 @@ function StudioAnatomicalHeartModel({
   });
 
   return (
-    <group ref={groupRef} position={[2.1, -0.04, 0]}>
+    <group ref={groupRef} position={[2.6, -0.04, 0]}>
       {/* Clean translucent white circular halo disc & concentric ring behind the heart */}
       <mesh position={[0.02, 0.12, -0.68]}>
         <circleGeometry args={[1.18, 64]} />
