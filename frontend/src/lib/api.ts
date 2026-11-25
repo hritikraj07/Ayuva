@@ -39,6 +39,15 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {})
     } catch {
       // ignore json parse failure
     }
+    if (
+      res.status === 404 &&
+      API_BASE === "/api" &&
+      typeof window !== "undefined" &&
+      !["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ) {
+      detail =
+        "Backend API unreachable on this static host (404). Deploy the FastAPI backend and set VITE_API_URL in Vercel Environment Variables.";
+    }
     throw new Error(detail);
   }
 

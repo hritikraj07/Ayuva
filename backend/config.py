@@ -22,8 +22,9 @@ class Settings:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "ayuva-hackathon-dev-secret-change-in-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "720"))
 
-    UPLOAD_DIR: Path = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads")))
-    SUMMARY_DIR: Path = Path(os.getenv("SUMMARY_DIR", str(BASE_DIR / "data" / "summaries")))
+    _default_runtime_root = Path("/tmp/ayuva") if os.getenv("VERCEL") else BASE_DIR
+    UPLOAD_DIR: Path = Path(os.getenv("UPLOAD_DIR", str(_default_runtime_root / "uploads")))
+    SUMMARY_DIR: Path = Path(os.getenv("SUMMARY_DIR", str(_default_runtime_root / "data" / "summaries")))
     MAX_UPLOAD_SIZE_BYTES: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")) * 1024 * 1024
 
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
@@ -54,5 +55,6 @@ def get_settings() -> Settings:
     settings = Settings()
     settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     settings.SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "data").mkdir(parents=True, exist_ok=True)
+    data_dir = Path("/tmp/ayuva/data") if os.getenv("VERCEL") else (BASE_DIR / "data")
+    data_dir.mkdir(parents=True, exist_ok=True)
     return settings

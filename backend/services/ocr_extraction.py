@@ -7,9 +7,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
 import httpx
-import numpy as np
 from google import genai
 from google.genai import types as genai_types
 from pypdf import PdfReader
@@ -67,7 +65,10 @@ def validate_upload_bytes(filename: str, content: bytes) -> Tuple[str, str]:
     return ext, ALLOWED_MIME_TYPES[ext]
 
 
-def _preprocess_image_for_ocr(image_bytes: bytes) -> np.ndarray:
+def _preprocess_image_for_ocr(image_bytes: bytes) -> Any:
+    import cv2
+    import numpy as np
+
     arr = np.frombuffer(image_bytes, dtype=np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
