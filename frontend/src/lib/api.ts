@@ -1,4 +1,5 @@
-const API_BASE = "/api";
+const rawApiUrl = (import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+const API_BASE = rawApiUrl ? (rawApiUrl.endsWith("/api") ? rawApiUrl : `${rawApiUrl}/api`) : "/api";
 
 export function getStoredToken(): string | null {
   try {
