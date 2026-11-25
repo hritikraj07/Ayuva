@@ -1,7 +1,15 @@
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 
-export function BrandMark({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+export function BrandMark({
+  className,
+  inverted = false,
+  compact = false,
+}: {
+  className?: string;
+  inverted?: boolean;
+  compact?: boolean;
+}) {
   const uid = useId().replace(/:/g, "");
   const gradId = `ayuvaMark-${uid}`;
 
@@ -35,24 +43,26 @@ export function BrandMark({ className, inverted = false }: { className?: string;
           <circle cx="29.5" cy="11.2" r="2.7" fill="#FF4D6D" stroke="#FFFFFF" strokeWidth="1.1" />
         </svg>
       </span>
-      <span className="flex flex-col leading-none">
-        <span
-          className={cn(
-            "font-display text-lg font-bold tracking-tight",
-            inverted ? "text-white" : "text-[#111827]"
-          )}
-        >
-          Ayu<span className={inverted ? "text-[#93C5FD]" : "text-[#0066FF]"}>va</span>
+      {!compact && (
+        <span className="flex flex-col leading-none">
+          <span
+            className={cn(
+              "font-display text-lg font-bold tracking-tight",
+              inverted ? "text-white" : "text-[#111827]"
+            )}
+          >
+            Ayu<span className={inverted ? "text-[#93C5FD]" : "text-[#0066FF]"}>va</span>
+          </span>
+          <span
+            className={cn(
+              "mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em]",
+              inverted ? "text-slate-300" : "text-[#64748B]"
+            )}
+          >
+            Health AI
+          </span>
         </span>
-        <span
-          className={cn(
-            "mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em]",
-            inverted ? "text-slate-300" : "text-[#64748B]"
-          )}
-        >
-          Health AI
-        </span>
-      </span>
+      )}
     </span>
   );
 }

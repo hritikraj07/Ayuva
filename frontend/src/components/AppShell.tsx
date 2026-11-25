@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { LayoutGroup, motion } from "framer-motion";
 import {
   Activity,
   Bell,
@@ -166,41 +167,66 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     navigate("/");
   };
 
-  const renderNavGroups = (isCompact: boolean) => (
-    <nav aria-label="Workspace navigation" className="flex flex-1 flex-col gap-5 px-3 py-4 overflow-y-auto">
-      {groups.map((grp) => (
-        <div key={grp.heading} className="flex flex-col gap-1">
-          {!isCompact && (
-            <div className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {grp.heading}
-            </div>
-          )}
-          {grp.items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                title={item.label}
-                aria-label={item.label}
-                className={({ isActive }) =>
-                  cn(
-                    "flex min-h-[44px] items-center gap-3 rounded-full px-3.5 py-2 text-sm transition-all duration-150",
-                    isActive
-                      ? "bg-[#0066FF] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(0,102,255,0.65)]"
-                      : "text-[#475569] hover:bg-[#F3F5F8] hover:text-[#111827]",
-                    isCompact && "justify-center px-0"
-                  )
-                }
-              >
-                <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-                {!isCompact && <span className="truncate">{item.label}</span>}
-              </NavLink>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
+  const renderNavGroups = (isCompact: boolean, scope: "desktop" | "mobile") => (
+    <LayoutGroup id={`ayuva-sidebar-${scope}`}>
+      <nav aria-label="Workspace navigation" className="flex flex-1 flex-col gap-5 px-3 py-4 overflow-y-auto">
+        {groups.map((grp) => (
+          <div key={grp.heading} className="flex flex-col gap-1">
+            {!isCompact && (
+              <div className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {grp.heading}
+              </div>
+            )}
+            {grp.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  title={item.label}
+                  aria-label={item.label}
+                  className={({ isActive }) =>
+                    cn(
+                      "group relative flex min-h-[44px] items-center rounded-full px-3.5 py-2 text-sm transition-colors duration-200",
+                      isActive ? "font-semibold text-white" : "text-[#475569] hover:text-[#111827]",
+                      isCompact && "justify-center px-0"
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive ? (
+                        <motion.span
+                          layoutId={`sidebar-active-pill-${scope}`}
+                          aria-hidden="true"
+                          transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
+                          className="absolute inset-0 rounded-full bg-[#0066FF] shadow-[0_8px_18px_-8px_rgba(0,102,255,0.65)]"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-full bg-[#F3F5F8] opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                        />
+                      )}
+                      <span
+                        className={cn(
+                          "relative z-10 flex w-full items-center gap-3 transition-transform duration-200",
+                          !isActive && !isCompact && "group-hover:translate-x-1",
+                          isCompact && "justify-center"
+                        )}
+                      >
+                        <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+                        {!isCompact && <span className="truncate">{item.label}</span>}
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+    </LayoutGroup>
   );
 
   return (
@@ -219,9 +245,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ) : (
             <Link to="/" aria-label="Ayuva Home" className="mx-auto">
-              <span className="flex size-9 items-center justify-center rounded-full border border-[#E5E9F0] bg-white font-display text-sm font-extrabold text-[#111827]">
-                A<sup className="text-[10px] text-[#0066FF]">+</sup>
-              </span>
+              <BrandMark compact />
             </Link>
           )}
           {!collapsed && (
@@ -250,7 +274,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {renderNavGroups(collapsed)}
+        {renderNavGroups(collapsed, "desktop")}
 
         <div className="border-t border-border p-3">
           {!collapsed && (
@@ -298,7 +322,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <X className="size-5" aria-hidden="true" />
               </button>
             </div>
-            {renderNavGroups(false)}
+            {renderNavGroups(false, "mobile")}
             <div className="border-t border-border p-4">
               <div className="mb-3 text-xs font-semibold text-foreground">{user.full_name}</div>
               <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
