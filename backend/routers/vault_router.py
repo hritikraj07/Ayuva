@@ -196,18 +196,71 @@ async def upload_medical_document(
     save_path = settings.UPLOAD_DIR / stored_name
     save_path.write_bytes(content)
 
-    ocr_text, confidence, ocr_engine = run_ocr_on_bytes(content, ext)
-    resolved_category = category if category in {
+    import asyncio
+    import os
+    from pypdf import PdfReader
+    import io
+
+    valid_categories = {
         "prescription",
         "lab_report",
         "medical_certificate",
         "diagnostic_report",
         "discharge_summary",
-    } else infer_category(ocr_text, file.filename or "")
-
+    }
     profile = db.query(PatientProfile).filter(PatientProfile.user_id == current_user.id).first()
     ai_consent = bool(profile.ai_consent) if profile else True
-    extracted_dict, provider_used = await extract_with_optional_llm(ocr_text, resolved_category, ai_consent)
+    gemini_key_present = bool((os.getenv("GEMINI_API_KEY", "") or settings.GEMINI_API_KEY or "").strip())
+
+    # Fast path: extract embedded text from PDFs (~20ms), or run Gemini Vision directly on images/scanned PDFs (~2-4s)
+    ocr_text = ""
+    confidence = 0.0
+    ocr_engine = "gemini_vision"
+    if ext == ".pdf":
+        try:
+            reader = PdfReader(io.BytesIO(content))
+            txt_pages = [(p.extract_text() or "").strip() for p in reader.pages]
+            joined = "\n\n".join(t for t in txt_pages if t).strip()
+            if len(joined) >= 25:
+                ocr_text, confidence, ocr_engine = joined, 0.96, "pypdf_text"
+        except Exception:
+            pass
+
+    initial_category = category if category in valid_categories else infer_category(ocr_text, file.filename or "")
+
+    if not (ai_consent and gemini_key_present):
+        if not ocr_text:
+            ocr_text, confidence, ocr_engine = await asyncio.to_thread(run_ocr_on_bytes, content, ext)
+            initial_category = category if category in valid_categories else infer_category(ocr_text, file.filename or "")
+
+    extracted_dict, provider_used = await extract_with_optional_llm(
+        ocr_text,
+        initial_category,
+        ai_consent,
+        file_bytes=content,
+        mime_type=mime_type,
+        filename=file.filename or "upload",
+    )
+
+    if not provider_used.startswith("gemini_vision:") and not ocr_text:
+        ocr_text, confidence, ocr_engine = await asyncio.to_thread(run_ocr_on_bytes, content, ext)
+        extracted_dict, provider_used = await extract_with_optional_llm(
+            ocr_text,
+            category if category in valid_categories else infer_category(ocr_text, file.filename or ""),
+            ai_consent,
+            file_bytes=content,
+            mime_type=mime_type,
+            filename=file.filename or "upload",
+        )
+
+    resolved_category = category if category in valid_categories else (extracted_dict.get("detected_category") or initial_category)
+    raw_transcription = (extracted_dict.get("raw_transcription") or "").strip()
+    if raw_transcription and provider_used.startswith("gemini_vision:"):
+        if len(ocr_text.strip()) < 60 or confidence < 0.8:
+            ocr_text = raw_transcription
+        elif raw_transcription.lower() != ocr_text.strip().lower():
+            ocr_text = f"{raw_transcription}\n\n--- Embedded Text ---\n{ocr_text}"
+        confidence = round(max(confidence, 0.92), 3)
 
     parsed_doc_date: Optional[date] = None
     if extracted_dict.get("document_date"):

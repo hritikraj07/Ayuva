@@ -1,5 +1,7 @@
+import asyncio
 import io
 import json
+import os
 import re
 from datetime import date, datetime
 from pathlib import Path
@@ -8,11 +10,20 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import httpx
 import numpy as np
+from google import genai
+from google.genai import types as genai_types
 from pypdf import PdfReader
 
 from backend.config import get_settings
 
 settings = get_settings()
+
+VISION_MODEL_CANDIDATES = [
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3-flash-preview",
+    "gemini-flash-latest",
+]
 
 _RAPID_OCR_INSTANCE = None
 
@@ -343,43 +354,101 @@ def extract_structured_from_text(ocr_text: str, category: str) -> Dict[str, Any]
     }
 
 
-async def extract_with_optional_llm(ocr_text: str, category: str, ai_consent: bool) -> Tuple[Dict[str, Any], str]:
-    """Use Gemini/OpenAI only if API key exists and user consented; never invent absent facts."""
+async def extract_with_optional_llm(
+    ocr_text: str,
+    category: str,
+    ai_consent: bool,
+    file_bytes: Optional[bytes] = None,
+    mime_type: Optional[str] = None,
+    filename: str = "",
+) -> Tuple[Dict[str, Any], str]:
+    """Use Gemini Multimodal Vision (for images/PDFs & handwriting) or text LLM if consented; never invent absent facts."""
     baseline = extract_structured_from_text(ocr_text, category)
-    if not ai_consent or not ocr_text.strip() or not settings.has_live_llm:
+    gemini_key = (os.getenv("GEMINI_API_KEY", "") or settings.GEMINI_API_KEY or "").strip()
+    openai_key = (os.getenv("OPENAI_API_KEY", "") or settings.OPENAI_API_KEY or "").strip()
+
+    has_media = bool(file_bytes and mime_type in {"image/jpeg", "image/png", "application/pdf"})
+    if not ai_consent or (not has_media and not ocr_text.strip()) or (not gemini_key and not openai_key):
         return baseline, "local_ocr_parser"
 
     prompt = (
-        "Extract ONLY explicitly stated medical facts from this OCR text into strict JSON. "
-        "NEVER invent or infer missing values; use null or empty arrays when absent.\n"
-        "Schema: {patient_name, doctor_name, hospital_name, document_date (YYYY-MM-DD or null), diagnosis, "
-        "medications: [{medicine_name, dosage, frequency, instructions}], "
-        "lab_values: [{test_name, value_numeric, value_text, unit, reference_range, flag, is_abnormal}], "
-        "allergies: [string], observations: [string]}\n\nOCR TEXT:\n"
-        + ocr_text[:6000]
+        "You are a clinical medical document & handwriting transcription parser. "
+        "Carefully examine the attached prescription/lab image or PDF (including cursive/handwritten doctor notes, stamps, printed tables, and OCR hints). "
+        "Extract ONLY explicitly visible medical facts into strict JSON matching the schema below.\n"
+        "RULES:\n"
+        "1. NEVER invent, guess, or fabricate values that are absent. Use null or [] when not stated.\n"
+        "2. For handwritten prescriptions: read Rx medicine lines carefully (Tab/Cap/Syp/Inj/Oint/Drops, brand or generic names, strengths like 500 mg, Indian schedules like 1-0-1 / OD / BD / TDS / HS / SOS, before/after food, duration). Fix broken OCR spacing on visible clinic/hospital/doctor/patient names (e.g. 'MAHARAOBHMSNGHHOSPITALKOTA' -> 'Maharao Bhimsingh Hospital, Kota').\n"
+        "3. For lab or diagnostic reports: extract every test row into lab_values with numeric value (if numeric), unit, reference_range, flag ('normal'|'low'|'high'|'critical'), and is_abnormal.\n"
+        "4. Convert document_date to YYYY-MM-DD when a full date is legible (interpret DD/MM/YYYY for Indian hospital slips); otherwise null.\n"
+        "5. Provide detected_category as one of: 'prescription', 'lab_report', 'discharge_summary', 'diagnostic_report', 'medical_certificate'.\n"
+        "6. Provide raw_transcription: a clean faithful plain-text transcription of all visible printed & handwritten text on the document. Note partially blurry words in uncertain_fields.\n\n"
+        "JSON Schema:\n"
+        "{\n"
+        '  "detected_category": "prescription|lab_report|discharge_summary|diagnostic_report|medical_certificate",\n'
+        '  "raw_transcription": string|null,\n'
+        '  "patient_name": string|null,\n'
+        '  "doctor_name": string|null,\n'
+        '  "hospital_name": string|null,\n'
+        '  "document_date": "YYYY-MM-DD"|null,\n'
+        '  "diagnosis": string|null,\n'
+        '  "medications": [{"medicine_name": string, "dosage": string|null, "frequency": string|null, "instructions": string|null}],\n'
+        '  "lab_values": [{"test_name": string, "value_numeric": number|null, "value_text": string, "unit": string|null, "reference_range": string|null, "flag": "normal"|"low"|"high"|"critical", "is_abnormal": boolean}],\n'
+        '  "allergies": [string],\n'
+        '  "observations": [string],\n'
+        '  "uncertain_fields": [string]\n'
+        "}\n"
+        f"\nFilename hint: {filename or 'document'}\n"
+        + (f"Supplementary local OCR hint (may contain spacing/handwriting gaps):\n{ocr_text[:4500]}" if ocr_text.strip() else "Local OCR text was minimal or unavailable; read directly from the attached visual document.")
     )
 
-    try:
-        if settings.GEMINI_API_KEY:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.post(
-                    url,
-                    json={
-                        "contents": [{"parts": [{"text": prompt}]}],
-                        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.0},
-                    },
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    txt = data["candidates"][0]["content"]["parts"][0]["text"]
-                    parsed = json.loads(txt)
-                    return _merge_safe_extraction(parsed, baseline), f"gemini:{settings.LLM_MODEL}"
-        elif settings.OPENAI_API_KEY:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+    if gemini_key:
+        configured = (os.getenv("LLM_MODEL", "") or settings.LLM_MODEL or "").strip()
+        models_to_try: List[str] = []
+        for candidate in ([configured] if configured and configured != "gemini-flash-latest" else []) + VISION_MODEL_CANDIDATES:
+            if candidate and candidate not in models_to_try:
+                models_to_try.append(candidate)
+
+        contents: List[Any] = []
+        if has_media and file_bytes and mime_type:
+            contents.append(genai_types.Part.from_bytes(data=file_bytes, mime_type=mime_type))
+        contents.append(prompt)
+
+        def _call_gemini_sync(model_name: str) -> str:
+            client = genai.Client(
+                api_key=gemini_key,
+                http_options=genai_types.HttpOptions(
+                    api_version="v1beta",
+                    timeout=14000,
+                    retry_options=genai_types.HttpRetryOptions(attempts=1),
+                ),
+            )
+            resp = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=genai_types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.0,
+                ),
+            )
+            return resp.text or ""
+
+        for model_name in models_to_try:
+            try:
+                raw_json = await asyncio.to_thread(_call_gemini_sync, model_name)
+                if not raw_json.strip():
+                    continue
+                parsed = json.loads(raw_json)
+                if isinstance(parsed, dict):
+                    return _merge_safe_extraction(parsed, baseline, prefer_llm=True), f"gemini_vision:{model_name}"
+            except Exception:
+                continue
+
+    if openai_key and ocr_text.strip():
+        try:
+            async with httpx.AsyncClient(timeout=18.0) as client:
                 resp = await client.post(
                     "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
+                    headers={"Authorization": f"Bearer {openai_key}"},
                     json={
                         "model": "gpt-4o-mini",
                         "response_format": {"type": "json_object"},
@@ -390,26 +459,112 @@ async def extract_with_optional_llm(ocr_text: str, category: str, ai_consent: bo
                 if resp.status_code == 200:
                     txt = resp.json()["choices"][0]["message"]["content"]
                     parsed = json.loads(txt)
-                    return _merge_safe_extraction(parsed, baseline), "openai:gpt-4o-mini"
-    except Exception:
-        pass
+                    return _merge_safe_extraction(parsed, baseline, prefer_llm=True), "openai:gpt-4o-mini"
+        except Exception:
+            pass
 
     return baseline, "local_ocr_parser"
 
 
-def _merge_safe_extraction(llm_data: Dict[str, Any], baseline: Dict[str, Any]) -> Dict[str, Any]:
+def _merge_safe_extraction(llm_data: Dict[str, Any], baseline: Dict[str, Any], *, prefer_llm: bool = False) -> Dict[str, Any]:
     merged = dict(baseline)
-    for field in ["patient_name", "doctor_name", "hospital_name", "document_date", "diagnosis"]:
-        if llm_data.get(field) and not merged.get(field):
-            merged[field] = str(llm_data[field]).strip()
+    valid_cats = {"prescription", "lab_report", "medical_certificate", "diagnostic_report", "discharge_summary"}
+    det_cat = str(llm_data.get("detected_category") or "").strip().lower()
+    if det_cat in valid_cats:
+        merged["detected_category"] = det_cat
+
+    if llm_data.get("raw_transcription"):
+        merged["raw_transcription"] = str(llm_data["raw_transcription"]).strip()
+
+    for field in ["patient_name", "doctor_name", "hospital_name", "diagnosis"]:
+        val = llm_data.get(field)
+        if val and str(val).strip() and str(val).strip().lower() not in {"null", "none", "not stated"}:
+            if prefer_llm or not merged.get(field):
+                merged[field] = str(val).strip()
+
+    raw_date = llm_data.get("document_date")
+    if raw_date and str(raw_date).strip():
+        normalized_date = _parse_date_candidate(str(raw_date).strip())
+        if normalized_date and (prefer_llm or not merged.get("document_date")):
+            merged["document_date"] = normalized_date
+
     if isinstance(llm_data.get("medications"), list) and llm_data["medications"]:
-        merged["medications"] = llm_data["medications"]
+        cleaned_meds: List[Dict[str, Any]] = []
+        for item in llm_data["medications"]:
+            if not isinstance(item, dict):
+                continue
+            med_name = str(item.get("medicine_name") or "").strip()
+            if not med_name:
+                continue
+            cleaned_meds.append(
+                {
+                    "medicine_name": med_name[:160],
+                    "dosage": str(item.get("dosage")).strip()[:80] if item.get("dosage") else None,
+                    "frequency": str(item.get("frequency")).strip()[:100] if item.get("frequency") else None,
+                    "instructions": str(item.get("instructions")).strip()[:200] if item.get("instructions") else None,
+                }
+            )
+        if cleaned_meds:
+            merged["medications"] = cleaned_meds
+
     if isinstance(llm_data.get("lab_values"), list) and llm_data["lab_values"]:
-        merged["lab_values"] = llm_data["lab_values"]
-    if isinstance(llm_data.get("allergies"), list) and llm_data["allergies"]:
-        merged["allergies"] = llm_data["allergies"]
-    if isinstance(llm_data.get("observations"), list) and llm_data["observations"]:
-        merged["observations"] = llm_data["observations"]
+        cleaned_labs: List[Dict[str, Any]] = []
+        for item in llm_data["lab_values"]:
+            if not isinstance(item, dict):
+                continue
+            t_name = str(item.get("test_name") or "").strip()
+            if not t_name:
+                continue
+            raw_num = item.get("value_numeric")
+            val_num: Optional[float] = None
+            if isinstance(raw_num, (int, float)):
+                val_num = float(raw_num)
+            elif raw_num is not None:
+                try:
+                    val_num = float(str(raw_num).strip())
+                except ValueError:
+                    val_num = None
+            val_text = str(item.get("value_text") or (val_num if val_num is not None else "")).strip()
+            if val_num is None and val_text:
+                m_num = re.search(r"[-+]?\d+(?:\.\d+)?", val_text)
+                if m_num:
+                    try:
+                        val_num = float(m_num.group(0))
+                    except ValueError:
+                        pass
+            ref_range = str(item.get("reference_range")).strip()[:120] if item.get("reference_range") else None
+            eval_flag, eval_abn = _evaluate_lab_flag(val_num, ref_range)
+            llm_flag = str(item.get("flag") or "").strip().lower()
+            flag = llm_flag if llm_flag in {"normal", "low", "high", "critical"} else eval_flag
+            is_abn = bool(item["is_abnormal"]) if isinstance(item.get("is_abnormal"), bool) else (flag != "normal" or eval_abn)
+            cleaned_labs.append(
+                {
+                    "test_name": t_name[:140],
+                    "value_numeric": val_num,
+                    "value_text": val_text[:80] or "N/A",
+                    "unit": str(item.get("unit")).strip()[:40] if item.get("unit") else None,
+                    "reference_range": ref_range,
+                    "flag": flag,
+                    "is_abnormal": is_abn,
+                }
+            )
+        if cleaned_labs:
+            merged["lab_values"] = cleaned_labs
+
+    if isinstance(llm_data.get("allergies"), list):
+        cleaned_allergies = [str(a).strip() for a in llm_data["allergies"] if str(a).strip() and str(a).strip().lower() not in {"none", "nil", "nkda"}]
+        if cleaned_allergies:
+            merged["allergies"] = cleaned_allergies
+
+    if isinstance(llm_data.get("observations"), list):
+        cleaned_obs = [str(o).strip() for o in llm_data["observations"] if str(o).strip()]
+        if cleaned_obs:
+            merged["observations"] = cleaned_obs[:8]
+
+    if isinstance(llm_data.get("uncertain_fields"), list):
+        merged["uncertain_fields"] = [str(u).strip() for u in llm_data["uncertain_fields"] if str(u).strip()][:6]
+    elif prefer_llm and (merged.get("medications") or merged.get("lab_values") or merged.get("raw_transcription")):
+        merged["uncertain_fields"] = []
 
     missing = []
     for key in ["patient_name", "doctor_name", "hospital_name", "document_date", "diagnosis"]:

@@ -28,10 +28,10 @@ from backend.services.ocr_extraction import extract_structured_from_text, run_oc
 settings = get_settings()
 
 FALLBACK_GEMINI_MODELS = [
+    "gemini-3-flash-preview",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite-preview",
     "gemini-flash-latest",
-    "gemini-3.6-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.8-flash",
 ]
 
 _GEMINI_CLIENT_CACHE: Dict[Tuple[str, int], genai.Client] = {}
