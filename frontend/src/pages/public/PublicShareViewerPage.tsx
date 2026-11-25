@@ -117,7 +117,7 @@ export function PublicShareViewerPage() {
           <Card className="mx-auto max-w-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lock className="size-4 text-secondary" aria-hidden="true" />
+                <Lock className="size-4 text-[#0066FF]" aria-hidden="true" />
                 PIN Protected Medical Share
               </CardTitle>
               <CardDescription>{shareData?.title || "Enter the patient's temporary PIN to open shared records."}</CardDescription>
@@ -157,7 +157,7 @@ export function PublicShareViewerPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-primary">
-                <Clock className="size-4 text-secondary" aria-hidden="true" />
+                <Clock className="size-4 text-[#0066FF]" aria-hidden="true" />
                 <span>{formatCountdown(remainingSec)}</span>
               </div>
             </div>
@@ -166,7 +166,7 @@ export function PublicShareViewerPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <ShieldCheck className="size-4 text-secondary" aria-hidden="true" />
+                    <ShieldCheck className="size-4 text-[#0066FF]" aria-hidden="true" />
                     Scoped Patient Consultation Summary
                   </CardTitle>
                   <CardDescription>{shareData.summary.scope_note}</CardDescription>
@@ -235,7 +235,7 @@ export function PublicShareViewerPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-sm text-foreground">{doc.title}</span>
-                      <FileText className="size-4 shrink-0 text-secondary" aria-hidden="true" />
+                      <FileText className="size-4 shrink-0 text-[#0066FF]" aria-hidden="true" />
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {CATEGORY_LABELS[doc.category] || doc.category} · {formatDate(doc.document_date)}

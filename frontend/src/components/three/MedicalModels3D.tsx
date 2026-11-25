@@ -332,50 +332,60 @@ function HalfBodyRespiratorySystem({
 
   return (
     <group ref={groupRef} position={[1.85, -0.18, 0]}>
+      {/* Studio Porcelain Halo Rings behind the Half-Body Respiratory Model */}
+      <mesh position={[0, 0.1, -0.58]}>
+        <ringGeometry args={[0.95, 1.48, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0.1, -0.62]}>
+        <ringGeometry args={[1.54, 1.82, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
+      </mesh>
+
       <mesh geometry={torsoShellGeo} scale={[1, 1, 0.56]}>
-        <meshPhysicalMaterial color="#66a9ec" roughness={0.2} metalness={0.05} transparent opacity={0.14} depthWrite={false} side={THREE.DoubleSide} />
+        <meshPhysicalMaterial color="#cbd5e1" roughness={0.22} metalness={0.04} transparent opacity={0.22} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
       <mesh geometry={neckHeadGeo} scale={[1, 1, 0.82]}>
-        <meshPhysicalMaterial color="#93c5fd" roughness={0.25} transparent opacity={0.13} depthWrite={false} side={THREE.DoubleSide} />
+        <meshPhysicalMaterial color="#e2e8f0" roughness={0.25} transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
 
       <mesh position={[0, -1.06, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.6, 1]}>
         <torusGeometry args={[0.85, 0.015, 10, 56]} />
-        <meshStandardMaterial color="#0284c7" transparent opacity={0.62} />
+        <meshStandardMaterial color="#0066ff" transparent opacity={0.75} />
       </mesh>
       <mesh position={[0, 1.54, 0.24]}>
         <sphereGeometry args={[0.05, 14, 14]} />
-        <meshStandardMaterial color="#0284c7" emissive="#0ea5e9" emissiveIntensity={0.6} transparent opacity={0.78} />
+        <meshStandardMaterial color="#0066ff" emissive="#0066ff" emissiveIntensity={0.45} transparent opacity={0.85} />
       </mesh>
 
       <mesh geometry={larynxGeo} position={[0, 1.06, 0.03]}>
-        <meshPhysicalMaterial color="#94a3b8" roughness={0.3} clearcoat={0.5} transparent opacity={0.86} />
+        <meshPhysicalMaterial color="#cbd5e1" roughness={0.28} clearcoat={0.5} transparent opacity={0.92} />
       </mesh>
       <mesh geometry={tracheaGeo}>
-        <meshPhysicalMaterial color="#cbd5e1" roughness={0.28} clearcoat={0.55} transparent opacity={0.84} />
+        <meshPhysicalMaterial color="#e2e8f0" roughness={0.24} clearcoat={0.55} transparent opacity={0.9} />
       </mesh>
       {cartilageRingYs.map((ry) => (
         <mesh key={ry} position={[0, ry, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.075, 0.013, 8, 22]} />
-          <meshStandardMaterial color="#f1f5f9" roughness={0.25} transparent opacity={0.94} />
+          <meshStandardMaterial color="#ffffff" roughness={0.22} transparent opacity={0.98} />
         </mesh>
       ))}
 
       <group>
         {bronchialGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshPhysicalMaterial color={idx < 2 ? "#0ea5e9" : "#38bdf8"} emissive="#0284c7" emissiveIntensity={0.25} roughness={0.25} transparent opacity={0.9} />
+            <meshPhysicalMaterial color={idx < 2 ? "#0066ff" : "#3b82f6"} emissive="#0066ff" emissiveIntensity={0.2} roughness={0.22} transparent opacity={0.94} />
           </mesh>
         ))}
         {alveoliPositions.map((pos, idx) => (
           <group key={idx} position={pos}>
             <mesh>
               <sphereGeometry args={[0.045, 12, 12]} />
-              <meshStandardMaterial color="#0284c7" emissive="#38bdf8" emissiveIntensity={0.45} transparent opacity={0.88} />
+              <meshStandardMaterial color="#0066ff" emissive="#2563eb" emissiveIntensity={0.35} transparent opacity={0.92} />
             </mesh>
             <mesh position={[0.04, -0.03, 0.02]}>
               <sphereGeometry args={[0.032, 10, 10]} />
-              <meshStandardMaterial color="#38bdf8" emissive="#0ea5e9" emissiveIntensity={0.4} transparent opacity={0.82} />
+              <meshStandardMaterial color="#60a5fa" emissive="#0066ff" emissiveIntensity={0.3} transparent opacity={0.88} />
             </mesh>
           </group>
         ))}
@@ -384,64 +394,64 @@ function HalfBodyRespiratorySystem({
       <group ref={lungsExpandRef}>
         <mesh position={[-0.54, 0.24, 0.02]} rotation={[0.05, 0, -0.2]} scale={[0.42, 0.5, 0.38]}>
           <sphereGeometry args={[0.78, 28, 28]} />
-          <meshPhysicalMaterial color="#fb7185" roughness={0.28} clearcoat={0.65} transparent opacity={0.48} depthWrite={false} />
+          <meshPhysicalMaterial color="#ff3b5c" roughness={0.24} clearcoat={0.72} transparent opacity={0.56} depthWrite={false} />
         </mesh>
         <mesh position={[-0.64, -0.14, 0.08]} rotation={[0.1, 0, -0.1]} scale={[0.44, 0.42, 0.4]}>
           <sphereGeometry args={[0.76, 26, 26]} />
-          <meshPhysicalMaterial color="#f43f5e" roughness={0.3} clearcoat={0.6} transparent opacity={0.48} depthWrite={false} />
+          <meshPhysicalMaterial color="#ef233c" roughness={0.26} clearcoat={0.68} transparent opacity={0.56} depthWrite={false} />
         </mesh>
         <mesh position={[-0.6, -0.48, -0.04]} rotation={[-0.08, 0, -0.12]} scale={[0.48, 0.42, 0.42]}>
           <sphereGeometry args={[0.78, 26, 26]} />
-          <meshPhysicalMaterial color="#e11d48" roughness={0.32} clearcoat={0.55} transparent opacity={0.45} depthWrite={false} />
+          <meshPhysicalMaterial color="#d90429" roughness={0.28} clearcoat={0.62} transparent opacity={0.52} depthWrite={false} />
         </mesh>
 
         <mesh position={[0.56, 0.22, 0.02]} rotation={[0.05, 0, 0.22]} scale={[0.4, 0.5, 0.38]}>
           <sphereGeometry args={[0.76, 28, 28]} />
-          <meshPhysicalMaterial color="#fb7185" roughness={0.28} clearcoat={0.65} transparent opacity={0.48} depthWrite={false} />
+          <meshPhysicalMaterial color="#ff3b5c" roughness={0.24} clearcoat={0.72} transparent opacity={0.56} depthWrite={false} />
         </mesh>
         <mesh position={[0.64, -0.36, 0.01]} rotation={[-0.06, 0, 0.14]} scale={[0.46, 0.54, 0.42]}>
           <sphereGeometry args={[0.76, 26, 26]} />
-          <meshPhysicalMaterial color="#e11d48" roughness={0.32} clearcoat={0.58} transparent opacity={0.45} depthWrite={false} />
+          <meshPhysicalMaterial color="#ef233c" roughness={0.28} clearcoat={0.65} transparent opacity={0.52} depthWrite={false} />
         </mesh>
 
         <mesh position={[0.18, -0.22, 0.12]} rotation={[0.1, 0, -0.28]} scale={[0.85, 1.1, 0.8]}>
           <sphereGeometry args={[0.2, 20, 20]} />
-          <meshPhysicalMaterial color="#be123c" roughness={0.25} clearcoat={0.7} transparent opacity={0.85} />
+          <meshPhysicalMaterial color="#d90429" roughness={0.22} clearcoat={0.8} transparent opacity={0.92} />
         </mesh>
       </group>
 
       <group ref={ribcageRef}>
         {ribGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#e2e8f0" roughness={0.32} metalness={0.12} transparent opacity={0.74} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.28} metalness={0.08} transparent opacity={0.86} />
           </mesh>
         ))}
         <mesh geometry={sternumGeo}>
-          <meshStandardMaterial color="#cbd5e1" roughness={0.3} metalness={0.15} transparent opacity={0.8} />
+          <meshStandardMaterial color="#e2e8f0" roughness={0.28} metalness={0.1} transparent opacity={0.9} />
         </mesh>
         {clavicleGeos.map((g, idx) => (
           <mesh key={idx} geometry={g}>
-            <meshStandardMaterial color="#f1f5f9" roughness={0.28} transparent opacity={0.84} />
+            <meshStandardMaterial color="#ffffff" roughness={0.25} transparent opacity={0.92} />
           </mesh>
         ))}
         {spineGeos.map((pos, idx) => (
           <mesh key={idx} position={pos}>
             <cylinderGeometry args={[0.065, 0.068, 0.11, 12]} />
-            <meshStandardMaterial color="#94a3b8" roughness={0.4} transparent opacity={0.64} />
+            <meshStandardMaterial color="#cbd5e1" roughness={0.35} transparent opacity={0.78} />
           </mesh>
         ))}
       </group>
 
       <mesh ref={diaphragmRef} position={[0, -0.82, 0.02]} scale={[0.92, 0.28, 0.48]}>
         <sphereGeometry args={[0.88, 28, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-        <meshPhysicalMaterial color="#be123c" roughness={0.35} clearcoat={0.4} transparent opacity={0.7} side={THREE.DoubleSide} />
+        <meshPhysicalMaterial color="#ef233c" roughness={0.3} clearcoat={0.5} transparent opacity={0.75} side={THREE.DoubleSide} />
       </mesh>
 
       <group ref={flowDotsRef}>
         {Array.from({ length: 8 }).map((_, idx) => (
           <mesh key={idx}>
             <sphereGeometry args={[0.028, 8, 8]} />
-            <meshBasicMaterial color="#38bdf8" transparent opacity={0.9} />
+            <meshBasicMaterial color="#0066ff" transparent opacity={0.95} />
           </mesh>
         ))}
       </group>
@@ -527,47 +537,51 @@ function DetailedVaultModel({
 
   return (
     <group ref={grpRef} visible={false}>
+      <mesh position={[0, 0, -0.55]}>
+        <ringGeometry args={[1.05, 1.55, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
       <mesh ref={backSheetRef} position={[-0.18, 0.08, -0.22]} rotation={[0, 0.08, 0.07]}>
         <boxGeometry args={[1.62, 2.05, 0.05]} />
-        <meshStandardMaterial color="#b7d4f2" roughness={0.35} transparent opacity={0.88} />
+        <meshStandardMaterial color="#e2e8f0" roughness={0.3} transparent opacity={0.9} />
       </mesh>
       <mesh ref={midSheetRef} position={[0.14, -0.05, -0.12]} rotation={[0, -0.06, -0.05]}>
         <boxGeometry args={[1.62, 2.05, 0.05]} />
-        <meshStandardMaterial color="#93c5fd" roughness={0.32} transparent opacity={0.92} />
+        <meshStandardMaterial color="#dbeafe" roughness={0.28} transparent opacity={0.94} />
       </mesh>
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[1.74, 2.15, 0.08]} />
-        <meshPhysicalMaterial color="#f9fafb" roughness={0.18} clearcoat={0.55} transparent opacity={0.96} />
+        <meshPhysicalMaterial color="#ffffff" roughness={0.16} clearcoat={0.6} transparent opacity={0.98} />
       </mesh>
       <mesh position={[0, 0.94, 0.06]}>
         <boxGeometry args={[0.96, 0.22, 0.1]} />
-        <meshStandardMaterial color="#323a4d" metalness={0.45} roughness={0.28} transparent opacity={1} />
+        <meshStandardMaterial color="#111827" metalness={0.35} roughness={0.25} transparent opacity={1} />
       </mesh>
       <group position={[-0.55, 0.6, 0.07]}>
         <mesh>
           <boxGeometry args={[0.28, 0.09, 0.035]} />
-          <meshStandardMaterial color="#e11d48" transparent opacity={1} />
+          <meshStandardMaterial color="#ef233c" transparent opacity={1} />
         </mesh>
         <mesh>
           <boxGeometry args={[0.09, 0.28, 0.035]} />
-          <meshStandardMaterial color="#e11d48" transparent opacity={1} />
+          <meshStandardMaterial color="#ef233c" transparent opacity={1} />
         </mesh>
       </group>
       <mesh position={[0.48, 0.6, 0.07]}>
         <torusGeometry args={[0.13, 0.025, 10, 28]} />
-        <meshStandardMaterial color="#0284c7" transparent opacity={1} />
+        <meshStandardMaterial color="#0066ff" transparent opacity={1} />
       </mesh>
       <mesh geometry={ecgGeo}>
-        <meshStandardMaterial color="#0284c7" emissive="#0ea5e9" emissiveIntensity={0.4} transparent opacity={1} />
+        <meshStandardMaterial color="#0066ff" emissive="#0066ff" emissiveIntensity={0.35} transparent opacity={1} />
       </mesh>
       <mesh ref={pulseDotRef} position={[0, 0.1, 0.12]}>
         <sphereGeometry args={[0.05, 12, 12]} />
-        <meshBasicMaterial color="#e11d48" transparent opacity={1} />
+        <meshBasicMaterial color="#ef233c" transparent opacity={1} />
       </mesh>
       {barHeights.map((h, i) => (
         <mesh key={i} position={[-0.44 + i * 0.22, -0.78 + h * 0.35, 0.06]}>
           <boxGeometry args={[0.12, h * 0.7, 0.04]} />
-          <meshStandardMaterial color={i === 3 ? "#0284c7" : "#66a9ec"} transparent opacity={1} />
+          <meshStandardMaterial color={i === 3 ? "#0066ff" : "#cbd5e1"} transparent opacity={1} />
         </mesh>
       ))}
     </group>
@@ -709,19 +723,23 @@ function DetailedPharmacologyModel({
 
   return (
     <group ref={grpRef} visible={false}>
+      <mesh position={[0.15, 0, -0.58]}>
+        <ringGeometry args={[1.0, 1.52, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
       <group ref={capRef} position={[-0.78, 0.05, 0.18]}>
         <mesh ref={capTopRef} position={[0, 0.27, 0]}>
           <capsuleGeometry args={[0.26, 0.42, 16, 24]} />
-          <meshPhysicalMaterial color="#0284c7" roughness={0.16} clearcoat={0.85} transparent opacity={1} />
+          <meshPhysicalMaterial color="#0066ff" roughness={0.14} clearcoat={0.9} transparent opacity={1} />
         </mesh>
         <mesh ref={capBotRef} position={[0, -0.27, 0]}>
           <capsuleGeometry args={[0.255, 0.42, 16, 24]} />
-          <meshPhysicalMaterial color="#f9fafb" roughness={0.18} clearcoat={0.85} transparent opacity={1} />
+          <meshPhysicalMaterial color="#ffffff" roughness={0.16} clearcoat={0.85} transparent opacity={1} />
         </mesh>
         {granules.map((g, i) => (
           <mesh key={i} position={g.offset}>
             <sphereGeometry args={[g.r, 12, 12]} />
-            <meshPhysicalMaterial color={g.color} roughness={0.2} clearcoat={0.6} transparent opacity={1} />
+            <meshPhysicalMaterial color={i % 2 === 0 ? "#0066ff" : "#ef233c"} roughness={0.18} clearcoat={0.65} transparent opacity={1} />
           </mesh>
         ))}
       </group>
@@ -730,27 +748,27 @@ function DetailedPharmacologyModel({
         {atoms.map((a, idx) => (
           <mesh key={idx} position={a.pos}>
             <sphereGeometry args={[a.r, 20, 20]} />
-            <meshPhysicalMaterial color={a.color} roughness={0.22} clearcoat={0.7} transparent opacity={1} />
+            <meshPhysicalMaterial color={idx % 3 === 0 ? "#0066ff" : idx % 3 === 1 ? "#ef233c" : "#cbd5e1"} roughness={0.2} clearcoat={0.7} transparent opacity={1} />
           </mesh>
         ))}
         {bondGeos.map((g, i) => (
           <mesh key={i} geometry={g}>
-            <meshStandardMaterial color="#64748b" metalness={0.35} roughness={0.35} transparent opacity={1} />
+            <meshStandardMaterial color="#94a3b8" metalness={0.25} roughness={0.32} transparent opacity={1} />
           </mesh>
         ))}
       </group>
 
       <group ref={dnaRef} position={[1.18, -0.05, -0.22]} rotation={[0, 0, -0.14]}>
         <mesh geometry={dnaStrandA}>
-          <meshStandardMaterial color="#0284c7" roughness={0.25} transparent opacity={0.92} />
+          <meshStandardMaterial color="#0066ff" roughness={0.22} transparent opacity={0.95} />
         </mesh>
         <mesh geometry={dnaStrandB}>
-          <meshStandardMaterial color="#323a4d" roughness={0.25} transparent opacity={0.92} />
+          <meshStandardMaterial color="#111827" roughness={0.25} transparent opacity={0.92} />
         </mesh>
         {dnaRungs.map((r, i) => (
           <mesh key={i} position={r.mid} rotation={[0, r.rotY, Math.PI / 2]}>
             <cylinderGeometry args={[0.011, 0.011, 0.4, 8]} />
-            <meshStandardMaterial color="#66a9ec" transparent opacity={1} />
+            <meshStandardMaterial color="#93c5fd" transparent opacity={1} />
           </mesh>
         ))}
       </group>
@@ -858,27 +876,31 @@ function DetailedParallaxGlobeModel({
 
   return (
     <group ref={grpRef} visible={false}>
+      <mesh position={[0, 0, -0.5]}>
+        <ringGeometry args={[1.45, 1.85, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
       <group ref={globeSpinRef}>
         <mesh>
           <sphereGeometry args={[radius - 0.02, 36, 36]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.5} transparent opacity={0.94} />
+          <meshPhysicalMaterial color="#f8fafc" roughness={0.35} clearcoat={0.4} transparent opacity={0.96} />
         </mesh>
         <mesh>
           <sphereGeometry args={[radius, 28, 28]} />
-          <meshBasicMaterial color="#66a9ec" wireframe transparent opacity={0.36} />
+          <meshBasicMaterial color="#cbd5e1" wireframe transparent opacity={0.55} />
         </mesh>
         <points geometry={dotGeo}>
-          <pointsMaterial color="#7dd3fc" size={0.042} sizeAttenuation transparent opacity={0.94} />
+          <pointsMaterial color="#0066ff" size={0.044} sizeAttenuation transparent opacity={0.92} />
         </points>
         {arcGeos.map((g, i) => (
           <mesh key={i} geometry={g}>
-            <meshBasicMaterial color="#38bdf8" transparent opacity={0.75} />
+            <meshBasicMaterial color="#0066ff" transparent opacity={0.75} />
           </mesh>
         ))}
         {beacons.map((b, i) => (
           <mesh key={i} position={b.pos}>
             <sphereGeometry args={[0.055, 12, 12]} />
-            <meshBasicMaterial color={b.color} transparent opacity={1} />
+            <meshBasicMaterial color={i % 2 === 0 ? "#ef233c" : "#0066ff"} transparent opacity={1} />
           </mesh>
         ))}
       </group>
@@ -886,15 +908,15 @@ function DetailedParallaxGlobeModel({
       <group ref={satRingRef} rotation={[Math.PI / 2.4, 0.25, 0]}>
         <mesh>
           <torusGeometry args={[radius + 0.34, 0.012, 8, 90]} />
-          <meshBasicMaterial color="#323a4d" transparent opacity={0.48} />
+          <meshBasicMaterial color="#0066ff" transparent opacity={0.45} />
         </mesh>
         <mesh position={[radius + 0.34, 0, 0]}>
           <octahedronGeometry args={[0.065, 0]} />
-          <meshStandardMaterial color="#0284c7" transparent opacity={1} />
+          <meshStandardMaterial color="#0066ff" transparent opacity={1} />
         </mesh>
         <mesh position={[-(radius + 0.34), 0, 0]}>
           <octahedronGeometry args={[0.065, 0]} />
-          <meshStandardMaterial color="#e11d48" transparent opacity={1} />
+          <meshStandardMaterial color="#ef233c" transparent opacity={1} />
         </mesh>
       </group>
     </group>
@@ -967,38 +989,42 @@ function DetailedSecurityShieldModel({
 
   return (
     <group ref={grpRef} visible={false}>
+      <mesh position={[0, 0, -0.55]}>
+        <ringGeometry args={[1.05, 1.5, 64]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.55} side={THREE.DoubleSide} />
+      </mesh>
       <mesh geometry={shieldGeo} position={[0, 0, -0.14]} scale={[0.92, 0.92, 0.5]}>
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.45} transparent opacity={0.9} />
+        <meshStandardMaterial color="#111827" roughness={0.28} metalness={0.35} transparent opacity={0.92} />
       </mesh>
       <mesh geometry={shieldGeo} position={[0, 0, -0.04]}>
-        <meshPhysicalMaterial color="#66a9ec" roughness={0.18} metalness={0.1} clearcoat={0.75} transparent opacity={0.74} />
+        <meshPhysicalMaterial color="#ffffff" roughness={0.15} metalness={0.05} clearcoat={0.85} transparent opacity={0.82} />
       </mesh>
       <mesh position={[0, 0.1, 0.16]}>
         <boxGeometry args={[0.66, 0.2, 0.08]} />
-        <meshStandardMaterial color="#323a4d" roughness={0.25} transparent opacity={1} />
+        <meshStandardMaterial color="#0066ff" roughness={0.22} transparent opacity={1} />
       </mesh>
       <mesh position={[0, 0.1, 0.16]}>
         <boxGeometry args={[0.2, 0.66, 0.08]} />
-        <meshStandardMaterial color="#323a4d" roughness={0.25} transparent opacity={1} />
+        <meshStandardMaterial color="#0066ff" roughness={0.22} transparent opacity={1} />
       </mesh>
       <group ref={outerRingRef}>
         <mesh>
           <torusGeometry args={[1.38, 0.018, 8, 72]} />
-          <meshStandardMaterial color="#0284c7" transparent opacity={0.85} />
+          <meshStandardMaterial color="#0066ff" transparent opacity={0.85} />
         </mesh>
         {[0, 1, 2, 3].map((k) => {
           const angle = (k / 4) * Math.PI * 2;
           return (
             <mesh key={k} position={[Math.cos(angle) * 1.38, Math.sin(angle) * 1.38, 0]}>
               <octahedronGeometry args={[0.065, 0]} />
-              <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.35} transparent opacity={1} />
+              <meshStandardMaterial color={k % 2 === 0 ? "#0066ff" : "#ef233c"} transparent opacity={1} />
             </mesh>
           );
         })}
       </group>
       <mesh ref={innerRingRef}>
         <torusGeometry args={[1.15, 0.012, 8, 64]} />
-        <meshStandardMaterial color="#323a4d" transparent opacity={0.68} />
+        <meshStandardMaterial color="#cbd5e1" transparent opacity={0.85} />
       </mesh>
     </group>
   );
@@ -1044,7 +1070,7 @@ function AmbientBioParticles({
 
   return (
     <points ref={ptsRef} geometry={geo}>
-      <pointsMaterial color="#0284c7" size={0.055} sizeAttenuation transparent opacity={0.35} />
+      <pointsMaterial color="#0066ff" size={0.048} sizeAttenuation transparent opacity={0.22} />
     </points>
   );
 }

@@ -17,28 +17,28 @@ export function Button({
 }: ButtonProps) {
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
     primary:
-      "bg-primary text-primary-foreground hover:bg-[#1E2534] border border-transparent shadow-sm",
+      "bg-[#0066FF] text-white hover:bg-[#0052CC] border border-transparent shadow-[0_8px_20px_-8px_rgba(0,102,255,0.55)]",
     accent:
-      "bg-accent text-accent-foreground hover:bg-[#4F98E3] border border-[#4F98E3]/40 shadow-sm",
+      "bg-[#0066FF] text-white hover:bg-[#0052CC] border border-transparent shadow-[0_8px_20px_-8px_rgba(0,102,255,0.45)]",
     secondary:
-      "bg-secondary text-secondary-foreground hover:bg-white border border-slate-300/80 shadow-xs",
+      "bg-white text-[#111827] hover:bg-[#F6F8FB] border border-[#E5E9F0] shadow-xs",
     outline:
-      "bg-secondary/90 text-foreground border border-slate-300 hover:bg-white hover:border-primary/40",
-    ghost: "bg-transparent text-foreground hover:bg-muted/60 border border-transparent",
+      "bg-white text-[#111827] border border-[#E5E9F0] hover:bg-[#F6F8FB] hover:border-[#0066FF]/40",
+    ghost: "bg-transparent text-[#111827] hover:bg-[#E9EEF5]/70 border border-transparent",
     destructive:
-      "bg-destructive text-destructive-foreground hover:opacity-90 border border-transparent",
+      "bg-[#EF233C] text-white hover:bg-[#D90429] border border-transparent",
   };
   const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {
-    sm: "min-h-[44px] px-3 py-2 text-xs",
-    md: "min-h-[44px] px-4 py-2 text-sm",
-    lg: "min-h-[48px] px-5 py-2.5 text-base",
+    sm: "min-h-[40px] px-3.5 py-1.5 text-xs",
+    md: "min-h-[44px] px-5 py-2 text-sm",
+    lg: "min-h-[48px] px-6 py-2.5 text-base",
   };
 
   return (
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-150 disabled:opacity-50",
         variants[variant],
         sizes[size],
         className
@@ -54,7 +54,7 @@ export function Card({ className, children }: { className?: string; children: Re
   return (
     <div
       className={cn(
-        "rounded-xl border border-slate-300/80 bg-secondary/90 text-card-foreground backdrop-blur-md shadow-[0_6px_24px_-8px_rgba(20,28,46,0.14)]",
+        "rounded-3xl border border-[#E5E9F0] bg-white text-[#111827] shadow-[0_12px_32px_-16px_rgba(15,23,42,0.08)]",
         className
       )}
     >
@@ -64,19 +64,19 @@ export function Card({ className, children }: { className?: string; children: Re
 }
 
 export function CardHeader({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("flex flex-col gap-1 border-b border-slate-200/90 bg-card/65 rounded-t-xl px-5 py-4", className)}>{children}</div>;
+  return <div className={cn("flex flex-col gap-1 border-b border-[#EEF1F5] bg-[#FAFBFC] rounded-t-3xl px-6 py-4", className)}>{children}</div>;
 }
 
 export function CardTitle({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <h3 className={cn("font-display text-base font-semibold text-primary", className)}>{children}</h3>;
+  return <h3 className={cn("font-display text-base font-semibold text-[#111827]", className)}>{children}</h3>;
 }
 
 export function CardDescription({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <p className={cn("text-xs text-muted-foreground leading-relaxed", className)}>{children}</p>;
+  return <p className={cn("text-xs text-[#64748B] leading-relaxed", className)}>{children}</p>;
 }
 
 export function CardContent({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("px-5 py-4", className)}>{children}</div>;
+  return <div className={cn("px-6 py-5", className)}>{children}</div>;
 }
 
 export function Badge({
@@ -89,17 +89,17 @@ export function Badge({
   children: React.ReactNode;
 }) {
   const styles: Record<string, string> = {
-    neutral: "bg-slate-100 text-slate-800 border-slate-300",
-    teal: "bg-[#D9EEF3] text-[#141C2E] border-[#66A9EC]",
-    verified: "bg-emerald-100 text-emerald-900 border-emerald-300",
-    low: "bg-emerald-100 text-emerald-900 border-emerald-300",
-    moderate: "bg-amber-100 text-amber-900 border-amber-300",
-    high: "bg-orange-100 text-orange-900 border-orange-300",
-    critical: "bg-rose-100 text-rose-900 border-rose-300",
-    insufficient_data: "bg-slate-200 text-slate-800 border-slate-300",
+    neutral: "bg-[#F3F5F8] text-[#334155] border-[#E5E9F0]",
+    teal: "bg-[#EFF6FF] text-[#0066FF] border-[#BFDBFE]",
+    verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    low: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    moderate: "bg-amber-50 text-amber-800 border-amber-200",
+    high: "bg-orange-50 text-orange-800 border-orange-200",
+    critical: "bg-rose-50 text-[#EF233C] border-rose-200",
+    insufficient_data: "bg-slate-100 text-slate-600 border-slate-200",
   };
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium", styles[variant], className)}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", styles[variant], className)}>
       {children}
     </span>
   );
@@ -117,10 +117,10 @@ export function Alert({
   className?: string;
 }) {
   const styles = {
-    info: "border-[#66A9EC] bg-[#D9EEF3] text-[#141C2E]",
-    warning: "border-amber-300 bg-amber-50 text-amber-950",
-    danger: "border-rose-300 bg-rose-50 text-rose-950",
-    success: "border-emerald-300 bg-emerald-50 text-emerald-950",
+    info: "border-[#BFDBFE] bg-[#EFF6FF] text-[#111827]",
+    warning: "border-amber-200 bg-amber-50 text-amber-950",
+    danger: "border-rose-200 bg-rose-50 text-rose-950",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-950",
   };
   const Icon = variant === "danger" || variant === "warning" ? AlertTriangle : variant === "success" ? CheckCircle2 : Info;
   return (
@@ -278,7 +278,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-300 bg-secondary/75 p-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full border border-[#66A9EC]/50 bg-card text-primary">
+      <div className="flex size-12 items-center justify-center rounded-full border border-[#E5E9F0] bg-[#EFF6FF] text-[#0066FF]">
         <Icon className="size-5" aria-hidden="true" />
       </div>
       <div className="flex max-w-md flex-col gap-1">

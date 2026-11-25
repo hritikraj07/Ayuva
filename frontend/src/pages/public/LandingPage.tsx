@@ -282,25 +282,25 @@ export function LandingPage() {
       </Suspense>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-300/80 bg-secondary/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-[#E5E9F0] bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" aria-label="Ayuva home">
             <BrandMark />
           </Link>
-          <nav aria-label="Primary navigation" className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <a href="#vault-experience" className="text-muted-foreground transition-colors hover:text-primary">
+          <nav aria-label="Primary navigation" className="hidden md:flex items-center gap-2 rounded-full border border-[#E5E9F0] bg-[#F8FAFC] p-1 text-xs font-medium">
+            <a href="#vault-experience" className="rounded-full px-3.5 py-1.5 text-[#475569] transition-colors hover:bg-white hover:text-[#111827]">
               Medical Vault
             </a>
-            <a href="#ai-assistant" className="text-muted-foreground transition-colors hover:text-primary">
+            <a href="#ai-assistant" className="rounded-full px-3.5 py-1.5 text-[#475569] transition-colors hover:bg-white hover:text-[#111827]">
               Gemini AI
             </a>
-            <a href="#outbreak-globe" className="text-muted-foreground transition-colors hover:text-primary">
+            <a href="#outbreak-globe" className="rounded-full px-3.5 py-1.5 text-[#475569] transition-colors hover:bg-white hover:text-[#111827]">
               Outbreak Globe
             </a>
-            <a href="#simulation" className="text-muted-foreground transition-colors hover:text-primary">
+            <a href="#simulation" className="rounded-full px-3.5 py-1.5 text-[#475569] transition-colors hover:bg-white hover:text-[#111827]">
               SEIR Simulator
             </a>
-            <a href="#security" className="text-muted-foreground transition-colors hover:text-primary">
+            <a href="#security" className="rounded-full px-3.5 py-1.5 text-[#475569] transition-colors hover:bg-white hover:text-[#111827]">
               Security
             </a>
           </nav>
@@ -308,7 +308,7 @@ export function LandingPage() {
             {user ? (
               <Link
                 to={dashboardHref}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#0066FF] px-5 text-xs font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC]"
               >
                 <span>Open Workspace</span>
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -317,15 +317,15 @@ export function LandingPage() {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex min-h-[44px] items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-primary hover:bg-card"
+                  className="inline-flex min-h-[42px] items-center rounded-full border border-[#E5E9F0] bg-white px-4 text-xs font-semibold text-[#111827] hover:border-[#0066FF]/40 hover:text-[#0066FF]"
                 >
                   Sign In / Demo
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex min-h-[44px] items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                  className="inline-flex min-h-[42px] items-center rounded-full bg-[#0066FF] px-5 text-xs font-semibold text-white shadow-[0_10px_22px_-10px_rgba(0,102,255,0.6)] hover:bg-[#0052CC]"
                 >
-                  Explore the Platform
+                  Explore Platform
                 </Link>
               </>
             )}
@@ -336,7 +336,7 @@ export function LandingPage() {
       {/* Interactive Scroll Chapter Slider Pill Rail (Desktop) */}
       <aside
         aria-label="3D section navigation"
-        className="fixed top-1/2 right-4 z-30 hidden -translate-y-1/2 flex-col gap-1.5 rounded-2xl border border-slate-300/80 bg-white/80 p-2 shadow-md backdrop-blur-md xl:flex"
+        className="fixed top-1/2 right-4 z-30 hidden -translate-y-1/2 flex-col gap-1.5 rounded-3xl border border-[#E5E9F0] bg-white/92 p-2 shadow-[0_14px_34px_-16px_rgba(15,23,42,0.12)] backdrop-blur-xl xl:flex"
       >
         {CHAPTERS.map((ch) => {
           const active = activeChapter === ch.id;
@@ -346,10 +346,10 @@ export function LandingPage() {
               type="button"
               onClick={() => scrollToSection(ch.id)}
               title={ch.label}
-              className={`flex min-h-[36px] items-center gap-2 rounded-lg px-2.5 text-left text-[11px] font-medium transition-all ${
+              className={`flex min-h-[36px] items-center gap-2 rounded-full px-3 text-left text-[11px] font-medium transition-all ${
                 active
-                  ? "bg-primary font-semibold text-primary-foreground shadow-xs"
-                  : "text-muted-foreground hover:bg-card hover:text-primary"
+                  ? "bg-[#0066FF] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(0,102,255,0.65)]"
+                  : "text-[#64748B] hover:bg-[#F3F5F8] hover:text-[#111827]"
               }`}
             >
               <span className="font-mono">{ch.short}</span>
@@ -360,28 +360,28 @@ export function LandingPage() {
       </aside>
 
       {/* Floating Bottom-Left Active 3D Parallax Telemetry Pill (No Box Around Models) */}
-      <div className="pointer-events-none fixed bottom-4 left-4 z-30 hidden items-center gap-2 rounded-full border border-slate-300/80 bg-white/80 px-3.5 py-1.5 text-[11px] shadow-sm backdrop-blur-md lg:inline-flex">
-        <span className="size-2 rounded-full bg-[#0284C7]" aria-hidden="true" />
-        <span className="font-mono font-semibold text-[#0284C7]">{activeChapterInfo.short} / 06</span>
-        <span className="font-medium text-primary">{activeChapterInfo.modelTitle}</span>
+      <div className="pointer-events-none fixed bottom-4 left-4 z-30 hidden items-center gap-2 rounded-full border border-[#E5E9F0] bg-white/90 px-4 py-2 text-[11px] shadow-sm backdrop-blur-xl lg:inline-flex">
+        <span className="size-2 rounded-full bg-[#0066FF]" aria-hidden="true" />
+        <span className="font-mono font-semibold text-[#0066FF]">{activeChapterInfo.short} / 06</span>
+        <span className="font-medium text-[#111827]">{activeChapterInfo.modelTitle}</span>
       </div>
 
       <main className="relative z-10">
         {/* SECTION 1: HERO WITH BORDERLESS 3D HALF-BODY RESPIRATORY PARALLAX */}
-        <section id="hero-section" ref={heroSectionRef} className="border-b border-slate-300/70">
+        <section id="hero-section" ref={heroSectionRef} className="border-b border-[#E5E9F0]">
           <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8 lg:py-20">
             <div className="flex flex-col gap-5 lg:col-span-6">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#66A9EC] bg-card px-3.5 py-1.5 text-xs font-semibold text-primary">
-                <Sparkles className="size-3.5 text-[#0284C7]" aria-hidden="true" />
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#E5E9F0] bg-white px-4 py-1.5 text-xs font-semibold text-[#111827] shadow-xs">
+                <Sparkles className="size-3.5 text-[#0066FF]" aria-hidden="true" />
                 <span>Personal Medical Intelligence &amp; Outbreak Surveillance</span>
               </div>
 
-              <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl lg:leading-[1.08]">
-                <span className="block text-primary">Smarter Health.</span>
+              <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl lg:leading-[1.06]">
+                <span className="block text-[#111827]">Smarter Health.</span>
                 <span className="neo-text-gradient block">A Safer Tomorrow.</span>
               </h1>
 
-              <p className="max-w-xl text-base leading-relaxed text-slate-700 sm:text-lg">
+              <p className="max-w-xl text-base leading-relaxed text-[#475569] sm:text-lg">
                 An intelligent healthcare ecosystem connecting personal medical intelligence with predictive public
                 health.
               </p>
@@ -389,42 +389,42 @@ export function LandingPage() {
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Link
                   to={dashboardHref}
-                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.01] hover:bg-primary/90"
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#0066FF] px-6 text-sm font-semibold text-white shadow-[0_14px_28px_-12px_rgba(0,102,255,0.65)] transition-transform hover:scale-[1.01] hover:bg-[#0052CC]"
                 >
                   <span>Explore the Platform</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
                 <a
                   href="#vault-experience"
-                  className="inline-flex min-h-[48px] items-center gap-2 rounded-lg border border-slate-300 bg-white/95 px-6 text-sm font-semibold text-primary hover:bg-card"
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-[#E5E9F0] bg-white px-6 text-sm font-semibold text-[#111827] shadow-xs hover:border-[#0066FF]/40 hover:text-[#0066FF]"
                 >
                   <span>Discover Our Technology</span>
                 </a>
               </div>
 
               <div className="grid gap-3 pt-3 sm:grid-cols-3">
-                <div className="neo-glass parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 01 // VAULT</div>
-                  <div className="mt-1 text-xs font-semibold text-primary">pypdf + RapidOCR Pipeline</div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">Human-verified extraction</div>
+                <div className="neo-glass parallax-float rounded-2xl p-4">
+                  <div className="font-mono text-[11px] font-semibold text-[#0066FF]">MODULE 01 // VAULT</div>
+                  <div className="mt-1 text-xs font-semibold text-[#111827]">pypdf + RapidOCR Pipeline</div>
+                  <div className="mt-0.5 text-[11px] text-[#64748B]">Human-verified extraction</div>
                 </div>
-                <div className="neo-glass parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 02 // CLINICAL AI</div>
-                  <div className="mt-1 text-xs font-semibold text-primary">Gemini + OpenFDA Labels</div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">Scoped consent retrieval</div>
+                <div className="neo-glass parallax-float rounded-2xl p-4">
+                  <div className="font-mono text-[11px] font-semibold text-[#0066FF]">MODULE 02 // CLINICAL AI</div>
+                  <div className="mt-1 text-xs font-semibold text-[#111827]">Gemini + OpenFDA Labels</div>
+                  <div className="mt-0.5 text-[11px] text-[#64748B]">Scoped consent retrieval</div>
                 </div>
-                <div className="neo-glass parallax-float rounded-xl p-3.5">
-                  <div className="font-mono text-[11px] font-semibold text-[#0284C7]">MODULE 03 // SURVEILLANCE</div>
-                  <div className="mt-1 text-xs font-semibold text-primary">NCDC/IDSP + Open-Meteo</div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">RandomForest &amp; SEIR engine</div>
+                <div className="neo-glass parallax-float rounded-2xl p-4">
+                  <div className="font-mono text-[11px] font-semibold text-[#0066FF]">MODULE 03 // SURVEILLANCE</div>
+                  <div className="mt-1 text-xs font-semibold text-[#111827]">NCDC/IDSP + Open-Meteo</div>
+                  <div className="mt-0.5 text-[11px] text-[#64748B]">RandomForest &amp; SEIR engine</div>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col justify-end lg:col-span-6 lg:min-h-[460px]">
-              <div className="neo-glass flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-3 text-xs">
-                <span className="flex items-center gap-2 font-medium text-primary">
-                  <Activity className="size-4 text-[#0284C7]" aria-hidden="true" />
+              <div className="neo-glass flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3 text-xs">
+                <span className="flex items-center gap-2 font-medium text-[#111827]">
+                  <Activity className="size-4 text-[#0066FF]" aria-hidden="true" />
                   New accounts start empty until you upload real records or sync IDSP data.
                 </span>
                 <Badge variant="teal">Zero Mock Records</Badge>
@@ -434,15 +434,15 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 2: THE PERSONAL HEALTH INTELLIGENCE EXPERIENCE */}
-        <section id="vault-experience" ref={vaultSectionRef} className="border-b border-slate-300/70 py-20">
+        <section id="vault-experience" ref={vaultSectionRef} className="border-b border-[#E5E9F0] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
               <div className="hidden lg:block lg:col-span-5 lg:min-h-[340px]" aria-hidden="true" />
               <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
-                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0066FF]">
                   02 // Personal Health Intelligence
                 </div>
-                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                <h2 className="font-display text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
                   A structured digital medical vault built for clarity before every consultation.
                 </h2>
                 <p className="text-base leading-relaxed text-slate-700">
@@ -452,14 +452,14 @@ export function LandingPage() {
                 <div className="flex flex-wrap gap-3 pt-1">
                   <Link
                     to="/patient/vault"
-                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#0066FF] px-5 text-xs font-semibold text-white hover:bg-[#0052CC]"
                   >
                     <span>Open Medical Vault</span>
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                   <Link
                     to="/login"
-                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-xs font-semibold text-primary hover:bg-card"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-xs font-semibold text-[#111827] hover:bg-card"
                   >
                     <span>Try Demo Patient</span>
                   </Link>
@@ -504,17 +504,17 @@ export function LandingPage() {
                 return (
                   <div
                     key={item.title}
-                    className={`reveal-panel neo-glass rounded-2xl p-6 transition-all hover:border-[#66A9EC] ${
+                    className={`reveal-panel neo-glass rounded-2xl p-6 transition-all hover:border-[#0066FF]/40 ${
                       idx === 4 ? "md:col-span-2 lg:col-span-1" : ""
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[11px] font-semibold text-[#0284C7]">{item.tag}</span>
-                      <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
+                      <span className="font-mono text-[11px] font-semibold text-[#0066FF]">{item.tag}</span>
+                      <div className="flex size-10 items-center justify-center rounded-lg border border-[#E5E9F0] bg-[#EFF6FF] text-[#0066FF]">
                         <Icon className="size-5" aria-hidden="true" />
                       </div>
                     </div>
-                    <h3 className="mt-4 font-display text-lg font-semibold text-primary">{item.title}</h3>
+                    <h3 className="mt-4 font-display text-lg font-semibold text-[#111827]">{item.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.desc}</p>
                   </div>
                 );
@@ -522,15 +522,15 @@ export function LandingPage() {
 
               <div className="reveal-panel neo-glass-violet flex flex-col justify-between rounded-2xl p-6">
                 <div>
-                  <span className="font-mono text-[11px] font-semibold text-[#0284C7]">CLEAN ONBOARDING</span>
-                  <h3 className="mt-3 font-display text-lg font-semibold text-primary">Start Your Health Vault</h3>
+                  <span className="font-mono text-[11px] font-semibold text-[#0066FF]">CLEAN ONBOARDING</span>
+                  <h3 className="mt-3 font-display text-lg font-semibold text-[#111827]">Start Your Health Vault</h3>
                   <p className="mt-2 text-sm text-slate-700">
                     Register a new account or sign in as Demo Patient to upload and verify your first document.
                   </p>
                 </div>
                 <Link
                   to="/patient/vault"
-                  className="mt-5 inline-flex min-h-[44px] w-fit items-center gap-2 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                  className="mt-5 inline-flex min-h-[44px] w-fit items-center gap-2 rounded-lg bg-[#0066FF] px-4 text-xs font-semibold text-white hover:bg-[#0052CC]"
                 >
                   <span>Launch Medical Vault</span>
                   <ArrowRight className="size-4" aria-hidden="true" />
@@ -541,14 +541,14 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 3: PERSONALIZED AI HEALTH ASSISTANT + PHARMACOLOGY 3D MODEL */}
-        <section id="ai-assistant" ref={aiSectionRef} className="border-b border-slate-300/70 py-20">
+        <section id="ai-assistant" ref={aiSectionRef} className="border-b border-[#E5E9F0] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
               <div className="reveal-panel flex flex-col gap-5 lg:col-span-6">
-                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0066FF]">
                   03 // Personalized AI &amp; Pharmacology
                 </div>
-                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                <h2 className="font-display text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
                   Gemini-powered clarity grounded strictly in your consented records.
                 </h2>
                 <p className="text-base leading-relaxed text-slate-700">
@@ -558,7 +558,7 @@ export function LandingPage() {
                 </p>
                 <Link
                   to="/patient/assistant"
-                  className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                  className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-[#111827]-foreground hover:bg-primary/90"
                 >
                   <Bot className="size-4" aria-hidden="true" />
                   <span>Open AI Health Assistant</span>
@@ -594,10 +594,10 @@ export function LandingPage() {
                 const Icon = card.icon;
                 return (
                   <div key={card.title} className="reveal-panel neo-glass rounded-2xl p-5">
-                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
+                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#E5E9F0] bg-[#EFF6FF] text-[#0066FF]">
                       <Icon className="size-5" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-3.5 font-display text-base font-semibold text-primary">{card.title}</h3>
+                    <h3 className="mt-3.5 font-display text-base font-semibold text-[#111827]">{card.title}</h3>
                     <p className="mt-1.5 text-xs leading-relaxed text-slate-700">{card.desc}</p>
                   </div>
                 );
@@ -607,15 +607,15 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 4: DISEASE OUTBREAK INTELLIGENCE + SCROLL-LINKED 3D GLOBE */}
-        <section id="outbreak-globe" ref={globeSectionRef} className="border-b border-slate-300/70 py-20">
+        <section id="outbreak-globe" ref={globeSectionRef} className="border-b border-[#E5E9F0] py-20">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center lg:px-8">
             <div className="hidden lg:block lg:col-span-7 lg:min-h-[380px]" aria-hidden="true" />
 
             <div className="reveal-panel flex flex-col gap-5 lg:col-span-5">
-              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0066FF]">
                 04 // Disease Outbreak Intelligence
               </div>
-              <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+              <h2 className="font-display text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
                 Interactive planetary surveillance backed by verified bulletins.
               </h2>
               <p className="text-base leading-relaxed text-slate-700">
@@ -625,7 +625,7 @@ export function LandingPage() {
               </p>
 
               <div className="neo-glass rounded-xl p-4 text-xs text-slate-700">
-                <div className="font-semibold text-primary">Zero-Fabrication Surveillance Guarantee</div>
+                <div className="font-semibold text-[#111827]">Zero-Fabrication Surveillance Guarantee</div>
                 <p className="mt-1 leading-relaxed text-muted-foreground">
                   No synthetic outbreak markers are shown on this public overview. Sign in as Demo Admin or Public
                   Health Officer to trigger live NCDC/IDSP synchronization and populate verified district markers.
@@ -634,7 +634,7 @@ export function LandingPage() {
 
               <Link
                 to="/admin/overview"
-                className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                className="inline-flex min-h-[48px] w-fit items-center gap-2 rounded-lg bg-[#0066FF] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#0052CC]"
               >
                 <Globe2 className="size-4" aria-hidden="true" />
                 <span>Explore Analytics</span>
@@ -644,18 +644,18 @@ export function LandingPage() {
         </section>
 
         {/* SECTION 5: INTERVENTION SIMULATION */}
-        <section id="simulation" ref={simSectionRef} className="border-b border-slate-300/70 py-20">
+        <section id="simulation" ref={simSectionRef} className="border-b border-[#E5E9F0] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="reveal-panel max-w-3xl">
-              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+              <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0066FF]">
                 05 // SEIR Scientific Simulation
               </div>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
                 Model hospital capacity and surge interventions deterministically.
               </h2>
               <p className="mt-3 text-base leading-relaxed text-slate-700">
                 Every curve below is solved live in-browser from the deterministic SEIR equations (
-                <code className="font-mono text-xs text-[#0284C7]">dS/dt, dE/dt, dI/dt, dR/dt</code>) using your slider
+                <code className="font-mono text-xs text-[#0066FF]">dS/dt, dE/dt, dI/dt, dR/dt</code>) using your slider
                 inputs. Inside the Admin Simulator, scenarios run directly against geocoded district populations.
               </p>
             </div>
@@ -663,7 +663,7 @@ export function LandingPage() {
             <div className="mt-10 grid gap-6 lg:grid-cols-12">
               <div className="reveal-panel neo-glass flex flex-col gap-4 rounded-2xl p-6 text-xs lg:col-span-5">
                 <div className="flex items-center justify-between border-b border-slate-300 pb-3">
-                  <span className="font-display text-sm font-semibold text-primary">Live SEIR Parameters</span>
+                  <span className="font-display text-sm font-semibold text-[#111827]">Live SEIR Parameters</span>
                   <Badge variant="teal">Deterministic ODE</Badge>
                 </div>
 
@@ -677,10 +677,10 @@ export function LandingPage() {
                 ].map((ctrl) => (
                   <div key={ctrl.id} className="flex flex-col gap-1">
                     <div className="flex justify-between">
-                      <label htmlFor={ctrl.id} className="font-medium text-primary">
+                      <label htmlFor={ctrl.id} className="font-medium text-[#111827]">
                         {ctrl.label}
                       </label>
-                      <span className="font-mono font-semibold text-[#0284C7]">
+                      <span className="font-mono font-semibold text-[#0066FF]">
                         {ctrl.value}
                         {ctrl.unit}
                       </span>
@@ -692,14 +692,14 @@ export function LandingPage() {
                       max={ctrl.max}
                       value={ctrl.value}
                       onChange={(e) => ctrl.set(Number(e.target.value))}
-                      className="accent-[#323A4D]"
+                      className="accent-[#0066FF]"
                     />
                   </div>
                 ))}
 
                 <Link
                   to="/admin/simulator"
-                  className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary/90"
+                  className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-primary px-4 font-semibold text-[#111827]-foreground hover:bg-primary/90"
                 >
                   <Sliders className="size-4" aria-hidden="true" />
                   <span>Open Full District SEIR Workspace</span>
@@ -709,7 +709,7 @@ export function LandingPage() {
               <div className="reveal-panel neo-glass rounded-2xl p-6 lg:col-span-7">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="font-display text-base font-semibold text-primary">
+                    <h3 className="font-display text-base font-semibold text-[#111827]">
                       30-Day Baseline vs. Intervention Incidence
                     </h3>
                     <p className="text-xs text-muted-foreground">
@@ -727,10 +727,10 @@ export function LandingPage() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#F9FAFB",
-                          borderColor: "#66A9EC",
-                          borderRadius: "8px",
+                          borderColor: "#E5E9F0",
+                          borderRadius: "14px",
                           fontSize: "12px",
-                          color: "#141C2E",
+                          color: "#111827",
                         }}
                       />
                       <Legend />
@@ -763,10 +763,10 @@ export function LandingPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
               <div className="reveal-panel flex flex-col gap-4 lg:col-span-7">
-                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0284C7]">
+                <div className="font-mono text-xs font-semibold uppercase tracking-widest text-[#0066FF]">
                   06 // Cryptographic Security &amp; Access Governance
                 </div>
-                <h2 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                <h2 className="font-display text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
                   Strict role isolation and transparent access governance.
                 </h2>
                 <p className="text-base text-slate-700">
@@ -813,10 +813,10 @@ export function LandingPage() {
                 const Icon = sec.icon;
                 return (
                   <div key={sec.title} className="reveal-panel neo-glass rounded-2xl p-6">
-                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#66A9EC]/60 bg-card text-primary">
+                    <div className="flex size-10 items-center justify-center rounded-lg border border-[#E5E9F0] bg-[#EFF6FF] text-[#0066FF]">
                       <Icon className="size-5" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-4 font-display text-base font-semibold text-primary">{sec.title}</h3>
+                    <h3 className="mt-4 font-display text-base font-semibold text-[#111827]">{sec.title}</h3>
                     <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{sec.desc}</p>
                   </div>
                 );
@@ -833,19 +833,19 @@ export function LandingPage() {
             <span>Educational healthcare &amp; public-health surveillance platform. Not a diagnostic medical device.</span>
           </div>
           <div className="flex flex-wrap gap-4">
-            <a href="#vault-experience" className="hover:text-primary">
+            <a href="#vault-experience" className="hover:text-[#111827]">
               Vault
             </a>
-            <a href="#ai-assistant" className="hover:text-primary">
+            <a href="#ai-assistant" className="hover:text-[#111827]">
               Assistant
             </a>
-            <a href="#outbreak-globe" className="hover:text-primary">
+            <a href="#outbreak-globe" className="hover:text-[#111827]">
               Outbreak Globe
             </a>
-            <Link to="/login" className="hover:text-primary">
+            <Link to="/login" className="hover:text-[#111827]">
               Sign In
             </Link>
-            <Link to="/register" className="hover:text-primary">
+            <Link to="/register" className="hover:text-[#111827]">
               Register
             </Link>
           </div>

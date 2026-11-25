@@ -131,7 +131,7 @@ export function DoctorSummaryPage() {
       </div>
 
       {/* Section B: Automated Consultation Brief clearly demarcated */}
-      <Card className="border-[#66A9EC]">
+      <Card className="border-[#BFDBFE]">
         <CardHeader className="bg-card">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>

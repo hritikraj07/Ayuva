@@ -339,7 +339,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
             <Card>
               <CardContent className="pt-5">
                 <div className="text-xs font-medium text-muted-foreground">Monitored Districts</div>
-                <div className="mt-1 font-mono text-2xl font-bold text-secondary">{summary.monitored_regions}</div>
+                <div className="mt-1 font-mono text-2xl font-bold text-[#0066FF]">{summary.monitored_regions}</div>
                 <div className="mt-1 text-[11px] text-muted-foreground">
                   Rated: {summary.rated_regions} | Insufficient Data: {summary.insufficient_data_regions}
                 </div>
@@ -396,7 +396,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                             href={rep.source_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-secondary hover:underline"
+                            className="text-[#0066FF] hover:underline"
                           >
                             {rep.source_document_id}
                           </a>
@@ -651,7 +651,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <BarChart3 className="size-4 text-secondary" aria-hidden="true" />
+                <BarChart3 className="size-4 text-[#0066FF]" aria-hidden="true" />
                 Observed Weekly Cases ({selectedDisease})
               </CardTitle>
               <CardDescription>Source: Official NCDC/IDSP Weekly Outbreak PDFs</CardDescription>
@@ -679,7 +679,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <CloudRain className="size-4 text-secondary" aria-hidden="true" />
+                <CloudRain className="size-4 text-[#0066FF]" aria-hidden="true" />
                 Environmental Covariates (Open-Meteo)
               </CardTitle>
               <CardDescription>Stored separately from disease counts; labels historical vs forecast</CardDescription>
@@ -724,7 +724,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
           <Card className="lg:col-span-5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Sliders className="size-4 text-secondary" aria-hidden="true" />
+                <Sliders className="size-4 text-[#0066FF]" aria-hidden="true" />
                 Input-Driven SEIR Intervention Simulator
               </CardTitle>
               <CardDescription>
@@ -948,7 +948,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
                   <Card>
                     <CardContent className="pt-4">
                       <div className="text-[11px] text-muted-foreground">Overload Days</div>
-                      <div className="mt-1 font-mono text-xl font-bold text-secondary">
+                      <div className="mt-1 font-mono text-xl font-bold text-[#0066FF]">
                         {simResults.summary_metrics.intervention_overload_days} days
                       </div>
                       <div className="text-[11px] text-muted-foreground">
@@ -1053,7 +1053,7 @@ export function AdminOutbreakView({ section }: { section: AdminSection }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Bell className="size-4 text-secondary" aria-hidden="true" />
+              <Bell className="size-4 text-[#0066FF]" aria-hidden="true" />
               Official Surveillance Alerts
             </CardTitle>
             <CardDescription>Generated strictly from verified IDSP high-caseload or fatal outbreak reports</CardDescription>

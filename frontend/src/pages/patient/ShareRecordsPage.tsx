@@ -135,7 +135,7 @@ export function ShareRecordsPage() {
         <Card className="lg:col-span-5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <QrCode className="size-4 text-secondary" aria-hidden="true" />
+              <QrCode className="size-4 text-[#0066FF]" aria-hidden="true" />
               Create Scoped Share Link &amp; QR
             </CardTitle>
             <CardDescription>Default expiration is 30 minutes for in-clinic consultations.</CardDescription>
@@ -281,7 +281,7 @@ export function ShareRecordsPage() {
                       </div>
                       <div className="flex flex-wrap gap-3 text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Clock className="size-3.5 text-secondary" aria-hidden="true" />
+                          <Clock className="size-3.5 text-[#0066FF]" aria-hidden="true" />
                           {s.is_active ? formatCountdown(s.remaining_seconds) : `Ended (${formatDateTime(s.expires_at)})`}
                         </span>
                         <span>{s.document_count} document(s)</span>

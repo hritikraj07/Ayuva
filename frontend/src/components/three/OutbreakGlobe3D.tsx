@@ -96,17 +96,17 @@ function GlobeMesh({
 
       <mesh>
         <sphereGeometry args={[radius, 30, 30]} />
-        <meshBasicMaterial color="#66a9ec" wireframe transparent opacity={0.42} />
+        <meshBasicMaterial color="#93c5fd" wireframe transparent opacity={0.42} />
       </mesh>
 
       <mesh>
         <sphereGeometry args={[radius + 0.08, 32, 32]} />
-        <meshBasicMaterial color={simulationActive ? "#4f46e5" : "#0284c7"} transparent opacity={0.08} side={THREE.BackSide} />
+        <meshBasicMaterial color={simulationActive ? "#4f46e5" : "#0066ff"} transparent opacity={0.08} side={THREE.BackSide} />
       </mesh>
 
       <mesh rotation={[Math.PI / 2.3, 0.2, 0]}>
         <torusGeometry args={[radius + 0.32, 0.01, 8, 96]} />
-        <meshBasicMaterial color="#323a4d" transparent opacity={0.45} />
+        <meshBasicMaterial color="#0066ff" transparent opacity={0.35} />
       </mesh>
 
       {arcGeometries.map((geo, idx) => (
@@ -180,7 +180,7 @@ export function OutbreakGlobe3D({
   }
 
   return (
-    <div ref={containerRef} className={`relative w-full overflow-hidden rounded-xl border border-slate-300 bg-gradient-to-br from-white via-[#d9eef3] to-[#b9d3ec] ${heightClass}`}>
+    <div ref={containerRef} className={`relative w-full overflow-hidden rounded-3xl border border-[#E5E9F0] bg-gradient-to-br from-white via-[#F6F8FB] to-[#EEF1F5] ${heightClass}`}>
       <WebGLErrorBoundary
         fallback={
           <div className="flex h-full items-center justify-center p-4 text-xs text-muted-foreground">

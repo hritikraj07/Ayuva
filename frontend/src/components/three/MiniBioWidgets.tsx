@@ -9,9 +9,9 @@ function BioCoreMesh({ pulseBoost = false }: { pulseBoost?: boolean }) {
   const shader = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#66a9ec",
-        rimColor: "#323a4d",
-        opacity: 0.7,
+        baseColor: "#0066ff",
+        rimColor: "#ef233c",
+        opacity: 0.72,
         scanSpeed: 1.8,
       }),
     []
@@ -35,11 +35,11 @@ function BioCoreMesh({ pulseBoost = false }: { pulseBoost?: boolean }) {
       </mesh>
       <mesh rotation={[Math.PI / 3, 0.3, 0]}>
         <torusGeometry args={[1.32, 0.02, 8, 64]} />
-        <meshBasicMaterial color="#0284c7" transparent opacity={0.7} />
+        <meshBasicMaterial color="#0066ff" transparent opacity={0.75} />
       </mesh>
       <mesh rotation={[-Math.PI / 3, -0.4, 0]}>
         <torusGeometry args={[1.52, 0.015, 8, 64]} />
-        <meshBasicMaterial color="#323a4d" transparent opacity={0.55} />
+        <meshBasicMaterial color="#94a3b8" transparent opacity={0.65} />
       </mesh>
     </group>
   );
@@ -54,16 +54,16 @@ export function PatientBioCore3D({ className = "h-40 w-40" }: { className?: stri
     return (
       <div
         aria-hidden="true"
-        className={`flex items-center justify-center rounded-full border border-[#66A9EC]/50 bg-white/80 ${className}`}
+        className={`flex items-center justify-center rounded-full border border-[#E5E9F0] bg-white ${className}`}
       >
-        <div className="size-12 rounded-full border border-[#0284C7] bg-[#D9EEF3]" />
+        <div className="size-12 rounded-full border border-[#0066FF] bg-[#EFF6FF]" />
       </div>
     );
   }
 
   return (
     <div ref={ref} aria-hidden="true" className={className}>
-      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#66A9EC] bg-[#D9EEF3]" />}>
+      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#E5E9F0] bg-[#EFF6FF]" />}>
         <Canvas
           dpr={caps.dpr}
           frameloop={visible ? "always" : "demand"}
@@ -84,8 +84,8 @@ function OrbMesh({ thinking }: { thinking: boolean }) {
   const mat = useMemo(
     () =>
       createHologramShaderMaterial({
-        baseColor: "#66a9ec",
-        rimColor: "#141c2e",
+        baseColor: "#0066ff",
+        rimColor: "#111827",
         opacity: thinking ? 0.88 : 0.68,
         scanSpeed: thinking ? 4.2 : 1.8,
       }),
@@ -113,11 +113,11 @@ function OrbMesh({ thinking }: { thinking: boolean }) {
       </mesh>
       <mesh>
         <icosahedronGeometry args={[1.12, 1]} />
-        <meshBasicMaterial color="#323a4d" wireframe transparent opacity={thinking ? 0.55 : 0.35} />
+        <meshBasicMaterial color="#111827" wireframe transparent opacity={thinking ? 0.45 : 0.25} />
       </mesh>
       <mesh rotation={[Math.PI / 2.6, 0.3, 0]}>
         <torusGeometry args={[1.45, 0.018, 8, 64]} />
-        <meshBasicMaterial color="#0284c7" transparent opacity={0.7} />
+        <meshBasicMaterial color="#0066ff" transparent opacity={0.75} />
       </mesh>
     </group>
   );
@@ -138,16 +138,16 @@ export function IntelligenceOrb3D({
     return (
       <div
         aria-hidden="true"
-        className={`flex items-center justify-center rounded-full border border-[#66A9EC] bg-white/80 ${className}`}
+        className={`flex items-center justify-center rounded-full border border-[#E5E9F0] bg-white ${className}`}
       >
-        <div className="size-10 rounded-full border border-[#323A4D] bg-[#D9EEF3]" />
+        <div className="size-10 rounded-full border border-[#0066FF] bg-[#EFF6FF]" />
       </div>
     );
   }
 
   return (
     <div ref={ref} aria-hidden="true" className={className}>
-      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#66A9EC] bg-[#D9EEF3]" />}>
+      <WebGLErrorBoundary fallback={<div className="h-full w-full rounded-full border border-[#E5E9F0] bg-[#EFF6FF]" />}>
         <Canvas
           dpr={caps.dpr}
           frameloop={visible ? "always" : "demand"}

@@ -295,7 +295,7 @@ export function HealthAssistantPage() {
     <div className="mx-auto flex max-w-7xl flex-col gap-5">
       <div className="neo-glass-violet flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3.5">
-          <Suspense fallback={<div className="h-16 w-16 shrink-0 rounded-full border border-[#66A9EC] bg-card" />}>
+          <Suspense fallback={<div className="h-16 w-16 shrink-0 rounded-full border border-[#E5E9F0] bg-[#EFF6FF]" />}>
             <IntelligenceOrb3D thinking={sending} className="h-16 w-16 shrink-0" />
           </Suspense>
           <div>
@@ -384,7 +384,7 @@ export function HealthAssistantPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Pill className="size-4 text-secondary" aria-hidden="true" />
+                <Pill className="size-4 text-[#0066FF]" aria-hidden="true" />
                 OpenFDA Drug Label Lookup
               </CardTitle>
               <CardDescription>Live lookup from U.S. FDA official drug labeling (api.fda.gov)</CardDescription>
@@ -418,7 +418,7 @@ export function HealthAssistantPage() {
                   {m.brand_names?.length > 0 && (
                     <div className="mt-1 text-[11px] text-muted-foreground">Brands: {m.brand_names.join(", ")}</div>
                   )}
-                  <div className="mt-1 text-[11px] font-medium text-secondary">{m.drug_class}</div>
+                  <div className="mt-1 text-[11px] font-medium text-[#0066FF]">{m.drug_class}</div>
                   <p className="mt-2 leading-relaxed text-foreground">
                     <strong>Indications:</strong> {m.uses}
                   </p>
@@ -432,7 +432,7 @@ export function HealthAssistantPage() {
                     href={m.source_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-[11px] font-medium text-secondary hover:underline"
+                    className="mt-2 inline-flex min-h-[32px] items-center gap-1 text-[11px] font-medium text-[#0066FF] hover:underline"
                   >
                     <span>Source: {medSource}</span>
                     <ExternalLink className="size-3" aria-hidden="true" />
@@ -469,7 +469,7 @@ export function HealthAssistantPage() {
                 disabled={chatStatus ? !chatStatus.ai_consent : false}
                 className="size-4 accent-[#0E7C7B]"
               />
-              <Database className="size-3.5 text-secondary" aria-hidden="true" />
+              <Database className="size-3.5 text-[#0066FF]" aria-hidden="true" />
               <span>Use My Medical Vault Context</span>
             </label>
           </CardHeader>
@@ -484,7 +484,7 @@ export function HealthAssistantPage() {
                 <div className="flex flex-col gap-4 py-4">
                   <div className="rounded-md border border-border bg-muted/20 p-4 text-xs leading-relaxed text-muted-foreground">
                     <div className="flex items-center gap-2 font-semibold text-primary">
-                      <Info className="size-4 text-secondary" aria-hidden="true" />
+                      <Info className="size-4 text-[#0066FF]" aria-hidden="true" />
                       <span>Educational Healthcare Guidance &amp; Privacy</span>
                     </div>
                     <p className="mt-1.5">
@@ -586,7 +586,7 @@ export function HealthAssistantPage() {
 
               {sending && (
                 <div className="mr-auto flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-primary">
-                  <Loader2 className="size-4 animate-spin text-secondary" aria-hidden="true" />
+                  <Loader2 className="size-4 animate-spin text-[#0066FF]" aria-hidden="true" />
                   <span>Generating Gemini healthcare explanation...</span>
                 </div>
               )}
@@ -621,7 +621,7 @@ export function HealthAssistantPage() {
                       />
                     ) : (
                       <div className="flex size-12 items-center justify-center rounded border border-border bg-card">
-                        <FileText className="size-5 text-secondary" aria-hidden="true" />
+                        <FileText className="size-5 text-[#0066FF]" aria-hidden="true" />
                       </div>
                     )}
                     <div className="truncate">
@@ -658,7 +658,7 @@ export function HealthAssistantPage() {
                 </select>
 
                 <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-medium hover:bg-muted">
-                  <Camera className="size-4 text-secondary" aria-hidden="true" />
+                  <Camera className="size-4 text-[#0066FF]" aria-hidden="true" />
                   <span>{attachmentFile ? "Replace File" : "Attach Image / PDF"}</span>
                   <input
                     ref={fileInputRef}

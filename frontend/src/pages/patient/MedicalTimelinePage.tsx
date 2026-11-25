@@ -255,7 +255,7 @@ export function MedicalTimelinePage() {
                         aria-hidden="true"
                       />
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-semibold text-secondary">{formatDate(ev.event_date)}</span>
+                        <span className="font-mono text-xs font-semibold text-[#0066FF]">{formatDate(ev.event_date)}</span>
                         <div className="flex gap-1.5">
                           <Badge variant="neutral">{CATEGORY_LABELS[ev.event_type] || ev.event_type.replace(/_/g, " ")}</Badge>
                           {ev.is_major_procedure && <Badge variant="high">Major Procedure</Badge>}
@@ -363,7 +363,7 @@ export function MedicalTimelinePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  <Pill className="size-4 text-secondary" aria-hidden="true" />
+                  <Pill className="size-4 text-[#0066FF]" aria-hidden="true" />
                   Medications Regimen Status ({data.medications.length})
                 </CardTitle>
                 <CardDescription>Mark completed prescriptions as Past so they do not appear as active drugs in Doctor Summary.</CardDescription>

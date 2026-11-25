@@ -143,10 +143,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label={item.label}
                 className={({ isActive }) =>
                   cn(
-                    "flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150",
+                    "flex min-h-[44px] items-center gap-3 rounded-full px-3.5 py-2 text-sm transition-all duration-150",
                     isActive
-                      ? "bg-primary font-semibold text-primary-foreground shadow-sm"
-                      : "text-foreground/85 hover:bg-card hover:text-primary",
+                      ? "bg-[#0066FF] font-semibold text-white shadow-[0_8px_18px_-8px_rgba(0,102,255,0.65)]"
+                      : "text-[#475569] hover:bg-[#F3F5F8] hover:text-[#111827]",
                     isCompact && "justify-center px-0"
                   )
                 }
@@ -162,23 +162,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-dvh bg-background text-foreground">
+    <div className="flex min-h-dvh bg-[#EEF1F5] text-[#111827]">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col border-r border-slate-300/80 bg-secondary/90 backdrop-blur-xl transition-all duration-150 shrink-0",
+          "hidden lg:flex flex-col border-r border-[#E5E9F0] bg-white transition-all duration-150 shrink-0",
           collapsed ? "w-[74px]" : "w-[268px]"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+        <div className="flex h-16 items-center justify-between border-b border-[#E5E9F0] px-4">
           {!collapsed ? (
             <Link to="/" aria-label="Ayuva Home">
               <BrandMark />
             </Link>
           ) : (
             <Link to="/" aria-label="Ayuva Home" className="mx-auto">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary font-display text-sm font-bold text-primary-foreground">
-                AY
+              <span className="flex size-9 items-center justify-center rounded-full border border-[#E5E9F0] bg-white font-display text-sm font-extrabold text-[#111827]">
+                A<sup className="text-[10px] text-[#0066FF]">+</sup>
               </span>
             </Link>
           )}
@@ -270,7 +270,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-300/80 bg-secondary/85 px-4 backdrop-blur-xl lg:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E5E9F0] bg-white/92 px-4 backdrop-blur-xl lg:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"

@@ -129,7 +129,7 @@ export function DoctorRecordsPage() {
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Stethoscope className="size-4 text-secondary" aria-hidden="true" />
+              <Stethoscope className="size-4 text-[#0066FF]" aria-hidden="true" />
               Assigned Patient Shares ({assigned.length})
             </CardTitle>
             <CardDescription>Expired or revoked sessions cannot be opened.</CardDescription>
@@ -180,7 +180,7 @@ export function DoctorRecordsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <KeyRound className="size-4 text-secondary" aria-hidden="true" />
+                  <KeyRound className="size-4 text-[#0066FF]" aria-hidden="true" />
                   PIN Required for "{viewerData?.title}"
                 </CardTitle>
               </CardHeader>
@@ -215,13 +215,13 @@ export function DoctorRecordsPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <CardTitle className="flex items-center gap-2 text-base">
-                          <ShieldCheck className="size-4 text-secondary" aria-hidden="true" />
+                          <ShieldCheck className="size-4 text-[#0066FF]" aria-hidden="true" />
                           Consultation Summary: {viewerData.patient_name}
                         </CardTitle>
                         <CardDescription>{viewerData.summary.scope_note}</CardDescription>
                       </div>
                       <div className="flex items-center gap-1.5 font-mono text-xs text-primary">
-                        <Clock className="size-3.5 text-secondary" aria-hidden="true" />
+                        <Clock className="size-3.5 text-[#0066FF]" aria-hidden="true" />
                         <span>{formatCountdown(viewerData.status.remaining_seconds)}</span>
                       </div>
                     </div>
@@ -305,7 +305,7 @@ export function DoctorRecordsPage() {
                           href={docFileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 font-medium text-secondary hover:underline"
+                          className="inline-flex items-center gap-1 font-medium text-[#0066FF] hover:underline"
                         >
                           <Eye className="size-3.5" aria-hidden="true" />
                           <span>Open original file</span>

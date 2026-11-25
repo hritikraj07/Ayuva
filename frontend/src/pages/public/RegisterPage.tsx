@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, FieldLabel, Input, Select } from "@/components/ui/primitives";
+import { LoginClinicalSvgBackground } from "@/pages/public/LoginPage";
 import { useAuth } from "@/context/AuthContext";
 
 export function RegisterPage() {
@@ -47,23 +48,27 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <header className="border-b border-border bg-card">
+    <div className="relative flex min-h-dvh flex-col bg-[#EEF1F5] text-[#111827]">
+      <LoginClinicalSvgBackground />
+      <header className="relative z-10 border-b border-[#E5E9F0] bg-white/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <Link to="/" aria-label="Ayuva home">
             <BrandMark />
           </Link>
-          <Link to="/login" className="text-sm font-medium text-secondary hover:underline">
+          <Link
+            to="/login"
+            className="inline-flex min-h-[40px] items-center rounded-full border border-[#E5E9F0] bg-white px-4 text-xs font-semibold text-[#111827] hover:border-[#0066FF]/40 hover:text-[#0066FF]"
+          >
             Already registered? Sign in
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-10">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-xl">Create Ayuva Account</CardTitle>
-            <CardDescription>Select your role to initialize role-isolated permissions.</CardDescription>
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-10">
+        <Card className="w-full rounded-3xl border-[#E5E9F0] bg-white/95 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+          <CardHeader className="rounded-t-3xl border-[#EEF1F5] bg-white px-7 pt-7 pb-5">
+            <CardTitle className="text-2xl font-semibold tracking-tight text-[#111827]">Create Ayuva Account</CardTitle>
+            <CardDescription className="text-xs text-[#64748B]">Select your role to initialize role-isolated permissions.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
