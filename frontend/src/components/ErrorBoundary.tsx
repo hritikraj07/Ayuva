@@ -14,7 +14,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   }
 
   componentDidCatch(error: Error) {
-    console.error("MedLedger UI ErrorBoundary:", error);
+    console.error("Ayuva UI ErrorBoundary:", error);
   }
 
   render() {

@@ -172,13 +172,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
           {!collapsed ? (
-            <Link to="/" aria-label="MedLedger Home">
+            <Link to="/" aria-label="Ayuva Home">
               <BrandMark />
             </Link>
           ) : (
-            <Link to="/" aria-label="MedLedger Home" className="mx-auto">
+            <Link to="/" aria-label="Ayuva Home" className="mx-auto">
               <span className="flex size-8 items-center justify-center rounded-lg bg-primary font-display text-sm font-bold text-primary-foreground">
-                ML
+                AY
               </span>
             </Link>
           )}

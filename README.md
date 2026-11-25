@@ -1,6 +1,6 @@
-# MedLedger: AI-Powered Healthcare & Disease Intelligence Platform
+# Ayuva: AI-Powered Healthcare & Disease Intelligence Platform
 
-MedLedger unifies three healthcare capabilities inside one role-isolated platform:
+Ayuva unifies three healthcare capabilities inside one role-isolated platform:
 
 1. **AI Medical Document Manager (Personal Health Vault):** DigiLocker-style personal storage for prescriptions, laboratory reports, medical certificates, diagnostic reports, and discharge summaries, powered by `pypdf` + `RapidOCR` + OpenCV image enhancement, human-in-the-loop extraction verification, chronological timeline filtering, One-Minute Doctor Summary PDF generation, and scoped temporary QR/PIN record sharing.
 2. **Personalized AI Healthcare Assistant:** Conversational assistant that uses consented vault records to explain lab reports in plain language, compare historical test trends, search medicine uses/precautions/interactions, inspect medicine strip or skin concern photos with explicit uncertainty notices, and escalate red-flag emergency symptoms immediately.
@@ -47,12 +47,12 @@ TechFusion4.0/
 
 ## Database Setup
 
-MedLedger uses SQLAlchemy 2.x models compatible with both **PostgreSQL** and **SQLite**:
+Ayuva uses SQLAlchemy 2.x models compatible with both **PostgreSQL** and **SQLite**:
 
-- **Zero-setup Hackathon Demo (Default):** Leave `DATABASE_URL` unset. On startup, the backend automatically initializes `./data/medledger.db`, creates all 19 tables, seeds synthetic demo accounts/documents, and trains the outbreak forecasting models.
-- **PostgreSQL Setup:** Create a PostgreSQL database (for example `medledger`), copy `.env.example` to `.env`, and set:
+- **Zero-setup Hackathon Demo (Default):** Leave `DATABASE_URL` unset. On startup, the backend automatically initializes `./data/ayuva.db`, creates all 19 tables, seeds synthetic demo accounts/documents, and trains the outbreak forecasting models.
+- **PostgreSQL Setup:** Create a PostgreSQL database (for example `ayuva`), copy `.env.example` to `.env`, and set:
   ```env
-  DATABASE_URL=postgresql+psycopg2://postgres:yourpassword@localhost:5432/medledger
+  DATABASE_URL=postgresql+psycopg2://postgres:yourpassword@localhost:5432/ayuva
   ```
 
 ---
@@ -63,7 +63,7 @@ Copy `.env.example` to `.env` in the repository root:
 
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Optional | `sqlite:///./data/medledger.db` | PostgreSQL or SQLite connection string |
+| `DATABASE_URL` | Optional | `sqlite:///./data/ayuva.db` | PostgreSQL or SQLite connection string |
 | `SECRET_KEY` | Recommended | Dev fallback key | Random 32+ char JWT signing secret |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Optional | `720` | JWT expiration window |
 | `MAX_UPLOAD_SIZE_MB` | Optional | `10` | Maximum medical document upload size |
@@ -109,9 +109,9 @@ python -m pytest -v backend/tests/test_api_e2e.py
 
 | Role | Email | Password | Capabilities |
 | --- | --- | --- | --- |
-| **Patient** | `patient@medledger.demo` | `Patient@2026` | 5 verified records, HbA1c/glucose lab trends, Penicillin allergy alert, AI assistant, PDF summary, QR sharing |
-| **Doctor** | `doctor@medledger.demo` | `Doctor@2026` | Read-only viewer scoped exclusively to patient share sessions assigned or unlocked by token/PIN |
-| **Public Health Admin** | `admin@medledger.demo` | `Admin@2026` | 10-district surveillance, RandomForest 7-day forecasts, Leaflet risk map, SEIR simulator, alerts (zero private vault access) |
+| **Patient** | `patient@ayuva.demo` | `Patient@2026` | 5 verified records, HbA1c/glucose lab trends, Penicillin allergy alert, AI assistant, PDF summary, QR sharing |
+| **Doctor** | `doctor@ayuva.demo` | `Doctor@2026` | Read-only viewer scoped exclusively to patient share sessions assigned or unlocked by token/PIN |
+| **Public Health Admin** | `admin@ayuva.demo` | `Admin@2026` | 10-district surveillance, RandomForest 7-day forecasts, Leaflet risk map, SEIR simulator, alerts (zero private vault access) |
 
 ---
 

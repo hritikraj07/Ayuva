@@ -2,7 +2,7 @@ const API_BASE = "/api";
 
 export function getStoredToken(): string | null {
   try {
-    const raw = localStorage.getItem("medledger_auth");
+    const raw = localStorage.getItem("ayuva_auth");
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.token ?? null;

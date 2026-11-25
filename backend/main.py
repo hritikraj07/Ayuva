@@ -24,7 +24,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="MedLedger Healthcare & Disease Intelligence API",
+    title="Ayuva Healthcare & Disease Intelligence API",
     version=settings.APP_VERSION,
     description="Unified Personal Medical Vault, Personalized Clinical AI Assistant, and Outbreak Surveillance Platform.",
     lifespan=lifespan,

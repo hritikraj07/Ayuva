@@ -711,7 +711,7 @@ def download_summary_pdf(
     pdf_path = settings.SUMMARY_DIR / record.pdf_filename
     if not pdf_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Summary PDF missing from storage.")
-    return FileResponse(path=pdf_path, media_type="application/pdf", filename=f"MedLedger_Doctor_Summary_{summary_id}.pdf")
+    return FileResponse(path=pdf_path, media_type="application/pdf", filename=f"Ayuva_Doctor_Summary_{summary_id}.pdf")
 
 
 @router.delete("/account/data")

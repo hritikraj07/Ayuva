@@ -33,13 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   const persistSession = (nextToken: string, nextUser: AuthUser) => {
-    localStorage.setItem("medledger_auth", JSON.stringify({ token: nextToken, user: nextUser }));
+    localStorage.setItem("ayuva_auth", JSON.stringify({ token: nextToken, user: nextUser }));
     setToken(nextToken);
     setUser(nextUser);
   };
 
   const logout = useCallback(() => {
-    localStorage.removeItem("medledger_auth");
+    localStorage.removeItem("ayuva_auth");
     setToken(null);
     setUser(null);
   }, []);
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restore = async () => {
       try {
-        const raw = localStorage.getItem("medledger_auth");
+        const raw = localStorage.getItem("ayuva_auth");
         if (!raw) {
           setIsReady(true);
           return;

@@ -120,7 +120,7 @@ export function DoctorSummaryPage() {
             onClick={() =>
               downloadAuthenticatedBlob(
                 `/vault/summary/${summary.summary_id}/pdf`,
-                `MedLedger_Doctor_Summary_${summary.summary_id}.pdf`
+                `Ayuva_Doctor_Summary_${summary.summary_id}.pdf`
               )
             }
           >

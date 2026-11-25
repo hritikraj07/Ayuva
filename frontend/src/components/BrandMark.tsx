@@ -23,7 +23,7 @@ export function BrandMark({ className }: { className?: string; inverted?: boolea
         <circle cx="17" cy="6.5" r="1.8" fill="#FFFFFF" />
       </svg>
       <span className="font-display text-lg font-bold tracking-tight text-primary">
-        Med<span className="text-[#0284C7]">Ledger</span>
+        Ayu<span className="text-[#0284C7]">va</span>
       </span>
     </span>
   );

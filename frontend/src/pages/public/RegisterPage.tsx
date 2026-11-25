@@ -50,7 +50,7 @@ export function RegisterPage() {
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-          <Link to="/" aria-label="MedLedger home">
+          <Link to="/" aria-label="Ayuva home">
             <BrandMark />
           </Link>
           <Link to="/login" className="text-sm font-medium text-secondary hover:underline">
@@ -62,7 +62,7 @@ export function RegisterPage() {
       <main className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-10">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-xl">Create MedLedger Account</CardTitle>
+            <CardTitle className="text-xl">Create Ayuva Account</CardTitle>
             <CardDescription>Select your role to initialize role-isolated permissions.</CardDescription>
           </CardHeader>
           <CardContent>

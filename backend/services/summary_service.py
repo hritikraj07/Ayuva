@@ -288,7 +288,7 @@ def render_summary_pdf(summary_payload: Dict[str, Any], patient_name: str) -> Pa
     p_info = facts["patient"]
 
     story = [
-        Paragraph(f"MedLedger One-Minute Doctor Summary: {patient_name}", title_style),
+        Paragraph(f"Ayuva One-Minute Doctor Summary: {patient_name}", title_style),
         Paragraph(
             f"Generated UTC: {summary_payload['generated_at'][:19].replace('T', ' ')} | "
             f"DOB: {p_info.get('date_of_birth') or 'Not recorded'} | "

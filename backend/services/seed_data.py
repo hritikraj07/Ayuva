@@ -22,21 +22,21 @@ def seed_database(db: Session) -> None:
 
     demo_users = [
         {
-            "email": "patient@medledger.demo",
+            "email": "patient@ayuva.demo",
             "password": "Patient@2026",
             "full_name": "Demo Patient",
             "role_name": "patient",
             "specialty_or_department": None,
         },
         {
-            "email": "doctor@medledger.demo",
+            "email": "doctor@ayuva.demo",
             "password": "Doctor@2026",
             "full_name": "Demo Physician",
             "role_name": "doctor",
             "specialty_or_department": "General Medicine",
         },
         {
-            "email": "admin@medledger.demo",
+            "email": "admin@ayuva.demo",
             "password": "Admin@2026",
             "full_name": "Demo Public Health Officer",
             "role_name": "admin",

@@ -9,7 +9,7 @@ const DEMO_ACCOUNTS = [
   {
     label: "Demo Patient",
     role: "patient",
-    email: "patient@medledger.demo",
+    email: "patient@ayuva.demo",
     password: "Patient@2026",
     note: "Starts with empty vault",
     icon: User,
@@ -17,7 +17,7 @@ const DEMO_ACCOUNTS = [
   {
     label: "Demo Doctor",
     role: "doctor",
-    email: "doctor@medledger.demo",
+    email: "doctor@ayuva.demo",
     password: "Doctor@2026",
     note: "Scoped record viewer",
     icon: Stethoscope,
@@ -25,7 +25,7 @@ const DEMO_ACCOUNTS = [
   {
     label: "Demo Admin",
     role: "admin",
-    email: "admin@medledger.demo",
+    email: "admin@ayuva.demo",
     password: "Admin@2026",
     note: "Live NCDC sync & SEIR",
     icon: ShieldCheck,
@@ -85,7 +85,7 @@ export function LoginPage() {
               <Lock className="size-3.5 text-[#0284C7]" aria-hidden="true" />
               <span>Authenticated Access</span>
             </div>
-            <CardTitle className="text-xl">Sign in to MedLedger</CardTitle>
+            <CardTitle className="text-xl">Sign in to Ayuva</CardTitle>
             <CardDescription>
               Access your personal health vault, clinician share sessions, or public-health surveillance workspace.
             </CardDescription>

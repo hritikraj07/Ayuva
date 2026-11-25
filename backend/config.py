@@ -11,15 +11,15 @@ load_dotenv(BASE_DIR / ".env")
 class Settings:
     """Application settings loaded from environment variables."""
 
-    APP_NAME: str = "MedLedger"
+    APP_NAME: str = "Ayuva"
     APP_VERSION: str = "2.0.0"
     DEMO_MODE: bool = os.getenv("DEMO_MODE", "false").strip().lower() == "true"
 
     DATABASE_URL: str = (
         os.getenv("DATABASE_URL", "").strip()
-        or f"sqlite:///{(BASE_DIR / 'data' / 'medledger.db').as_posix()}"
+        or f"sqlite:///{(BASE_DIR / 'data' / 'ayuva.db').as_posix()}"
     )
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "medledger-hackathon-dev-secret-change-in-production")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "ayuva-hackathon-dev-secret-change-in-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "720"))
 
     UPLOAD_DIR: Path = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads")))

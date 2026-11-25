@@ -57,8 +57,12 @@ def _register_and_login(client: TestClient, *, role: str = "patient") -> tuple[s
 @pytest.fixture(autouse=True)
 def _reset_rate_limit():
     chat_router._USER_REQUEST_TIMESTAMPS.clear()
+    assistant_service._GEMINI_CLIENT_CACHE.clear()
+    assistant_service._UNHEALTHY_MODEL_UNTIL.clear()
     yield
     chat_router._USER_REQUEST_TIMESTAMPS.clear()
+    assistant_service._GEMINI_CLIENT_CACHE.clear()
+    assistant_service._UNHEALTHY_MODEL_UNTIL.clear()
 
 
 def test_gemini_chatbot_comprehensive_suite(monkeypatch):
@@ -154,18 +158,16 @@ def test_gemini_chatbot_comprehensive_suite(monkeypatch):
         recorded_calls: list[dict] = []
 
         class _FakeModels:
-            def __init__(self, mode: str = "ok"):
-                self.mode = mode
-
             def generate_content(self, *, model, contents, config):
+                mode = _FakeClient.mode
                 recorded_calls.append({"model": model, "contents": contents, "config": config})
-                if self.mode == "rate_limit":
+                if mode == "rate_limit":
                     raise genai_errors.APIError(429, {"error": {"message": "Quota exhausted"}})
-                if self.mode == "server_error":
+                if mode == "server_error":
                     raise genai_errors.APIError(500, {"error": {"message": f"Backend error with key={test_secret}"}})
-                if self.mode == "malformed":
+                if mode == "malformed":
                     return SimpleNamespace(text="", candidates=[SimpleNamespace(finish_reason="SAFETY")])
-                if self.mode == "slow":
+                if mode == "slow":
                     import time
                     time.sleep(1.2)
                     return SimpleNamespace(text="Too late", candidates=[])
@@ -182,7 +184,7 @@ def test_gemini_chatbot_comprehensive_suite(monkeypatch):
 
             def __init__(self, api_key=None, **_kwargs):
                 assert api_key == test_secret
-                self.models = _FakeModels(self.mode)
+                self.models = _FakeModels()
 
         monkeypatch.setattr(assistant_service.genai, "Client", _FakeClient)
 

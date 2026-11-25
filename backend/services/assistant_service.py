@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import re
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
@@ -28,12 +29,32 @@ settings = get_settings()
 
 FALLBACK_GEMINI_MODELS = [
     "gemini-flash-latest",
-    "gemini-3.8-flash",
     "gemini-3.6-flash",
-    "gemini-2.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
 ]
 
-HEALTHCARE_SAFETY_SYSTEM_INSTRUCTION = """You are MedLedger Clinical Assistant, an educational healthcare information assistant. You are NOT a licensed physician, medical practitioner, or diagnostic tool.
+_GEMINI_CLIENT_CACHE: Dict[Tuple[str, int], genai.Client] = {}
+_UNHEALTHY_MODEL_UNTIL: Dict[str, float] = {}
+_MODEL_COOLDOWN_SECONDS = 300.0
+
+
+def _get_gemini_client(api_key: str) -> genai.Client:
+    cache_key = (api_key, id(genai.Client))
+    client = _GEMINI_CLIENT_CACHE.get(cache_key)
+    if client is None:
+        client = genai.Client(
+            api_key=api_key,
+            http_options=genai_types.HttpOptions(
+                api_version="v1beta",
+                timeout=12000,
+                retry_options=genai_types.HttpRetryOptions(attempts=1),
+            ),
+        )
+        _GEMINI_CLIENT_CACHE[cache_key] = client
+    return client
+
+HEALTHCARE_SAFETY_SYSTEM_INSTRUCTION = """You are Ayuva Clinical Assistant, an educational healthcare information assistant. You are NOT a licensed physician, medical practitioner, or diagnostic tool.
 
 NON-NEGOTIABLE CLINICAL SAFETY & GROUNDING RULES:
 1. Role & Scope: Always act as a calm, plain-language educational healthcare guide. Never claim a definitive medical diagnosis, never independently prescribe medication, and never advise changing or stopping a doctor-prescribed treatment.
@@ -379,27 +400,42 @@ def _select_relevant_patient_context(
     }
 
 
+def _build_generate_config(model_name: str) -> genai_types.GenerateContentConfig:
+    low = model_name.lower()
+    if any(tag in low for tag in ("3.5-flash", "3.6-flash", "3.7-flash")):
+        return genai_types.GenerateContentConfig(
+            system_instruction=HEALTHCARE_SAFETY_SYSTEM_INSTRUCTION,
+            temperature=0.2,
+            max_output_tokens=750,
+            thinking_config=genai_types.ThinkingConfig(thinking_level=genai_types.ThinkingLevel.MINIMAL),
+        )
+    return genai_types.GenerateContentConfig(
+        system_instruction=HEALTHCARE_SAFETY_SYSTEM_INSTRUCTION,
+        temperature=0.2,
+        max_output_tokens=750,
+    )
+
+
 def _call_gemini_sync(
     *,
     api_key: str,
     model_name: str,
     contents: List[genai_types.Content],
 ) -> Tuple[str, str]:
-    """Execute Gemini generate_content using official google-genai SDK."""
-    client = genai.Client(api_key=api_key, http_options=genai_types.HttpOptions(api_version="v1beta"))
-    candidates = [model_name] + [m for m in FALLBACK_GEMINI_MODELS if m != model_name]
+    """Execute Gemini generate_content using cached google-genai SDK client with instant fallback."""
+    client = _get_gemini_client(api_key)
+    now = time.monotonic()
+    ordered = [model_name] + [m for m in FALLBACK_GEMINI_MODELS if m != model_name]
+    candidates = [m for m in ordered if _UNHEALTHY_MODEL_UNTIL.get(m, 0.0) <= now] or ordered
 
     last_not_found_err: Optional[Exception] = None
+    last_rate_limit_err: Optional[Exception] = None
     for candidate_model in candidates:
         try:
             response = client.models.generate_content(
                 model=candidate_model,
                 contents=contents,
-                config=genai_types.GenerateContentConfig(
-                    system_instruction=HEALTHCARE_SAFETY_SYSTEM_INSTRUCTION,
-                    temperature=0.2,
-                    max_output_tokens=1200,
-                ),
+                config=_build_generate_config(candidate_model),
             )
             text = getattr(response, "text", None)
             if text and text.strip():
@@ -424,14 +460,13 @@ def _call_gemini_sync(
             code = getattr(exc, "code", None) or 502
             msg_low = str(exc).lower()
             if code in (404, 503) or "not found" in msg_low or "not supported" in msg_low or "unavailable" in msg_low:
+                _UNHEALTHY_MODEL_UNTIL[candidate_model] = time.monotonic() + _MODEL_COOLDOWN_SECONDS
                 last_not_found_err = exc
                 continue
             if code == 429 or "resource_exhausted" in msg_low or "quota" in msg_low or "rate limit" in msg_low or "too many requests" in msg_low:
-                raise GeminiServiceError(
-                    429,
-                    "Gemini API rate limit reached. Please wait a moment and click Retry.",
-                    "gemini_rate_limited",
-                ) from exc
+                _UNHEALTHY_MODEL_UNTIL[candidate_model] = time.monotonic() + 60.0
+                last_rate_limit_err = exc
+                continue
             if code in (401, 403) or "api key" in msg_low or "permission" in msg_low:
                 raise GeminiServiceError(
                     502,
@@ -455,6 +490,13 @@ def _call_gemini_sync(
                 f"Failed to communicate with Gemini API: {_sanitize_error_text(str(exc))}",
                 "gemini_transport_error",
             ) from exc
+
+    if last_rate_limit_err is not None:
+        raise GeminiServiceError(
+            429,
+            "Gemini API rate limit reached. Please wait a moment and click Retry.",
+            "gemini_rate_limited",
+        ) from last_rate_limit_err
 
     raise GeminiServiceError(
         503,
