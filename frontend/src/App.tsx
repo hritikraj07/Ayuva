@@ -4,8 +4,11 @@ import { AppShell } from "@/components/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingState } from "@/components/ui/primitives";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AdminOutbreakView } from "@/pages/admin/AdminOutbreakPages";
 import { DoctorRecordsPage } from "@/pages/doctor/DoctorRecordsPage";
 import { DoctorSummaryPage } from "@/pages/patient/DoctorSummaryPage";
+import { HealthAssistantPage } from "@/pages/patient/HealthAssistantPage";
+import { MedicalTimelinePage } from "@/pages/patient/MedicalTimelinePage";
 import { MedicalVaultPage } from "@/pages/patient/MedicalVaultPage";
 import { PatientOverviewPage } from "@/pages/patient/PatientOverviewPage";
 import { PatientProfilePage } from "@/pages/patient/PatientProfilePage";
@@ -14,16 +17,6 @@ import { LandingPage } from "@/pages/public/LandingPage";
 import { LoginPage } from "@/pages/public/LoginPage";
 import { PublicShareViewerPage } from "@/pages/public/PublicShareViewerPage";
 import { RegisterPage } from "@/pages/public/RegisterPage";
-
-const MedicalTimelinePage = React.lazy(() =>
-  import("@/pages/patient/MedicalTimelinePage").then((m) => ({ default: m.MedicalTimelinePage }))
-);
-const HealthAssistantPage = React.lazy(() =>
-  import("@/pages/patient/HealthAssistantPage").then((m) => ({ default: m.HealthAssistantPage }))
-);
-const AdminOutbreakView = React.lazy(() =>
-  import("@/pages/admin/AdminOutbreakPages").then((m) => ({ default: m.AdminOutbreakView }))
-);
 
 function ProtectedRoute({
   allowedRoles,
